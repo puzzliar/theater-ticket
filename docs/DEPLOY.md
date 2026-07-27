@@ -70,5 +70,5 @@
 
 - **DB**: 共有Supabaseプロジェクト(`wiqnmebudaadwqdaxwko`)に `tk_` プレフィックスで同居(物販システムと同一基盤・共通Auth方針)
 - **契約ビュー**: 事前物販OSは `tk_ticket_sales_by_cast_v1` のみ参照可(ギャラ合算連携用)
-- **リマインドメール**: Vercel Cron(10分毎)が開演55〜75分前の注文にQRページURLを送付(`RESEND_API_KEY` 設定時のみ)
+- **リマインドメール**: `/api/cron/send-reminders` を10分毎に叩くと開演55〜75分前の注文にQRページURLを送付する(`RESEND_API_KEY` 設定時のみ)。VercelのHobbyプランはCronが1日1回までのため、Supabaseのpg_cron(pg_net)または外部Cronサービスから呼び出す(Resend設定時にあわせてセットアップする)
 - **期限切れ仮押さえ**: ページアクセス時に随時クリーンアップ(35分で失効)
