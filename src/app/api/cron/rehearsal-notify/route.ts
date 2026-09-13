@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { notifyMember } from "@/lib/rehearsal/notify";
+import { importBusyAsUnavailable } from "@/lib/rehearsal/google-sync";
 import { listMemberSessions, sessionLine } from "@/lib/rehearsal/schedule";
 import { addDays, fmtDateLabel, jstDateString, jstDayRange, jstHour } from "@/lib/rehearsal/time";
 import { RESPONSE_LABEL, type MemberRow } from "@/lib/rehearsal/types";
-import { SITE_URL } from "@/lib/constants";
+import { ORG_ID, SITE_URL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
 // 定時通知(要件 5.8 / 5.9)。外部スケジューラから 10〜30 分おきに呼ぶ。
 //  - 毎朝 REHEARSAL_DIGEST_HOUR(既定 8)時台: 今日の予定ダイジェスト(予定がある人のみ)
 //  - 毎晩 REHEARSAL_REMINDER_HOUR(既定 20)時台: 翌日の予定リマインド
+//  - 毎朝 digest と同時に Google カレンダー連携メンバーの FreeBusy を取り込み(可用性の自動更新)
 // 送信は dedupe_key (種別:日付:メンバー) で冪等。
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
@@ -28,11 +30,15 @@ export async function GET(req: NextRequest) {
   if (jobs.length === 0) return NextResponse.json({ skipped: true, hour });
 
   const admin = supabaseAdmin();
-  const { data: members } = await admin.from("rh_members").select("id, name, line_user_id, email").eq("is_active", true);
+  const { data: members } = await admin.from("rh_members").select("id, name, line_user_id, email, google_refresh_token_enc").eq("is_active", true);
   const today = jstDateString();
-  const counts = { digest: 0, reminder: 0 };
+  const counts = { digest: 0, reminder: 0, freebusy: 0 };
 
   for (const m of (members ?? []) as MemberRow[]) {
+    if (jobs.includes("digest") && m.google_refresh_token_enc) {
+      const { error } = await admin.from("rh_notifications").insert({ org_id: ORG_ID, member_id: m.id, channel: "none", dedupe_key: `freebusy:${today}:${m.id}` });
+      if (!error) counts.freebusy += await importBusyAsUnavailable(m.id);
+    }
     if (!m.line_user_id && !m.email) continue;
     for (const job of jobs) {
       const date = job === "digest" ? today : addDays(today, 1);

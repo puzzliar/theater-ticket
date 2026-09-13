@@ -6,6 +6,8 @@ import { ORG_ID } from "@/lib/constants";
 import { getCurrentMember, issueLineLinkCode } from "@/lib/rehearsal/members";
 import { applySubstitution, respondToSession } from "@/lib/rehearsal/core";
 import { jstToIso } from "@/lib/rehearsal/time";
+import { deleteAllEventsForMember, importBusyAsUnavailable } from "@/lib/rehearsal/google-sync";
+import { revokeToken } from "@/lib/google-calendar";
 import type { Response } from "@/lib/rehearsal/types";
 
 async function requireMember() {
@@ -61,6 +63,33 @@ export async function deleteAvailability(id: string) {
 export async function newLineCode() {
   const member = await requireMember();
   await issueLineLinkCode(member.id);
+  revalidatePath("/me");
+}
+
+export async function importGoogleBusy() {
+  const member = await requireMember();
+  await importBusyAsUnavailable(member.id);
+  revalidatePath("/me");
+}
+
+export async function setFreebusyImport(enabled: boolean) {
+  const member = await requireMember();
+  const admin = supabaseAdmin();
+  await admin.from("rh_members").update({ google_freebusy_import: enabled }).eq("id", member.id);
+  if (!enabled) await admin.from("rh_availability").delete().eq("member_id", member.id).eq("source", "calendar");
+  revalidatePath("/me");
+}
+
+export async function disconnectGoogle() {
+  const member = await requireMember();
+  const admin = supabaseAdmin();
+  await deleteAllEventsForMember(member.id);
+  if (member.google_refresh_token_enc) await revokeToken(member.google_refresh_token_enc);
+  await admin
+    .from("rh_members")
+    .update({ google_refresh_token_enc: null, google_email: null, google_connected_at: null })
+    .eq("id", member.id);
+  await admin.from("rh_availability").delete().eq("member_id", member.id).eq("source", "calendar");
   revalidatePath("/me");
 }
 

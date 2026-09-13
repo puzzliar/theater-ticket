@@ -7,13 +7,24 @@ import { openSubstitutionsFor } from "@/lib/rehearsal/core";
 import { addDays, fmtDateLabel, fmtRange, fmtTime, jstDateString, jstDayRange, nowMs } from "@/lib/rehearsal/time";
 import { RESPONSE_LABEL, SESSION_KIND_LABEL, type AvailabilityRow } from "@/lib/rehearsal/types";
 import { lineAddFriendUrl, lineConfigured } from "@/lib/line";
-import { respond, apply, addAvailability, deleteAvailability, newLineCode, unlinkLine } from "./actions";
+import { googleConfigured } from "@/lib/google-calendar";
+import { respond, apply, addAvailability, deleteAvailability, newLineCode, unlinkLine, importGoogleBusy, setFreebusyImport, disconnectGoogle } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 // メンバー個人ビュー(要件 5.6)。「今日どこへ行くか」を全プロダクション横断で表示する。
-export default async function MePage() {
+const GOOGLE_MSG: Record<string, { cls: string; text: string }> = {
+  connected: { cls: "text-emerald-400", text: "Google カレンダーと連携しました。今後の召集をカレンダーに登録し、カレンダーの予定を「不可」として取り込みました。" },
+  denied: { cls: "text-yellow-500", text: "Google の認可がキャンセルされました。" },
+  error: { cls: "text-red-400", text: "Google 連携に失敗しました。時間をおいて再度お試しください。" },
+  state_mismatch: { cls: "text-red-400", text: "連携の確認に失敗しました。もう一度「Google と連携」からやり直してください。" },
+  not_configured: { cls: "text-yellow-500", text: "Google 連携はこの環境では設定されていません。" },
+};
+
+export default async function MePage({ searchParams }: { searchParams: Promise<{ google?: string }> }) {
   const { user, member } = await requireCurrentMember();
+  const sp = await searchParams;
+  const googleMsg = sp.google ? GOOGLE_MSG[sp.google] : undefined;
 
   if (!member) {
     return (
@@ -215,10 +226,38 @@ export default async function MePage() {
           )}
         </div>
         <div className="space-y-2 rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-          <h2 className="font-semibold">Google カレンダーに表示</h2>
-          <p className="text-sm text-neutral-300">Google カレンダーの「他のカレンダー」→「URL で追加」に次の URL を貼り付けると、あなたの召集予定が表示されます(Apple/Outlook も可)。</p>
-          <p className="break-all rounded bg-neutral-800 p-2 font-mono text-xs text-amber-300">{icalUrl}</p>
-          <p className="text-xs text-neutral-500">※ URL は本人専用です。他の人に共有しないでください。Google 側の更新は数時間遅れることがあります。急な変更は LINE でお知らせします。</p>
+          <h2 className="font-semibold">Google カレンダー連携</h2>
+          {googleMsg && <p className={`text-sm ${googleMsg.cls}`}>{googleMsg.text}</p>}
+          {googleConfigured() ? (
+            member.google_refresh_token_enc ? (
+              <>
+                <p className="text-sm text-emerald-400">連携済み{member.google_email && `(${member.google_email})`}。召集された予定は即時にあなたのカレンダーへ登録・更新・削除されます。</p>
+                <div className="flex items-center gap-2 text-sm text-neutral-300">
+                  <form action={setFreebusyImport.bind(null, !member.google_freebusy_import)}>
+                    <button className={`rounded px-2 py-0.5 text-xs ${member.google_freebusy_import ? "bg-emerald-500 text-black" : "bg-neutral-700"}`}>{member.google_freebusy_import ? "ON" : "OFF"}</button>
+                  </form>
+                  <span>カレンダーの「予定あり」を空き時間の「不可」として自動取り込み(毎朝更新。予定の内容は取得しません)</span>
+                </div>
+                <div className="flex gap-3 text-xs">
+                  {member.google_freebusy_import && <form action={importGoogleBusy}><button className="text-amber-400 hover:underline">今すぐ取り込む</button></form>}
+                  <form action={disconnectGoogle}><button className="text-neutral-500 hover:text-red-400">連携を解除(登録した予定も削除)</button></form>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-neutral-300">Google アカウントで認可すると、召集された予定が即時にあなたの Google カレンダーに登録され、変更・中止もすぐ反映されます。カレンダーの「予定あり」を空き時間として自動で取り込むこともできます。</p>
+                <a href="/api/google/connect" className={`inline-block ${btn} bg-amber-500 text-black hover:bg-amber-400`}>Google と連携する</a>
+              </>
+            )
+          ) : (
+            <p className="text-xs text-yellow-500">(Google API 連携はこの環境では未設定です。下の購読 URL をご利用ください)</p>
+          )}
+          <details className="pt-2">
+            <summary className="cursor-pointer text-sm text-neutral-300">購読 URL で表示する(Google / Apple / Outlook)</summary>
+            <p className="mt-1 text-xs text-neutral-400">カレンダーの「URL で追加」に次の URL を貼り付けると、あなたの召集予定が表示されます。</p>
+            <p className="mt-1 break-all rounded bg-neutral-800 p-2 font-mono text-xs text-amber-300">{icalUrl}</p>
+            <p className="text-xs text-neutral-500">※ URL は本人専用です。Google 側の更新は数時間遅れることがあります。急な変更は LINE でお知らせします。</p>
+          </details>
         </div>
       </section>
     </div>

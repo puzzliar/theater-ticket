@@ -34,6 +34,7 @@
 | `/admin/rehearsal/availability` | 主催 | 週間の空き時間マトリクス |
 | `/me` | キャスト・スタッフ | 今日/今週の予定(全公演横断)、出欠回答、代役応募、空き時間登録、LINE連携、カレンダー購読URL |
 | `/api/ical/[token]` | Googleカレンダー等 | 個人用 iCal フィード |
+| `/api/google/connect` `/api/google/callback` | Google | Calendar API 連携(OAuth)。召集の即時同期と空き時間の自動取り込み |
 | `/api/line/webhook` | LINE | Messaging API Webhook(「今日」「参加」「入れます」等に応答) |
 | `/api/cron/rehearsal-notify` | スケジューラ | 毎朝の予定配信・前日リマインド |
 

@@ -17,6 +17,11 @@ export interface MemberRow {
   line_link_expires_at: string | null;
   ical_token: string;
   is_active: boolean;
+  google_refresh_token_enc: string | null;
+  google_email: string | null;
+  google_calendar_id: string;
+  google_connected_at: string | null;
+  google_freebusy_import: boolean;
   created_at: string;
 }
 
@@ -79,6 +84,7 @@ export interface SessionMemberRow {
   attendance: Attendance;
   note: string;
   notified_at: string | null;
+  google_event_id: string | null;
 }
 
 export interface AvailabilityRow {

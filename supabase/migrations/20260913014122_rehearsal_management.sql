@@ -1,6 +1,7 @@
 -- 稽古・シフト管理 (docs/rehearsal-requirements.md v0.1 準拠)
 -- 共有プロジェクトのため全テーブル rh_ プレフィックス。
 -- 組織・公演・アカウントはチケットシステム (tk_) のものを参照する。
+-- ※ Supabase プロジェクト wiqnmebudaadwqdaxwko に適用済み (version 20260913014122)
 
 -- ========== メンバー(公演横断の人物) ==========
 create table rh_members (

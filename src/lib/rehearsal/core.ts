@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { ORG_ID, SITE_URL } from "@/lib/constants";
 import { notifyMember } from "./notify";
 import { checkAvailability } from "./schedule";
+import { syncSession } from "./google-sync";
 import { fmtRange } from "./time";
 import { SESSION_KIND_LABEL, type MemberRow, type Response, type SessionRow } from "./types";
 
@@ -30,6 +31,7 @@ export async function respondToSession(memberId: string, sessionId: string, resp
   if (!row) throw new RehearsalError("この稽古枠には召集されていません");
   const { error } = await admin.from("rh_session_members").update({ response }).eq("session_id", sessionId).eq("member_id", memberId);
   if (error) throw new RehearsalError(error.message);
+  await syncSession(sessionId, [memberId]);
 }
 
 // 召集メンバーへ通知(新規召集・変更・中止)
@@ -143,6 +145,7 @@ export async function fillSubstitution(requestId: string, memberId: string): Pro
     { onConflict: "session_id,member_id" },
   );
   await admin.from("rh_session_members").update({ response: "no" }).eq("session_id", updated.session_id).eq("member_id", updated.absent_member_id);
+  await syncSession(updated.session_id, [memberId, updated.absent_member_id]);
 
   const session = await loadSession(updated.session_id);
   const { data: cands } = await admin.from("rh_substitution_candidates").select("member_id, rh_members(id, name, line_user_id, email)").eq("request_id", requestId);

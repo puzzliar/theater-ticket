@@ -7,6 +7,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { ORG_ID } from "@/lib/constants";
 import { jstToIso } from "@/lib/rehearsal/time";
 import { notifySessionMembers, openSubstitution, fillSubstitution } from "@/lib/rehearsal/core";
+import { syncSession, removeEventForMember } from "@/lib/rehearsal/google-sync";
 import type { MemberKind, SessionKind } from "@/lib/rehearsal/types";
 
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
@@ -200,6 +201,7 @@ export async function createSession(productionId: string, formData: FormData) {
     await admin.from("rh_session_members").insert([...memberIds].map((m) => ({ session_id: session.id, member_id: m, org_id: ORG_ID })));
   }
   if (formData.get("notify") === "on") await notifySessionMembers(session.id, "invite");
+  await syncSession(session.id);
   revalidatePath(`/admin/rehearsal/p/${productionId}`);
   redirect(`/admin/rehearsal/p/${productionId}/s/${session.id}`);
 }
@@ -221,6 +223,7 @@ export async function updateSession(productionId: string, sessionId: string, for
     .eq("id", sessionId);
   if (error) throw new Error(error.message);
   if (formData.get("notify") === "on") await notifySessionMembers(sessionId, "update");
+  await syncSession(sessionId);
   revalidatePath(`/admin/rehearsal/p/${productionId}/s/${sessionId}`);
   revalidatePath(`/admin/rehearsal/p/${productionId}`);
 }
@@ -231,6 +234,7 @@ export async function cancelSession(productionId: string, sessionId: string) {
   await admin.from("rh_sessions").update({ status: "cancelled", updated_at: new Date().toISOString() }).eq("id", sessionId);
   await admin.from("rh_substitution_requests").update({ status: "cancelled" }).eq("session_id", sessionId).eq("status", "open");
   await notifySessionMembers(sessionId, "cancel");
+  await syncSession(sessionId);
   revalidatePath(`/admin/rehearsal/p/${productionId}/s/${sessionId}`);
   revalidatePath(`/admin/rehearsal/p/${productionId}`);
 }
@@ -238,6 +242,7 @@ export async function cancelSession(productionId: string, sessionId: string) {
 export async function reopenSession(productionId: string, sessionId: string) {
   await requireRole("admin");
   await supabaseAdmin().from("rh_sessions").update({ status: "scheduled", updated_at: new Date().toISOString() }).eq("id", sessionId);
+  await syncSession(sessionId);
   revalidatePath(`/admin/rehearsal/p/${productionId}/s/${sessionId}`);
   revalidatePath(`/admin/rehearsal/p/${productionId}`);
 }
@@ -283,12 +288,14 @@ export async function addSessionScene(productionId: string, sessionId: string, f
       { onConflict: "session_id,member_id", ignoreDuplicates: true },
     );
   }
+  await syncSession(sessionId);
   revalidatePath(`/admin/rehearsal/p/${productionId}/s/${sessionId}`);
 }
 
 export async function removeSessionScene(productionId: string, sessionId: string, sceneId: string) {
   await requireRole("admin");
   await supabaseAdmin().from("rh_session_scenes").delete().eq("session_id", sessionId).eq("scene_id", sceneId);
+  await syncSession(sessionId);
   revalidatePath(`/admin/rehearsal/p/${productionId}/s/${sessionId}`);
 }
 
@@ -299,11 +306,13 @@ export async function addSessionMember(productionId: string, sessionId: string, 
   const admin = supabaseAdmin();
   await admin.from("rh_session_members").upsert({ session_id: sessionId, member_id: memberId, org_id: ORG_ID }, { onConflict: "session_id,member_id", ignoreDuplicates: true });
   if (formData.get("notify") === "on") await notifySessionMembers(sessionId, "invite", [memberId]);
+  await syncSession(sessionId, [memberId]);
   revalidatePath(`/admin/rehearsal/p/${productionId}/s/${sessionId}`);
 }
 
 export async function removeSessionMember(productionId: string, sessionId: string, memberId: string) {
   await requireRole("admin");
+  await removeEventForMember(sessionId, memberId);
   await supabaseAdmin().from("rh_session_members").delete().eq("session_id", sessionId).eq("member_id", memberId);
   revalidatePath(`/admin/rehearsal/p/${productionId}/s/${sessionId}`);
 }
