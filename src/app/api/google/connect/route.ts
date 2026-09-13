@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
-import { getCurrentMember } from "@/lib/rehearsal/members";
+import { getSessionUser } from "@/lib/core/session";
 import { googleAuthUrl, googleConfigured } from "@/lib/google-calendar";
 import { SITE_URL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
-// Google カレンダー連携の開始(要件 5.7 方式B)。ログイン中メンバーを state に署名して Google へリダイレクト
+// Google カレンダー連携の開始(要件 5.7 方式B)。ログイン中プロフィールを state に署名して Google へ
 export async function GET() {
-  if (!googleConfigured()) return NextResponse.redirect(`${SITE_URL}/me?google=not_configured`);
-  const ctx = await getCurrentMember();
-  if (!ctx) return NextResponse.redirect(`${SITE_URL}/login`);
-  if (!ctx.member) return NextResponse.redirect(`${SITE_URL}/me?google=no_member`);
-  return NextResponse.redirect(googleAuthUrl(ctx.member.id));
+  if (!googleConfigured()) return NextResponse.redirect(`${SITE_URL}/me/settings?google=not_configured`);
+  const me = await getSessionUser();
+  if (!me) return NextResponse.redirect(`${SITE_URL}/login?next=${encodeURIComponent("/me/settings")}`);
+  return NextResponse.redirect(googleAuthUrl(me.id));
 }

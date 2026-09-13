@@ -25,19 +25,16 @@
 | `/cast` | キャスト | 自分の扱い売上・ギャラ見込み・ゲスト予約起票 |
 | `/reception` | 受付 | QR照合チェックイン・当日現金収受 |
 
-### 稽古・シフト管理(`rh_` テーブル群)
+### 稽古・シフト管理(無料・多主催者向け。`core_` 共通アカウント基盤 + `rh_`)
 
 | パス | 対象 | 内容 |
 |---|---|---|
-| `/admin/rehearsal` | 主催 | プロダクション・メンバー(公演横断)の管理 |
-| `/admin/rehearsal/p/[id]` | 主催 | シーン進捗(未消化シーン)、稽古枠/本番シフトの作成(参加可否チェック付き) |
-| `/admin/rehearsal/p/[id]/s/[sessionId]` | 主催 | 召集・出欠・実施シーン記録・代役募集 |
-| `/admin/rehearsal/availability` | 主催 | 週間の空き時間マトリクス |
-| `/me` | キャスト・スタッフ | 今日/今週の予定(全公演横断)、出欠回答、代役応募、空き時間登録、LINE連携、カレンダー購読URL |
-| `/api/ical/[token]` | Googleカレンダー等 | 個人用 iCal フィード |
-| `/api/google/connect` `/api/google/callback` | Google | Calendar API 連携(OAuth)。召集の即時同期と空き時間の自動取り込み |
-| `/api/line/webhook` | LINE | Messaging API Webhook(「今日」「参加」「入れます」等に応答) |
-| `/api/cron/rehearsal-notify` | スケジューラ | 毎朝の予定配信・前日リマインド |
+| `/rehearsal` `/signup` `/login` `/onboarding` | 全員 | 紹介・登録(メール/Google/LINE)・初回設定 |
+| `/me` `/me/settings` | 本人 | 全組織横断の予定、出欠、代役応募、空き時間、通知設定、LINE/Google 連携、Web プッシュ、iCal、退会 |
+| `/orgs/new` `/join/[token]` | 主催者・招待された人 | 組織作成(招待制)・招待リンクの受諾 |
+| `/o/[slug]` 以下 | 組織 | プロダクション、シーン進捗、稽古枠(参加可否チェック)、出欠・実施記録、代役募集、空き時間マトリクス、メンバー・招待・参加者台帳 |
+| `/platform` | 運営 | 主催者コード発行、組織管理 |
+| `/api/ical/[token]` `/api/google/*` `/api/line/webhook` `/api/push/subscribe` `/api/cron/rehearsal-notify` | 連携 | iCal、Google Calendar API、LINE Messaging API、Web プッシュ、定時通知 |
 
 ## 開発
 

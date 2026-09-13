@@ -2,34 +2,31 @@
 
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { ORG_ID } from "@/lib/constants";
-import { getCurrentMember, issueLineLinkCode } from "@/lib/rehearsal/members";
+import { getSessionUser } from "@/lib/core/session";
 import { applySubstitution, respondToSession } from "@/lib/rehearsal/core";
 import { jstToIso } from "@/lib/rehearsal/time";
-import { deleteAllEventsForMember, importBusyAsUnavailable } from "@/lib/rehearsal/google-sync";
-import { revokeToken } from "@/lib/google-calendar";
 import type { Response } from "@/lib/rehearsal/types";
 
-async function requireMember() {
-  const ctx = await getCurrentMember();
-  if (!ctx || !ctx.member) throw new Error("メンバー登録がありません");
-  return ctx.member;
+async function requireMe() {
+  const me = await getSessionUser();
+  if (!me) throw new Error("ログインが必要です");
+  return me;
 }
 
 export async function respond(sessionId: string, response: Response) {
-  const member = await requireMember();
-  await respondToSession(member.id, sessionId, response);
+  const me = await requireMe();
+  await respondToSession(me.id, sessionId, response);
   revalidatePath("/me");
 }
 
 export async function apply(requestId: string) {
-  const member = await requireMember();
-  await applySubstitution(member.id, requestId);
+  const me = await requireMe();
+  await applySubstitution(me.id, requestId);
   revalidatePath("/me");
 }
 
 export async function addAvailability(formData: FormData) {
-  const member = await requireMember();
+  const me = await requireMe();
   const date = String(formData.get("date") ?? "");
   const from = String(formData.get("from") ?? "");
   const to = String(formData.get("to") ?? "");
@@ -40,62 +37,13 @@ export async function addAvailability(formData: FormData) {
   const startsAt = jstToIso(`${date}T${allDay ? "00:00" : from}`);
   const endsAt = allDay ? jstToIso(`${date}T23:59`) : jstToIso(`${date}T${to}`);
   if (new Date(endsAt) <= new Date(startsAt)) throw new Error("終了は開始より後にしてください");
-  const admin = supabaseAdmin();
-  const { error } = await admin.from("rh_availability").insert({
-    org_id: ORG_ID,
-    member_id: member.id,
-    starts_at: startsAt,
-    ends_at: endsAt,
-    status,
-    note: String(formData.get("note") ?? "").trim(),
-  });
+  const { error } = await supabaseAdmin().from("rh_availability").insert({ profile_id: me.id, starts_at: startsAt, ends_at: endsAt, status, note: String(formData.get("note") ?? "").trim() });
   if (error) throw new Error(error.message);
   revalidatePath("/me");
 }
 
 export async function deleteAvailability(id: string) {
-  const member = await requireMember();
-  const admin = supabaseAdmin();
-  await admin.from("rh_availability").delete().eq("id", id).eq("member_id", member.id);
-  revalidatePath("/me");
-}
-
-export async function newLineCode() {
-  const member = await requireMember();
-  await issueLineLinkCode(member.id);
-  revalidatePath("/me");
-}
-
-export async function importGoogleBusy() {
-  const member = await requireMember();
-  await importBusyAsUnavailable(member.id);
-  revalidatePath("/me");
-}
-
-export async function setFreebusyImport(enabled: boolean) {
-  const member = await requireMember();
-  const admin = supabaseAdmin();
-  await admin.from("rh_members").update({ google_freebusy_import: enabled }).eq("id", member.id);
-  if (!enabled) await admin.from("rh_availability").delete().eq("member_id", member.id).eq("source", "calendar");
-  revalidatePath("/me");
-}
-
-export async function disconnectGoogle() {
-  const member = await requireMember();
-  const admin = supabaseAdmin();
-  await deleteAllEventsForMember(member.id);
-  if (member.google_refresh_token_enc) await revokeToken(member.google_refresh_token_enc);
-  await admin
-    .from("rh_members")
-    .update({ google_refresh_token_enc: null, google_email: null, google_connected_at: null })
-    .eq("id", member.id);
-  await admin.from("rh_availability").delete().eq("member_id", member.id).eq("source", "calendar");
-  revalidatePath("/me");
-}
-
-export async function unlinkLine() {
-  const member = await requireMember();
-  const admin = supabaseAdmin();
-  await admin.from("rh_members").update({ line_user_id: null }).eq("id", member.id);
+  const me = await requireMe();
+  await supabaseAdmin().from("rh_availability").delete().eq("id", id).eq("profile_id", me.id);
   revalidatePath("/me");
 }

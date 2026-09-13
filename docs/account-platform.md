@@ -2,7 +2,7 @@
 
 > 稽古・シフト管理（無料・アカウント獲得のフック）、チケット販売管理（`docs/requirements.md`）、事前物販・当日物販の各サービスを **1 つのアカウントと 1 つの組織台帳** で使えるようにするための共通基盤の設計案。稽古管理 v0.2（`docs/rehearsal-requirements.md`）のフェーズ A で最初に実装する。
 >
-> 作成日: 2026-09-13 ／ ステータス: 設計ドラフト（要レビュー）
+> 作成日: 2026-09-13 ／ ステータス: **v0.1 実装済み**（マイグレーション `core_platform_rehearsal_v2`。稽古管理が利用中。チケット `tk_` の載せ替えは未着手＝Q27 の決定どおり）
 
 # 1. 設計原則
 
@@ -209,10 +209,12 @@ create policy rh_productions_admin_write on rh_productions
 
 | # | 論点 | 提案 |
 |---|---|---|
-| A1 | LINE ログインの実装方式（Supabase Auth 非対応） | LINE Login（OIDC）でコード交換 → Edge Function で本人確認済みのカスタム JWT を発行 → `signInWithIdToken` ではなく `setSession` 相当で Supabase セッション化。または Supabase の「Custom OIDC provider」対応状況を確認して採用 |
+| A1 | LINE ログインの実装方式（Supabase Auth 非対応） | **実装済み**: LINE Login v2.1 で code → id_token を取得し LINE の verify エンドポイントで検証。`core_identities(line)` からユーザーを特定（無ければ作成）し、`auth.admin.generateLink(magiclink)` の `hashed_token` を SSR クライアントの `verifyOtp` に渡してセッション発行（`/auth/line/callback`） |
 | A2 | LINE Login の userId と Messaging API の userId を一致させるため、**同一プロバイダー配下**に両チャネルを置く | LINE Developers で 1 プロバイダーに「ログインチャネル」「Messaging API チャネル」を作る |
 | A3 | 組織 slug の扱い（URL に劇団名を出すか、UUID か） | slug（変更可・履歴保持） |
 | A4 | 1 アカウントの組織作成上限・招待の既定期限 | 10 組織、14 日 |
 | A5 | `part` の語彙（cast/staff/director/organizer）を全サービス共通にするか、サービスごとに拡張するか | 基盤は 4 値固定。サービス固有の細分（受付・物販担当など）は各サービス側で持つ |
+| A8 | 招待制の実装 | `core_organizer_codes`（運営発行のコード）。`ORG_CREATION_OPEN=true` で解除 |
+| A9 | 運営権限 | `core_profiles.is_platform_admin`。初期値は harbingerstar@gmail.com のみ |
 | A6 | 退会時の匿名化の実装（`core_profiles.display_name` を「退会済みユーザー」に置換、`email` と `core_identities` を削除） | 提案どおり。30 日の猶予後に実行 |
 | A7 | Supabase Auth の Google プロバイダと、カレンダー連携の Google OAuth を統合するか | 分離（ログインは最小スコープ、カレンダーは追加同意）。将来の incremental auth で統合検討 |

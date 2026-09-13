@@ -1,42 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { getCurrentMember } from "@/lib/rehearsal/members";
+import { getSessionUser } from "@/lib/core/session";
 import { encryptToken, exchangeCode, googleConfigured, verifyState } from "@/lib/google-calendar";
-import { importBusyAsUnavailable, syncMemberUpcoming } from "@/lib/rehearsal/google-sync";
+import { getSettings } from "@/lib/rehearsal/profile";
+import { importBusyAsUnavailable, syncProfileUpcoming } from "@/lib/rehearsal/google-sync";
 import { SITE_URL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
-// Google OAuth コールバック。state の署名とログイン中メンバーの一致を確認してからトークンを保存する
+// Google OAuth コールバック。state の署名とログイン中プロフィールの一致を確認してからトークンを保存する
 export async function GET(req: NextRequest) {
-  const me = `${SITE_URL}/me`;
-  if (!googleConfigured()) return NextResponse.redirect(`${me}?google=not_configured`);
+  const back = `${SITE_URL}/me/settings`;
+  if (!googleConfigured()) return NextResponse.redirect(`${back}?google=not_configured`);
   const code = req.nextUrl.searchParams.get("code");
   const state = req.nextUrl.searchParams.get("state") ?? "";
-  if (req.nextUrl.searchParams.get("error") || !code) return NextResponse.redirect(`${me}?google=denied`);
+  if (req.nextUrl.searchParams.get("error") || !code) return NextResponse.redirect(`${back}?google=denied`);
 
-  const memberId = verifyState(state);
-  const ctx = await getCurrentMember();
-  if (!memberId || !ctx?.member || ctx.member.id !== memberId) return NextResponse.redirect(`${me}?google=state_mismatch`);
+  const profileId = verifyState(state);
+  const me = await getSessionUser();
+  if (!profileId || !me || me.id !== profileId) return NextResponse.redirect(`${back}?google=state_mismatch`);
 
   try {
     const { refreshToken, email } = await exchangeCode(code);
+    await getSettings(me.id);
     const { error } = await supabaseAdmin()
-      .from("rh_members")
-      .update({
-        google_refresh_token_enc: encryptToken(refreshToken),
-        google_email: email,
-        google_connected_at: new Date().toISOString(),
-      })
-      .eq("id", memberId);
+      .from("core_identities")
+      .upsert(
+        { profile_id: me.id, provider: "google_calendar", provider_uid: email ?? me.id, email, secret_enc: encryptToken(refreshToken), connected_at: new Date().toISOString() },
+        { onConflict: "profile_id,provider" },
+      );
     if (error) throw new Error(error.message);
   } catch (e) {
     console.error("google connect failed", e);
-    return NextResponse.redirect(`${me}?google=error`);
+    return NextResponse.redirect(`${back}?google=error`);
   }
-
-  // 連携直後: 今後の召集をカレンダーへ、カレンダーの予定を「不可」へ
-  await syncMemberUpcoming(memberId);
-  await importBusyAsUnavailable(memberId);
-  return NextResponse.redirect(`${me}?google=connected`);
+  await syncProfileUpcoming(me.id);
+  await importBusyAsUnavailable(me.id);
+  return NextResponse.redirect(`${back}?google=connected`);
 }
