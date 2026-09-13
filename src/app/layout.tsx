@@ -16,7 +16,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/" className="text-lg font-semibold tracking-wide">
               🎫 PUZZLIAR チケット
             </Link>
-            <nav className="text-sm text-neutral-400">
+            <nav className="flex gap-4 text-sm text-neutral-400">
+              <Link href="/me" className="hover:text-neutral-100">
+                稽古予定
+              </Link>
               <Link href="/login" className="hover:text-neutral-100">
                 関係者ログイン
               </Link>

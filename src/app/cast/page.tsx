@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAppUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -39,7 +40,9 @@ export default async function CastPage() {
   return (
     <div className="space-y-10">
       <h1 className="text-2xl font-bold">キャストダッシュボード</h1>
-      <p className="text-sm text-neutral-400">{user.displayName} さん</p>
+      <p className="text-sm text-neutral-400">
+        {user.displayName} さん ／ <Link href="/me" className="text-amber-400 hover:underline">稽古予定を見る</Link>
+      </p>
       {sections.length === 0 && (
         <p className="text-neutral-400">出演公演がまだ登録されていません。主催者にお問い合わせください。</p>
       )}
