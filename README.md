@@ -6,6 +6,7 @@
 - ドメインモデル・DB設計: [docs/domain-model.md](docs/domain-model.md)
 - 稽古・シフト管理 要件定義(質問事項つき): [docs/rehearsal-requirements.md](docs/rehearsal-requirements.md)(v0.2: 多主催者向け無料 SaaS 化)
 - 共通アカウント基盤(PUZZLIAR ID)設計案: [docs/account-platform.md](docs/account-platform.md)
+- 稽古管理 運用開始手順書: [docs/GO-LIVE-REHEARSAL.md](docs/GO-LIVE-REHEARSAL.md)
 - デプロイ手順: [docs/DEPLOY.md](docs/DEPLOY.md)
 
 ## 技術スタック
