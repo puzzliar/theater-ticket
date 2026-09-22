@@ -19,6 +19,9 @@ export default async function AdminHome() {
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-bold">主催ダッシュボード</h1>
+      <p className="text-sm">
+        <Link href="/admin/rehearsal" className="text-amber-400 hover:underline">🎭 稽古・シフト管理へ</Link>
+      </p>
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">公演</h2>
