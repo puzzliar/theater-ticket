@@ -73,9 +73,10 @@ export async function createOrganization(
 export async function createInvitation(
   orgId: string,
   actorProfileId: string,
-  input: { role: "admin" | "member"; part: Part | null; label: string; maxUses: number | null; days: number },
+  input: { role: "admin" | "member"; part: Part | null; label: string; maxUses: number | null; days: number; productionIds?: string[] },
 ): Promise<InvitationRow> {
-  const { data, error } = await supabaseAdmin()
+  const admin = supabaseAdmin();
+  const { data, error } = await admin
     .from("core_invitations")
     .insert({
       org_id: orgId,
@@ -89,15 +90,35 @@ export async function createInvitation(
     .select("*")
     .single();
   if (error) throw new OrgError(error.message);
-  await audit("invitation.create", { orgId, actorProfileId, target: data.id, detail: { role: input.role } });
+  // 招待で同時に参加させる公演(同一組織のものだけ受け付ける)
+  const productionIds = input.productionIds ?? [];
+  if (productionIds.length) {
+    const { data: prods } = await admin.from("rh_productions").select("id").eq("org_id", orgId).in("id", productionIds);
+    const valid = (prods ?? []).map((p) => p.id);
+    if (valid.length) await admin.from("rh_invitation_productions").insert(valid.map((pid) => ({ invitation_id: data.id, production_id: pid, org_id: orgId })));
+  }
+  await audit("invitation.create", { orgId, actorProfileId, target: data.id, detail: { role: input.role, productions: productionIds.length } });
   return data as InvitationRow;
 }
 
-export async function getInvitation(token: string): Promise<(InvitationRow & { org: OrganizationRow }) | null> {
-  const { data } = await supabaseAdmin().from("core_invitations").select("*, core_organizations(*)").eq("token", token).maybeSingle();
+export interface InvitationWithOrg extends InvitationRow {
+  org: OrganizationRow;
+  productions: { id: string; name: string }[];
+}
+
+export async function getInvitation(token: string): Promise<InvitationWithOrg | null> {
+  const { data } = await supabaseAdmin()
+    .from("core_invitations")
+    .select("*, core_organizations(*), rh_invitation_productions(rh_productions(id, name, status))")
+    .eq("token", token)
+    .maybeSingle();
   if (!data) return null;
-  const { core_organizations, ...inv } = data as InvitationRow & { core_organizations: OrganizationRow };
-  return { ...inv, org: core_organizations };
+  const { core_organizations, rh_invitation_productions, ...inv } = data as InvitationRow & {
+    core_organizations: OrganizationRow;
+    rh_invitation_productions: { rh_productions: { id: string; name: string; status: string } | null }[];
+  };
+  const productions = (rh_invitation_productions ?? []).map((r) => r.rh_productions).filter((p): p is { id: string; name: string; status: string } => Boolean(p) && p!.status !== "closed");
+  return { ...inv, org: core_organizations, productions };
 }
 
 export function invitationUsable(inv: InvitationRow): { ok: boolean; reason?: string } {
@@ -117,15 +138,26 @@ export async function acceptInvitation(token: string, profile: ProfileRow, part:
   if (inv.org.status !== "active") throw new OrgError("この組織は現在利用できません");
 
   const { data: existing } = await admin.from("core_org_members").select("*").eq("org_id", inv.org_id).eq("profile_id", profile.id).maybeSingle();
-  if (existing?.status === "active") return inv.org; // 既に所属
-  const role: OrgRole = existing?.role === "owner" ? "owner" : inv.role;
-  const { error } = await admin
-    .from("core_org_members")
-    .upsert({ org_id: inv.org_id, profile_id: profile.id, role, part, status: "active", joined_at: new Date().toISOString() }, { onConflict: "org_id,profile_id" });
-  if (error) throw new OrgError(error.message);
+  const alreadyMember = existing?.status === "active";
+  if (!alreadyMember) {
+    // 既存の owner を招待で降格させない
+    const role: OrgRole = existing?.role === "owner" ? "owner" : inv.role;
+    const { error } = await admin
+      .from("core_org_members")
+      .upsert({ org_id: inv.org_id, profile_id: profile.id, role, part, status: "active", joined_at: new Date().toISOString() }, { onConflict: "org_id,profile_id" });
+    if (error) throw new OrgError(error.message);
+  }
+  const participant = await ensureParticipant(inv.org_id, profile.id, profile.display_name, alreadyMember ? (existing!.part as Part) : part);
+  // 招待に紐づく公演へ参加(既に所属している人が別公演の招待を開いた場合も、その公演に追加される)
+  if (inv.productions.length) {
+    await admin.from("rh_production_members").upsert(
+      inv.productions.map((p) => ({ production_id: p.id, participant_id: participant.id, org_id: inv.org_id })),
+      { onConflict: "production_id,participant_id", ignoreDuplicates: true },
+    );
+  }
+  if (alreadyMember && inv.productions.length === 0) return inv.org; // 何も変わらない再訪問
   await admin.from("core_invitations").update({ used_count: inv.used_count + 1 }).eq("id", inv.id);
-  await ensureParticipant(inv.org_id, profile.id, profile.display_name, part);
-  await audit("member.join", { orgId: inv.org_id, actorProfileId: profile.id, target: inv.id, detail: { role, part } });
+  await audit("member.join", { orgId: inv.org_id, actorProfileId: profile.id, target: inv.id, detail: { role: alreadyMember ? existing!.role : inv.role, part, productions: inv.productions.map((p) => p.id) } });
   return inv.org;
 }
 

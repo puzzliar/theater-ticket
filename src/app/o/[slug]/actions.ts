@@ -93,6 +93,7 @@ export async function newInvitation(orgId: string, formData: FormData) {
     label: str(formData, "label"),
     maxUses: maxUses > 0 ? maxUses : null,
     days: Number(formData.get("days") ?? 14) || 14,
+    productionIds: list(formData, "production_ids"),
   });
   revalidatePath(`/o/${org.slug}/members`);
 }
@@ -183,6 +184,37 @@ export async function addProductionMember(orgId: string, productionId: string, f
     .upsert({ production_id: productionId, participant_id: participantId, org_id: orgId, role_name: str(formData, "role_name") }, { onConflict: "production_id,participant_id" });
   if (error) throw new Error(error.message);
   revalidatePath(`/o/${org.slug}/p/${productionId}`);
+}
+
+// 参加者を公演へ一括追加(公演ページのチェックボックス)
+export async function addProductionMembers(orgId: string, productionId: string, formData: FormData) {
+  const { org } = await requireOrgById(orgId, "admin");
+  const ids = list(formData, "participant_ids");
+  if (ids.length === 0) return;
+  const admin = supabaseAdmin();
+  const { data: valid } = await admin.from("rh_participants").select("id").eq("org_id", orgId).in("id", ids);
+  const rows = (valid ?? []).map((p) => ({ production_id: productionId, participant_id: p.id, org_id: orgId }));
+  if (rows.length) {
+    const { error } = await admin.from("rh_production_members").upsert(rows, { onConflict: "production_id,participant_id", ignoreDuplicates: true });
+    if (error) throw new Error(error.message);
+  }
+  revalidatePath(`/o/${org.slug}/p/${productionId}`);
+}
+
+// 1 人の参加者が所属する公演をまとめて設定(メンバー画面の参加者×公演)
+export async function setParticipantProductions(orgId: string, participantId: string, formData: FormData) {
+  const { org } = await requireOrgById(orgId, "admin");
+  const admin = supabaseAdmin();
+  const wanted = new Set(list(formData, "production_ids"));
+  const { data: prods } = await admin.from("rh_productions").select("id").eq("org_id", orgId).neq("status", "closed");
+  const { data: current } = await admin.from("rh_production_members").select("production_id").eq("participant_id", participantId).eq("org_id", orgId);
+  const currentSet = new Set((current ?? []).map((c) => c.production_id));
+  const toAdd = (prods ?? []).map((p) => p.id).filter((id) => wanted.has(id) && !currentSet.has(id));
+  const toRemove = (prods ?? []).map((p) => p.id).filter((id) => !wanted.has(id) && currentSet.has(id));
+  if (toAdd.length) await admin.from("rh_production_members").insert(toAdd.map((pid) => ({ production_id: pid, participant_id: participantId, org_id: orgId })));
+  if (toRemove.length) await admin.from("rh_production_members").delete().eq("participant_id", participantId).in("production_id", toRemove);
+  revalidatePath(`/o/${org.slug}/members`);
+  for (const pid of [...toAdd, ...toRemove]) revalidatePath(`/o/${org.slug}/p/${pid}`);
 }
 
 export async function removeProductionMember(orgId: string, productionId: string, participantId: string) {

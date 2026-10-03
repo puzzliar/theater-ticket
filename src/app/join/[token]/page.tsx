@@ -27,6 +27,12 @@ export default async function JoinPage({ params, searchParams }: { params: Promi
         <h1 className="text-2xl font-bold">{inv.org.name}</h1>
         {inv.label && <p className="text-sm text-neutral-400">{inv.label}</p>}
         <p className="mt-1 text-sm text-neutral-300">{inv.role === "admin" ? "管理者" : "メンバー"}として参加します。参加すると、この団体の稽古枠の召集や予定があなたの稽古予定に表示されます。</p>
+        {inv.productions.length > 0 && (
+          <p className="mt-2 text-sm text-neutral-300">
+            参加する公演: <span className="text-amber-300">{inv.productions.map((p) => p.name).join("、")}</span>
+            <span className="block text-xs text-neutral-500">すでにこの団体に参加している方も、この公演に追加されます。</span>
+          </p>
+        )}
       </div>
       {!usable.ok && <p className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{usable.reason}</p>}
       {sp.error && <p className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{sp.error}</p>}
