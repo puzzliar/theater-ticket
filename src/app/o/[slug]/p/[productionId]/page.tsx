@@ -6,7 +6,7 @@ import { checkAvailability, sceneProgress, type AvailabilityVerdict } from "@/li
 import { fmtDate, fmtRange, jstDateString, jstToIso, nowMs, ts } from "@/lib/rehearsal/time";
 import { SESSION_KIND_LABEL, SESSION_STATUS_LABEL, type ParticipantRow, type ProductionRow, type SceneRow, type SessionRow } from "@/lib/rehearsal/types";
 import { PART_LABEL } from "@/lib/core/types";
-import { addProductionMember, removeProductionMember, createScene, setSceneMembers, deleteScene, checkSessionSlot, createSession } from "../../actions";
+import { addProductionMember, addProductionMembers, removeProductionMember, createScene, setSceneMembers, deleteScene, checkSessionSlot, createSession } from "../../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -241,6 +241,17 @@ export default async function ProductionPage({ params, searchParams }: { params:
             </div>
           ))}
         </div>
+        {isAdmin && ((allParticipants ?? []) as ParticipantRow[]).some((p) => !memberIds.has(p.id)) && (
+          <form action={addProductionMembers.bind(null, org.id, productionId)} className="space-y-2 rounded-lg border border-neutral-800 bg-neutral-900 p-3">
+            <p className="text-sm font-medium">団体の参加者から一括で追加</p>
+            <div className="flex flex-wrap gap-3 text-xs">
+              {((allParticipants ?? []) as ParticipantRow[]).filter((p) => !memberIds.has(p.id)).map((p) => (
+                <label key={p.id} className="flex items-center gap-1"><input type="checkbox" name="participant_ids" value={p.id} />{p.display_name} <span className="text-neutral-500">({PART_LABEL[p.part]}{!p.profile_id ? "・未登録" : ""})</span></label>
+              ))}
+            </div>
+            <button className="rounded-md bg-neutral-700 px-3 py-2 text-sm hover:bg-neutral-600">チェックした参加者を追加</button>
+          </form>
+        )}
         {isAdmin && (
           <form action={addProductionMember.bind(null, org.id, productionId)} className="flex flex-wrap items-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 p-3">
             <select name="participant_id" required className={input}>
@@ -248,8 +259,8 @@ export default async function ProductionPage({ params, searchParams }: { params:
               {((allParticipants ?? []) as ParticipantRow[]).filter((p) => !memberIds.has(p.id)).map((p) => <option key={p.id} value={p.id}>{p.display_name} ({PART_LABEL[p.part]}{!p.profile_id ? "・未登録" : ""})</option>)}
             </select>
             <input name="role_name" placeholder="役名(任意)" className={input} />
-            <button className="rounded-md bg-neutral-700 px-3 py-2 text-sm hover:bg-neutral-600">参加させる</button>
-            <span className="text-xs text-neutral-500">団体への招待・仮メンバー登録は <Link href={`/o/${slug}/members`} className="underline">メンバー</Link></span>
+            <button className="rounded-md bg-neutral-700 px-3 py-2 text-sm hover:bg-neutral-600">役名つきで参加させる</button>
+            <span className="text-xs text-neutral-500">団体への招待（この公演を指定した招待リンクも発行できます）・仮メンバー登録は <Link href={`/o/${slug}/members`} className="underline">メンバー</Link></span>
           </form>
         )}
       </section>
