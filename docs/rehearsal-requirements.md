@@ -288,6 +288,7 @@ v0.1 からのモデル変更点:
 | Q27 | **共通基盤に組み込んだ稽古管理だけを先に出す**。チケット（`tk_`）は当面そのまま。`tk_organizations` の PUZZLIAR は同一 UUID で `core_organizations` に複製済み |
 | Q28 | フォーム＋メール、ベストエフォート |
 | A1 | LINE ログインは LINE Login v2.1（OIDC）を自前実装。Supabase セッションは magiclink の token_hash 検証で発行 |
+| Q29 | **稽古管理とチケット販売は共通アカウントだが、サービスとしては独立**（2026-10-04 決定）。別ドメイン・別 Vercel プロジェクトで配信し、稽古管理は独自のトップページを持つ。画面上の相互リンクは置かない。同一リポジトリ・同一 Supabase プロジェクトを使い、環境変数 `NEXT_PUBLIC_APP`（`rehearsal`／未設定＝`ticket`）でどちらのサービスとしてビルドされるかが決まる。`src/proxy.ts` が相手サービスのパスを遮断する（API は 404、画面はトップまたは相手サービスへ転送） |
 
 # 9. 段階計画（v0.2）
 
@@ -342,7 +343,7 @@ LINE 側は審査不要。LINE Developers でプロバイダーを 1 つ作り�
 
 | パス | 対象 | 内容 |
 |---|---|---|
-| `/rehearsal` | 公開 | サービス紹介 |
+| `/` | 公開 | サービス紹介（稽古管理の独立したトップページ。旧 `/rehearsal` は `/` へ転送） |
 | `/signup` `/login` `/auth/callback` | 全員 | メール／Google／LINE（任意）での登録・ログイン |
 | `/auth/line` `/auth/line/callback` | 全員 | LINE ログイン（自前 OIDC） |
 | `/onboarding` | 全員 | 表示名・規約同意・空き時間共有の同意・マーケティング同意 |
@@ -354,6 +355,8 @@ LINE 側は審査不要。LINE Developers でプロバイダーを 1 つ作り�
 | `/terms` `/privacy` | 公開 | 規約・プライバシーポリシー（ドラフト。法務レビュー前） |
 | `/api/ical/[token]` `/api/google/*` `/api/line/webhook` `/api/push/subscribe` `/api/me/export` `/api/cron/rehearsal-notify` | 連携 | v0.1 と同様（個人単位に変更） |
 
-環境変数（`.env.example`）: 既存に加え `ORG_CREATION_OPEN`、`LINE_LOGIN_CHANNEL_ID/SECRET`、`NEXT_PUBLIC_LINE_LOGIN_ENABLED`、`LINE_PUSH_MONTHLY_LIMIT`、`NEXT_PUBLIC_VAPID_PUBLIC_KEY`、`VAPID_PRIVATE_KEY`、`VAPID_SUBJECT`。
+配信形態（Q29）: 稽古管理は `NEXT_PUBLIC_APP=rehearsal` でビルドした独立したデプロイ（Vercel プロジェクト `puzzliar-rehearsal`、独自ドメイン）。チケット販売のデプロイ（`theater-ticket`、`ticket.puzzliar.jp`）では上記の稽古管理パスは提供されず、逆も同様。共通なのはアカウント（Supabase Auth・`core_` テーブル）と `/login` `/auth/callback` `/terms` `/privacy` の実装のみ。
+
+環境変数（`.env.example`）: 既存に加え `NEXT_PUBLIC_APP`、`ORG_CREATION_OPEN`、`LINE_LOGIN_CHANNEL_ID/SECRET`、`NEXT_PUBLIC_LINE_LOGIN_ENABLED`、`LINE_PUSH_MONTHLY_LIMIT`、`NEXT_PUBLIC_VAPID_PUBLIC_KEY`、`VAPID_PRIVATE_KEY`、`VAPID_SUBJECT`。
 
 運用開始前に必要なこと: Supabase Auth の Google プロバイダ（設定済み）とメール確認の設定、Resend の送信ドメイン、VAPID 鍵の生成、LINE チャネル、Google OAuth（9.1）、規約・ポリシーの法務レビュー、外部スケジューラで `/api/cron/rehearsal-notify` を定期実行。

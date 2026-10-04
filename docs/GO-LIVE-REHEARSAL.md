@@ -1,6 +1,6 @@
 # 🚀 稽古管理サービス 運用開始手順書（クローズド β 向け・操作手順版）
 
-> `docs/rehearsal-requirements.md` v0.2 で実装した稽古・シフト管理サービス（共通アカウント基盤つき）を、招待制のクローズド β として公開するための手順。チケット販売システムと同じ Next.js アプリ・同じ Supabase プロジェクトで動く。
+> `docs/rehearsal-requirements.md` v0.2 で実装した稽古・シフト管理サービス（共通アカウント基盤つき）を、招待制のクローズド β として公開するための手順。チケット販売システムと同じ GitHub リポジトリ・同じ Supabase プロジェクト（＝共通アカウント）を使うが、**別の Vercel プロジェクト・別ドメインで独立したサービスとして配信する**。
 >
 > 作成日: 2026-09-14 ／ 対象ブランチ: `claude/theater-rehearsal-management-xpzffv`
 >
@@ -12,11 +12,13 @@
 
 | # | 決めること | 例 | 使う場所 |
 |---|---|---|---|
-| 1 | 公開ドメイン | `app.puzzliar.jp` | A-3、B-1、F-3、G-1 のリダイレクト URL、`NEXT_PUBLIC_SITE_URL` |
+| 1 | 稽古管理の公開ドメイン | `keiko.puzzliar.jp` | A-2、A-3、A-5、B-1、F-3、G-1 のリダイレクト URL、`NEXT_PUBLIC_SITE_URL` |
 | 2 | 送信元メールアドレスと表示名 | `PUZZLIAR <noreply@puzzliar.jp>` | C、B-4、`EMAIL_FROM` |
 | 3 | 問い合わせ先 | `support@puzzliar.jp` | D、F-2、`VAPID_SUBJECT` |
 
-ドメインは 1 つだけ。`NEXT_PUBLIC_SITE_URL` が 1 値であり、Google／LINE のリダイレクト URI もこれに合わせるため。既に `ticket.puzzliar.jp` で公開済みで、稽古管理も同じ場所で出すならそれでよい。
+本書で `<ドメイン>` と書いてあるものはすべて**稽古管理のドメイン**を指す。
+
+稽古管理とチケット販売は**共通アカウント（同じ Supabase プロジェクト）だが別サービス**として配信する。チケット販売の `ticket.puzzliar.jp`（Vercel プロジェクト `theater-ticket`）とは別に、稽古管理専用の Vercel プロジェクト（本書では `puzzliar-rehearsal`）とドメインを用意する。両プロジェクトは同じ GitHub リポジトリの `main` から自動デプロイされ、環境変数 `NEXT_PUBLIC_APP` でどちらのサービスとして動くかが決まる（`rehearsal`＝稽古管理、未設定＝チケット）。片方のサービスの URL（例: 稽古管理ドメインの `/admin`）を開くと相手サービスのトップへ戻され、画面上に相互リンクは置かない。ログイン状態はドメインごとに別で、同じメールアドレス／Google アカウントで双方にログインできる。
 
 ### 0-2. 手元に用意するもの
 
@@ -53,18 +55,23 @@
 4. 作成された Pull Request ページで、下部の緑の **Merge pull request** → **Confirm merge** を押す
 5. 「Pull request successfully merged」と表示されれば完了。Vercel が `main` を自動でデプロイし始める（Vercel プロジェクト未作成なら A-2 で作ってからマージ後に再デプロイする）
 
-### A-2. Vercel プロジェクトを開く（未作成なら作る）
+### A-2. 稽古管理用の Vercel プロジェクトを作る
 
-**既にある場合**（`docs/DEPLOY.md` で作成済み）: https://vercel.com/dashboard を開き、プロジェクト一覧から `theater-ticket` をクリック。
+チケット販売用の `theater-ticket` プロジェクトはそのまま残し、**同じリポジトリから 2 つ目のプロジェクト**を作る。
 
-**無い場合**:
-1. https://vercel.com/new を開く
-2. 「Import Git Repository」の一覧で `puzzliar/theater-ticket` の右の **Import** を押す（一覧に無ければ「Adjust GitHub App Permissions」からリポジトリへのアクセスを許可する）
-3. Framework Preset が **Next.js** になっていることを確認（自動検出）。Root Directory は `./` のまま
-4. **Environment Variables** の欄を開き、A-3 の「必須」の変数を 1 行ずつ入れる（Key と Value を入力して **Add**）
-5. **Deploy** を押す。数分で「Congratulations!」が出る
+1. https://vercel.com/new を開く（チーム `puzzliar's projects` が選ばれていることを左上で確認）
+2. 「Import Git Repository」の一覧で `puzzliar/theater-ticket` の右の **Import** を押す（既に `theater-ticket` で使っているリポジトリでも、もう一度 Import できる）
+3. **Project Name** を `puzzliar-rehearsal` に書き換える
+4. Framework Preset が **Next.js** になっていることを確認（自動検出）。Root Directory は `./` のまま
+5. **Environment Variables** の欄を開き、まず Key `NEXT_PUBLIC_APP`、Value `rehearsal` を入れて **Add**。続けて A-3 の「必須」の変数を 1 行ずつ入れる
+6. **Deploy** を押す。数分で「Congratulations!」が出る
+7. 以降の A-3〜A-6 はこの `puzzliar-rehearsal` プロジェクトに対して行う。https://vercel.com/dashboard のプロジェクト一覧から `puzzliar-rehearsal` をクリックして開く
+
+> `theater-ticket` 側には `NEXT_PUBLIC_APP` を**設定しない**（未設定＝チケット販売として動く）。設定すると `ticket.puzzliar.jp` が稽古管理に変わってしまう。
 
 ### A-3. 環境変数を登録する
+
+以下は稽古管理プロジェクト（`puzzliar-rehearsal`）に登録する。チケット側（`theater-ticket`）の環境変数は変更しない。
 
 1. Vercel のプロジェクト画面上部のタブ **Settings** をクリック
 2. 左メニュー **Environment Variables** をクリック
@@ -75,12 +82,13 @@
 
 | Key | Value | 備考 |
 |---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://wiqnmebudaadwqdaxwko.supabase.co` | 設定済みのはず |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | B-0 で確認する `anon` キー | 設定済みのはず |
-| `SUPABASE_SERVICE_ROLE_KEY` | B-0 で確認する `service_role` キー | 設定済みのはず。**秘匿** |
+| `NEXT_PUBLIC_APP` | `rehearsal` | **稽古管理プロジェクトのみ**。これで `/` が稽古管理のトップページになり、チケット機能は提供されなくなる |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://wiqnmebudaadwqdaxwko.supabase.co` | チケットと同じ（共通アカウント） |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | B-0 で確認する `anon` キー | チケットと同じ |
+| `SUPABASE_SERVICE_ROLE_KEY` | B-0 で確認する `service_role` キー | チケットと同じ。**秘匿** |
 | `NEXT_PUBLIC_SITE_URL` | `https://<ドメイン>` | **末尾に `/` を付けない** |
 | `RESEND_API_KEY` | C-3 で取得 | C を終えてから登録 |
-| `EMAIL_FROM` | `PUZZLIAR <noreply@puzzliar.jp>` | 既存値「PUZZLIAR チケット <…>」から変更する（稽古管理の通知にも使うため） |
+| `EMAIL_FROM` | `PUZZLIAR 稽古管理 <noreply@puzzliar.jp>` | 稽古管理の通知の送信元。チケット側の `EMAIL_FROM` は別プロジェクトなので変更不要 |
 | `CRON_SECRET` | A-4 で生成したランダム文字列 | H-1 で同じ値を使う |
 | `ORG_CREATION_OPEN` | `false` | 招待制 |
 | `LINE_PUSH_MONTHLY_LIMIT` | `200` | |
@@ -113,14 +121,14 @@ Windows で `openssl` が無い場合は PowerShell で:
 ### A-5. ドメインを接続する
 
 1. Vercel プロジェクト → **Settings** → 左メニュー **Domains**
-2. 入力欄に `<ドメイン>`（例: `app.puzzliar.jp`）を入力し **Add** を押す
+2. 入力欄に `<ドメイン>`（例: `keiko.puzzliar.jp`）を入力し **Add** を押す
 3. 「Add domain」のダイアログで既定のまま **Add** を押す
 4. 一覧に追加されたドメインの下に「Invalid Configuration」と DNS の指示が出る。表示された **CNAME** の値（通常 `cname.vercel-dns.com`）を控える
 5. DNS 管理画面（例: お名前.com の「DNS 設定／レコード追加」、Cloudflare なら **DNS → Records → Add record**）で次を追加して保存:
 
 ```
 種別: CNAME
-ホスト名(名前): app        ← <ドメイン> のサブドメイン部分
+ホスト名(名前): keiko      ← <ドメイン> のサブドメイン部分
 値(ターゲット): cname.vercel-dns.com
 TTL: 自動 または 3600
 ```
@@ -133,8 +141,10 @@ TTL: 自動 または 3600
 1. Vercel プロジェクト → 上部タブ **Deployments**
 2. 一番上のデプロイ行の右端 **…** → **Redeploy** → ダイアログで **Redeploy**
 3. Status が **Ready** になったら、ブラウザで次を開く
-   - `https://<ドメイン>/rehearsal` → 「今日、どこに行けばいいか。」の紹介ページ
-   - `https://<ドメイン>/login` → 「Google でログイン」ボタンがある
+   - `https://<ドメイン>/` → 「今日、どこに行けばいいか。」の紹介ページ（ヘッダーが「🎭 PUZZLIAR 稽古管理」）
+   - `https://<ドメイン>/login` → 「Google でログイン」ボタンと「新規登録」リンクがある
+   - `https://<ドメイン>/admin` → トップページに戻される（チケット機能は稽古管理では提供しない）
+   - `https://ticket.puzzliar.jp/` → 従来どおり「公演一覧」。ヘッダーに稽古管理へのリンクが**無い**ことを確認
    - `https://<ドメイン>/terms` と `/privacy` → 文章が表示される
 
 ---
@@ -150,13 +160,15 @@ TTL: 自動 または 3600
 ### B-1. URL 設定（最重要）
 
 1. https://supabase.com/dashboard/project/wiqnmebudaadwqdaxwko/auth/url-configuration を開く（左メニュー **Authentication** → **URL Configuration** でも同じ）
-2. **Site URL** の欄を `https://<ドメイン>` に書き換え → **Save**
+2. **Site URL** の欄を `https://<ドメイン>` に書き換え → **Save**（メールのリンクが既定で向く先。稽古管理を指定する）
 3. **Redirect URLs** の **Add URL** を押し、次を 1 つずつ追加して **Save**:
    - `https://<ドメイン>/auth/callback`
    - `https://<ドメイン>/**`
+   - `https://ticket.puzzliar.jp/auth/callback`（チケット側でも同じアカウントで Google ログインを使うため）
+   - `https://ticket.puzzliar.jp/**`
    - `http://localhost:3000/**`（ローカル確認用）
 
-ここが未登録だと、Google ログインやメール確認リンクの後に `/login?error=auth` へ戻される。
+ここが未登録だと、Google ログインやメール確認リンクの後に `/login?error=auth` へ戻される。Supabase の Auth 設定は 1 プロジェクトに 1 つなので、両サービスのドメインをここにまとめて登録する。
 
 ### B-2. Google ログインの確認（設定済みのはず）
 
@@ -303,7 +315,7 @@ abc...（長い文字列）
 | アプリ名 | PUZZLIAR 稽古管理 |
 | ユーザーサポートメール | support@puzzliar.jp |
 | アプリのロゴ | 任意（設定すると審査対象が増えるので β では空でよい） |
-| アプリのホームページ | `https://<ドメイン>/rehearsal` |
+| アプリのホームページ | `https://<ドメイン>/` |
 | アプリのプライバシーポリシー | `https://<ドメイン>/privacy` |
 | アプリの利用規約 | `https://<ドメイン>/terms` |
 | 承認済みドメイン | `puzzliar.jp`（**ドメインを追加** を押して入力） |
@@ -492,7 +504,7 @@ update core_profiles set is_platform_admin = true where email = '<メールア�
 | 11 | A | 稽古枠詳細 → シーン `1-1` を **実施** → 「保存と同時に完了にする」にチェック → **記録を保存** | プロダクション画面のシーン進捗が `1 / 1`、「未消化 0」「全シーン一巡済み」 |
 | 12 | B | `/me/settings` → **Google カレンダーと連携する**（F 設定後） | Google カレンダーに `[稽古] テスト劇団 秋公演` が入る |
 | 13 | B | `/me/settings` → 「自分の予定・出欠・空き時間を CSV でダウンロード」 | CSV が保存される |
-| 14 | B | `/me/settings` → **アカウントを削除(退会)** → `退会` と入力 → **退会する** | `/rehearsal?deleted=1`。A の **メンバー** から B が消え、参加者台帳に「退会済みユーザー」 |
+| 14 | B | `/me/settings` → **アカウントを削除(退会)** → `退会` と入力 → **退会する** | `https://<ドメイン>/?deleted=1`（「退会が完了しました」）。A の **メンバー** から B が消え、参加者台帳に「退会済みユーザー」 |
 
 14 の後、B は同じメールで再登録できる。テスト劇団は A の `/o/test-troupe/settings` → **アーカイブする** で片付ける。
 
@@ -517,10 +529,10 @@ update core_profiles set is_platform_admin = true where email = '<メールア�
 
 1. F-5 の審査が承認されたら、Google Auth Platform の **対象** → **本番環境に公開**
 2. Vercel → Settings → Environment Variables → `ORG_CREATION_OPEN` を **Edit** → `true` → **Save** → A-6 の Redeploy
-3. `src/app/rehearsal/page.tsx` の「現在はクローズド β として招待制で運用しています…」の段落を削除または書き換え（D-2 と同じ GitHub 上の編集手順）
+3. `src/components/RehearsalLanding.tsx` の「現在はクローズド β として招待制で運用しています…」の段落を削除または書き換え（D-2 と同じ GitHub 上の編集手順）
 4. LINE: G-4 の画面でプランを見直し、`LINE_PUSH_MONTHLY_LIMIT` を合わせる
 5. Supabase: B-5 の Rate Limits と Resend の上限（https://resend.com/settings/billing）を利用者数に合わせる
-6. `/rehearsal` と `/privacy` に問い合わせ先を明記する
+6. トップページ（`/`）と `/privacy` に問い合わせ先を明記する
 
 ---
 
@@ -569,7 +581,8 @@ where channel = 'line' and sent_at >= date_trunc('month', now() at time zone 'As
 
 | Key | 必須 | 用途 | 取得箇所 |
 |---|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` `NEXT_PUBLIC_SUPABASE_ANON_KEY` `SUPABASE_SERVICE_ROLE_KEY` | 必須 | DB・認証 | B-0 |
+| `NEXT_PUBLIC_APP` | 必須 | `rehearsal`＝稽古管理として配信（未設定＝チケット販売） | A-2 |
+| `NEXT_PUBLIC_SUPABASE_URL` `NEXT_PUBLIC_SUPABASE_ANON_KEY` `SUPABASE_SERVICE_ROLE_KEY` | 必須 | DB・認証（チケットと共通） | B-0 |
 | `NEXT_PUBLIC_SITE_URL` | 必須 | 公開 URL | 0-1 |
 | `RESEND_API_KEY` `EMAIL_FROM` | 必須 | メール通知 | C-3 |
 | `CRON_SECRET` | 必須 | 定時通知の保護 | A-4 |
@@ -586,17 +599,17 @@ where channel = 'line' and sent_at >= date_trunc('month', now() at time zone 'As
 | 登録先 | 画面 | 値 |
 |---|---|---|
 | Supabase | Authentication → URL Configuration → Site URL | `https://<ドメイン>` |
-| Supabase | 同 → Redirect URLs | `https://<ドメイン>/auth/callback`、`https://<ドメイン>/**` |
+| Supabase | 同 → Redirect URLs | `https://<ドメイン>/auth/callback`、`https://<ドメイン>/**`、`https://ticket.puzzliar.jp/auth/callback`、`https://ticket.puzzliar.jp/**` |
 | Google Cloud | クライアント → 承認済みのリダイレクト URI | `https://<ドメイン>/api/google/callback`、`https://wiqnmebudaadwqdaxwko.supabase.co/auth/v1/callback` |
-| Google Cloud | ブランディング → ホームページ／プライバシー／規約 | `https://<ドメイン>/rehearsal`、`/privacy`、`/terms` |
+| Google Cloud | ブランディング → ホームページ／プライバシー／規約 | `https://<ドメイン>/`、`/privacy`、`/terms` |
 | LINE Developers | Messaging API 設定 → Webhook URL | `https://<ドメイン>/api/line/webhook` |
 | LINE Developers | LINE ログイン設定 → コールバック URL | `https://<ドメイン>/auth/line/callback` |
 | cron-job.org | Job URL | `https://<ドメイン>/api/cron/rehearsal-notify`（Header `Authorization: Bearer <CRON_SECRET>`） |
 
 ## 付録 3. 公開前チェックリスト
 
-- [ ] A-1 `main` にマージ済み ／ A-5 ドメインが Valid Configuration ／ A-6 `/rehearsal` が開く
-- [ ] A-3 必須 11 変数を登録。`EMAIL_FROM` を汎用名に変更
+- [ ] A-1 `main` にマージ済み ／ A-2 `puzzliar-rehearsal` プロジェクト作成（`NEXT_PUBLIC_APP=rehearsal`） ／ A-5 ドメインが Valid Configuration ／ A-6 トップページが開き、`ticket.puzzliar.jp` は従来どおり
+- [ ] A-3 必須 12 変数を稽古管理プロジェクトに登録
 - [ ] B-1 Site URL と Redirect URLs ／ B-3 Confirm email ON ／ B-5 Custom SMTP ON
 - [ ] C-2 Resend Domain が Verified ／ C-4 Click Tracking Disabled
 - [ ] D 規約・ポリシー確定、運営者情報記載、`TERMS_VERSION` 更新

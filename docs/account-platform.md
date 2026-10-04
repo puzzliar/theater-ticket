@@ -193,6 +193,13 @@ create policy rh_productions_admin_write on rh_productions
 
 - 各サービスの業務データ（稽古枠、注文、商品）は共有しない。相互参照が必要な場合は**契約ビュー**（`tk_ticket_sales_by_cast_v1` のような読み取り専用ビュー）で提供する既存方針を維持
 
+## 6.5 配信形態（2026-10-04 追加）
+
+- **アカウントは共通、サービスは独立**。稽古管理とチケット販売は同じ Supabase プロジェクト（`auth.users`・`core_`）を使うが、別ドメイン・別 Vercel プロジェクトで配信し、それぞれ独自のトップページを持つ。画面上の相互リンクは置かない
+- 同一リポジトリを環境変数 `NEXT_PUBLIC_APP`（`rehearsal`／未設定＝`ticket`）で切り替える（`src/lib/app.ts`）。`src/proxy.ts` が相手サービスのパスを遮断し、`/login` `/auth/callback` `/terms` `/privacy` のみ両サービスで同じ実装を共有する
+- ログインセッション（Cookie）はドメインごとに独立する。利用者は同じメールアドレス／Google アカウントで双方にログインできるが、片方でログインしても相手側は未ログインのまま。Supabase Auth の Redirect URLs には両サービスのドメインを登録する
+- 将来の物販システムも同じ方式（3 つ目の `NEXT_PUBLIC_APP` 値、または別リポジトリ＋同じ Supabase プロジェクト）で追加できる
+
 # 7. 移行計画（フェーズ A）
 
 1. `core_` テーブルと関数を作成

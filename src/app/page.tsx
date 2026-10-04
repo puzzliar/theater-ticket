@@ -1,10 +1,23 @@
 import Link from "next/link";
+import { IS_REHEARSAL } from "@/lib/app";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { fmtDateTime } from "@/lib/format";
+import { getSessionUser } from "@/lib/core/session";
+import RehearsalLanding from "@/components/RehearsalLanding";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
+// トップページはサービスごとに異なる。稽古管理デプロイでは独立したサービス紹介、チケットデプロイでは公演一覧
+export default async function HomePage({ searchParams }: { searchParams: Promise<{ deleted?: string }> }) {
+  if (IS_REHEARSAL) {
+    const sp = await searchParams;
+    const me = await getSessionUser();
+    return <RehearsalLanding me={me} deleted={Boolean(sp.deleted)} />;
+  }
+  return <TicketHome />;
+}
+
+async function TicketHome() {
   const admin = supabaseAdmin();
   const { data: events } = await admin
     .from("tk_events")
