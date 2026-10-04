@@ -1,6 +1,8 @@
 # 🚀 デプロイ手順(Vercel + ticket.puzzliar.jp)
 
 本アプリを `puzzliar.jp` 配下(推奨: `ticket.puzzliar.jp`)で公開するための手順。
+
+> **2026-10-04 追記**: 本書は**チケット販売サービス**(Vercel プロジェクト `theater-ticket`)の手順。同じリポジトリから稽古管理を別サービスとして配信する手順は [GO-LIVE-REHEARSAL.md](GO-LIVE-REHEARSAL.md) を参照。`theater-ticket` プロジェクトには環境変数 `NEXT_PUBLIC_APP` を**設定しない**(未設定＝チケット販売として動く)。
 コード側の準備(ビルド確認・Cron設定・環境変数テンプレート)は完了済み。以下の3ステップで公開できます。
 
 ## Step 1. Vercel プロジェクト作成(約3分)

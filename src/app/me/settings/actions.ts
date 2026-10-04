@@ -97,7 +97,7 @@ export async function deleteMyAccount(formData: FormData) {
   await deleteAccount(me.id);
   const supa = await supabaseServer();
   await supa.auth.signOut();
-  redirect("/rehearsal?deleted=1");
+  redirect("/?deleted=1");
 }
 
 export async function signOut() {
