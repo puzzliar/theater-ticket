@@ -12,12 +12,12 @@ export default async function OrgLayout({ children, params }: { children: React.
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-800 pb-3">
         <div>
-          <p className="text-xs text-neutral-500"><Link href="/me" className="hover:text-neutral-300">← 自分の予定</Link></p>
+          <p className="text-xs text-neutral-500"><Link href="/me" className="hover:text-neutral-300">← マイスケジュール</Link>{org.kind === "personal" && <span className="ml-2 rounded bg-amber-500/20 px-1.5 py-0.5 text-amber-300">セルフ公演</span>}</p>
           <h1 className="text-xl font-bold">{org.name}</h1>
         </div>
         <nav className="flex flex-wrap gap-1 text-sm text-neutral-300">
-          <Link href={`/o/${slug}`} className={link}>プロダクション</Link>
-          <Link href={`/o/${slug}/members`} className={link}>メンバー</Link>
+          <Link href={`/o/${slug}`} className={link}>公演</Link>
+          <Link href={`/o/${slug}/members`} className={link}>{org.kind === "personal" ? "共演者・招待" : "メンバー"}</Link>
           {isAdmin && <Link href={`/o/${slug}/availability`} className={link}>空き時間</Link>}
           {isAdmin && <Link href={`/o/${slug}/settings`} className={link}>設定</Link>}
         </nav>

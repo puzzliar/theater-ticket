@@ -1,6 +1,6 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { fmtDate, fmtTime, overlaps, ts } from "./time";
+import { fmtDate, fmtTime, jstDateString, overlaps, ts } from "./time";
 import { SESSION_KIND_LABEL, type SessionKind, type SessionStatus, type Response, type SceneProgressRow } from "./types";
 
 // 個人の予定(全組織横断)と、予定(稽古・本番)に対する参加可否判定。
@@ -21,6 +21,8 @@ export interface MemberSession {
   location: string;
   note: string;
   status: SessionStatus;
+  tentative: boolean;
+  respondBy: string | null;
   response: Response;
   required: boolean;
   scenes: { code: string; name: string }[];
@@ -42,13 +44,15 @@ type Row = {
     location: string;
     note: string;
     status: SessionStatus;
+    tentative: boolean;
+    respond_by: string | null;
     rh_productions: { name: string; core_organizations: { slug: string; name: string } | null } | null;
     rh_session_scenes: { rh_scenes: { code: string; name: string; sort_order: number } | null }[];
   };
 };
 
 const SELECT =
-  "participant_id, required, response, rh_participants!inner(profile_id), rh_sessions!inner(id, org_id, production_id, kind, title, starts_at, ends_at, location, note, status, rh_productions(name, core_organizations(slug, name)), rh_session_scenes(rh_scenes(code, name, sort_order)))";
+  "participant_id, required, response, rh_participants!inner(profile_id), rh_sessions!inner(id, org_id, production_id, kind, title, starts_at, ends_at, location, note, status, tentative, respond_by, rh_productions(name, core_organizations(slug, name)), rh_session_scenes(rh_scenes(code, name, sort_order)))";
 
 function toMemberSession(r: Row): MemberSession {
   return {
@@ -66,6 +70,8 @@ function toMemberSession(r: Row): MemberSession {
     location: r.rh_sessions.location,
     note: r.rh_sessions.note,
     status: r.rh_sessions.status,
+    tentative: r.rh_sessions.tentative,
+    respondBy: r.rh_sessions.respond_by,
     response: r.response,
     required: r.required,
     scenes: r.rh_sessions.rh_session_scenes
@@ -111,6 +117,7 @@ export async function checkAvailability(
   startIso: string,
   endIso: string,
   excludeSessionId?: string,
+  productionId?: string,
 ): Promise<Map<string, AvailabilityVerdict>> {
   const result = new Map<string, AvailabilityVerdict>();
   if (participantIds.length === 0) return result;
@@ -120,25 +127,36 @@ export async function checkAvailability(
   const participants = (parts ?? []) as { id: string; org_id: string; profile_id: string | null }[];
   const profileIds = [...new Set(participants.map((p) => p.profile_id).filter((x): x is string => Boolean(x)))];
 
-  const [{ data: avail }, { data: booked }] = profileIds.length
+  const dayStart = jstDateString(new Date(startIso));
+  const dayEnd = jstDateString(new Date(new Date(endIso).getTime() - 1));
+  const [{ data: avail }, { data: booked }, { data: blocks }] = profileIds.length
     ? await Promise.all([
         admin.from("rh_availability").select("profile_id, starts_at, ends_at, status, note").in("profile_id", profileIds).lt("starts_at", endIso).gt("ends_at", startIso),
         admin
           .from("rh_session_members")
-          .select("participant_id, response, rh_participants!inner(profile_id, org_id), rh_sessions!inner(id, org_id, starts_at, ends_at, status, rh_productions(name))")
+          .select("participant_id, response, rh_participants!inner(profile_id, org_id), rh_sessions!inner(id, org_id, starts_at, ends_at, status, tentative, rh_productions(name))")
           .in("rh_participants.profile_id", profileIds)
           .neq("response", "no")
           .lt("rh_sessions.starts_at", endIso)
           .gt("rh_sessions.ends_at", startIso),
+        // 本番期間ブロック: 所属する公演の block_from〜block_to に当たる日は他現場として扱う
+        admin
+          .from("rh_production_members")
+          .select("production_id, rh_participants!inner(profile_id), rh_productions!inner(id, org_id, name, block_from, block_to)")
+          .in("rh_participants.profile_id", profileIds)
+          .not("rh_productions.block_from", "is", null)
+          .lte("rh_productions.block_from", dayEnd)
+          .gte("rh_productions.block_to", dayStart),
       ])
-    : [{ data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }];
 
   type Booked = {
     participant_id: string;
     response: Response;
     rh_participants: { profile_id: string; org_id: string };
-    rh_sessions: { id: string; org_id: string; starts_at: string; ends_at: string; status: SessionStatus; rh_productions: { name: string } | null };
+    rh_sessions: { id: string; org_id: string; starts_at: string; ends_at: string; status: SessionStatus; tentative: boolean; rh_productions: { name: string } | null };
   };
+  type Block = { production_id: string; rh_participants: { profile_id: string }; rh_productions: { id: string; org_id: string; name: string; block_from: string; block_to: string } };
 
   for (const p of participants) {
     if (!p.profile_id) {
@@ -153,14 +171,22 @@ export async function checkAvailability(
         overlaps(b.rh_sessions.starts_at, b.rh_sessions.ends_at, startIso, endIso),
     );
     if (conflicts.length > 0) {
-      const c = conflicts[0];
+      // 確定を優先して表示。仮押さえ同士なら「仮」と明示する
+      const c = conflicts.find((x) => !x.rh_sessions.tentative) ?? conflicts[0];
       const sameOrg = c.rh_sessions.org_id === p.org_id;
+      const tent = c.rh_sessions.tentative ? "(仮)" : "";
       result.set(p.id, {
         status: "conflict",
         detail: sameOrg
-          ? `重複: ${c.rh_sessions.rh_productions?.name ?? ""} ${fmtTime(c.rh_sessions.starts_at)}〜${fmtTime(c.rh_sessions.ends_at)}`
-          : `他現場 ${fmtTime(c.rh_sessions.starts_at)}〜${fmtTime(c.rh_sessions.ends_at)}`,
+          ? `重複${tent}: ${c.rh_sessions.rh_productions?.name ?? ""} ${fmtTime(c.rh_sessions.starts_at)}〜${fmtTime(c.rh_sessions.ends_at)}`
+          : `他現場${tent} ${fmtTime(c.rh_sessions.starts_at)}〜${fmtTime(c.rh_sessions.ends_at)}`,
       });
+      continue;
+    }
+    const block = ((blocks ?? []) as unknown as Block[]).find((b) => b.rh_participants.profile_id === p.profile_id && b.production_id !== productionId);
+    if (block) {
+      const sameOrg = block.rh_productions.org_id === p.org_id;
+      result.set(p.id, { status: "conflict", detail: sameOrg ? `本番期間: ${block.rh_productions.name}` : "他現場(本番期間)" });
       continue;
     }
     const mine = (avail ?? []).filter((a) => a.profile_id === p.profile_id && overlaps(a.starts_at, a.ends_at, startIso, endIso));

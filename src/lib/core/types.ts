@@ -2,7 +2,7 @@
 
 export type OrgRole = "owner" | "admin" | "member";
 export type Part = "cast" | "staff" | "director" | "organizer";
-export type OrgKind = "troupe" | "producer" | "individual" | "other";
+export type OrgKind = "troupe" | "producer" | "individual" | "other" | "personal";
 
 export interface ProfileRow {
   id: string;
@@ -91,6 +91,7 @@ export const ORG_KIND_LABEL: Record<OrgKind, string> = {
   producer: "制作会社・団体",
   individual: "個人主催",
   other: "その他",
+  personal: "個人(セルフ公演)",
 };
 
 export function isAdminRole(role: OrgRole | null | undefined): boolean {

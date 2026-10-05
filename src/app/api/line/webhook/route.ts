@@ -5,6 +5,7 @@ import { listProfileSessions, sessionLine } from "@/lib/rehearsal/schedule";
 import { applySubstitution, openSubstitutionsFor, respondToSession, RehearsalError } from "@/lib/rehearsal/core";
 import { addDays, fmtDateLabel, jstDateString, jstDayRange, fmtRange } from "@/lib/rehearsal/time";
 import { SITE_URL } from "@/lib/constants";
+import { computeDayStatuses, formatAvailabilityText, normalizeOptions } from "@/lib/rehearsal/availability-text";
 
 // LINE Messaging API Webhook(要件 5.8)。返信(reply)は無料なので問い合わせ型の機能はすべてここで提供する。
 // 本人特定は core_identities(provider=line)。LINE ログインで登録した人は自動で紐づき、
@@ -13,6 +14,7 @@ import { SITE_URL } from "@/lib/constants";
 const HELP = [
   "使えるメッセージ:",
   "「今日」「明日」「今週」…予定を表示",
+  "「空き」…2 週間の空き状況を ○×△ で返す(主催者への返事に貼れます)。「空き 30」で日数指定",
   "「参加」「不参加」…直近の未回答の召集に回答(複数ある場合は「参加 2」のように番号指定)",
   "「入れます」…募集中の代役に応募(複数ある場合は「入れます 2」)",
   "「連携 123456」…アカウント連携(コードは Web の設定画面で発行)",
@@ -89,6 +91,14 @@ async function handle(ev: LineWebhookEvent, lineUserId: string): Promise<string 
   if (/^(今日|きょう|today)$/i.test(text)) return scheduleText(profileId, today, 1, "今日");
   if (/^(明日|あした|tomorrow)$/i.test(text)) return scheduleText(profileId, addDays(today, 1), 1, "明日");
   if (/^(今週|こんしゅう|week)$/i.test(text)) return scheduleText(profileId, today, 7, "今週(7日間)");
+  const avail = text.match(/^(空き|あき|空き状況|空き日程)\s*(\d+)?$/);
+  if (avail) {
+    const days = Math.min(62, Math.max(1, Number(avail[2] ?? 14) || 14));
+    const opts = normalizeOptions({ fromDate: today, toDate: addDays(today, days - 1) }, today);
+    const { data: prof } = await admin.from("core_profiles").select("display_name").eq("id", profileId).maybeSingle();
+    const statuses = await computeDayStatuses(profileId, opts);
+    return formatAvailabilityText(prof?.display_name ?? "", statuses, opts) + `\n期間や時間帯を変える: ${SITE_URL}/me/availability`;
+  }
 
   const resp = text.match(/^(参加|不参加|未定|yes|no|maybe)\s*(\d+)?$/i);
   if (resp) {

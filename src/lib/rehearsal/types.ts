@@ -17,6 +17,10 @@ export interface ProductionRow {
   default_location: string;
   rehearsal_starts_on: string | null;
   opens_on: string | null;
+  closes_on: string | null;
+  // この期間(小屋入り〜終演など)は他現場の予定を入れない。参加可否判定で「他現場(本番期間)」になる
+  block_from: string | null;
+  block_to: string | null;
   note: string;
   created_at: string;
 }
@@ -54,6 +58,9 @@ export interface SessionRow {
   location: string;
   note: string;
   status: SessionStatus;
+  // 仮押さえ(本決まり前)。respond_by は返答期限
+  tentative: boolean;
+  respond_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -109,6 +116,69 @@ export interface SceneProgressRow {
   last_done_at: string | null;
 }
 
+export interface AvailabilityShareRow {
+  id: string;
+  profile_id: string;
+  token: string;
+  label: string;
+  from_date: string;
+  to_date: string;
+  window_from: string;
+  window_to: string;
+  empty_mark: "○" | "−";
+  expires_at: string;
+  revoked_at: string | null;
+  created_at: string;
+}
+
+export interface ProductionTransferRow {
+  id: string;
+  token: string;
+  production_id: string;
+  from_org_id: string;
+  to_org_id: string | null;
+  created_by: string | null;
+  accepted_by: string | null;
+  expires_at: string;
+  accepted_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+}
+
+export type CreditKind = "stage" | "immersive" | "film" | "tv" | "voice" | "dance" | "music" | "other";
+
+export interface PublicProfileRow {
+  profile_id: string;
+  handle: string;
+  is_public: boolean;
+  headline: string;
+  bio: string;
+  photo_url: string | null;
+  links: Record<string, string>;
+  show_upcoming: boolean;
+  updated_at: string;
+  created_at: string;
+}
+
+export interface CreditRow {
+  id: string;
+  profile_id: string;
+  production_id: string | null;
+  source: "auto" | "manual";
+  title: string;
+  role_name: string;
+  org_name: string;
+  kind: CreditKind;
+  started_on: string | null;
+  ended_on: string | null;
+  venue: string;
+  url: string;
+  note: string;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ProfileSettingsRow {
   profile_id: string;
   ical_token: string;
@@ -129,6 +199,7 @@ export const RESPONSE_LABEL: Record<Response, string> = { pending: "未回答", 
 export const ATTENDANCE_LABEL: Record<Attendance, string> = { unknown: "-", present: "出席", absent: "欠席", late: "遅刻" };
 export const PRODUCTION_STATUS_LABEL: Record<ProductionRow["status"], string> = { planning: "準備中", rehearsing: "稽古中", running: "公演中", closed: "終了" };
 export const CHANNEL_LABEL: Record<NotifyChannel, string> = { line: "LINE", webpush: "プッシュ通知", email: "メール", none: "送らない" };
+export const CREDIT_KIND_LABEL: Record<CreditKind, string> = { stage: "舞台", immersive: "イマーシブ", film: "映画", tv: "テレビ・配信", voice: "声", dance: "ダンス", music: "音楽", other: "その他" };
 export const NOTIFY_KIND_LABEL: Record<NotifyKind, string> = {
   digest: "毎朝の予定",
   reminder: "前日リマインド",
