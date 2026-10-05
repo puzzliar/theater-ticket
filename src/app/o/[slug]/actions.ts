@@ -10,6 +10,8 @@ import { claimParticipant, ensureParticipant } from "@/lib/rehearsal/profile";
 import { jstToIso } from "@/lib/rehearsal/time";
 import { notifySessionMembers, openSubstitution, fillSubstitution } from "@/lib/rehearsal/core";
 import { syncSession, removeEventForParticipant } from "@/lib/rehearsal/google-sync";
+import { createTransfer, revokeTransfer, TransferError } from "@/lib/rehearsal/transfer";
+import type { ParsedKind } from "@/lib/rehearsal/parse-schedule";
 import type { SessionKind } from "@/lib/rehearsal/types";
 
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
@@ -168,6 +170,45 @@ export async function createProduction(orgId: string, formData: FormData) {
   redirect(`/o/${org.slug}/p/${data.id}`);
 }
 
+export async function updateProduction(orgId: string, productionId: string, formData: FormData) {
+  const { org } = await requireOrgById(orgId, "admin");
+  const name = str(formData, "name");
+  if (!name) throw new Error("公演名を入力してください");
+  const d = (k: string) => str(formData, k) || null;
+  const blockFrom = d("block_from");
+  const blockTo = d("block_to");
+  if ((blockFrom && !blockTo) || (!blockFrom && blockTo)) throw new Error("他現場を入れない期間は開始と終了の両方を入力してください");
+  if (blockFrom && blockTo && blockTo < blockFrom) throw new Error("他現場を入れない期間の終了は開始以降にしてください");
+  const { error } = await supabaseAdmin()
+    .from("rh_productions")
+    .update({ name, default_location: str(formData, "default_location"), rehearsal_starts_on: d("rehearsal_starts_on"), opens_on: d("opens_on"), closes_on: d("closes_on"), block_from: blockFrom, block_to: blockTo, note: str(formData, "note") })
+    .eq("id", productionId)
+    .eq("org_id", orgId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/o/${org.slug}/p/${productionId}`);
+  revalidatePath(`/o/${org.slug}`);
+}
+
+// セルフ公演を主催者の座組へ引き渡すためのリンクを発行(/handover/[token])
+export async function startTransfer(orgId: string, productionId: string) {
+  const { org, user } = await requireOrgById(orgId, "admin");
+  const { data: p } = await supabaseAdmin().from("rh_productions").select("id").eq("id", productionId).eq("org_id", orgId).maybeSingle();
+  if (!p) throw new Error("公演が見つかりません");
+  try {
+    await createTransfer(productionId, orgId, user.id);
+  } catch (e) {
+    if (e instanceof TransferError) throw new Error(e.message);
+    throw e;
+  }
+  revalidatePath(`/o/${org.slug}/p/${productionId}`);
+}
+
+export async function cancelTransfer(orgId: string, productionId: string, transferId: string) {
+  const { org } = await requireOrgById(orgId, "admin");
+  await revokeTransfer(transferId, orgId);
+  revalidatePath(`/o/${org.slug}/p/${productionId}`);
+}
+
 export async function updateProductionStatus(orgId: string, productionId: string, status: string) {
   const { org } = await requireOrgById(orgId, "admin");
   if (!["planning", "rehearsing", "running", "closed"].includes(status)) throw new Error("状態が不正です");
@@ -294,7 +335,18 @@ export async function createSession(orgId: string, productionId: string, formDat
 
   const { data: session, error } = await admin
     .from("rh_sessions")
-    .insert({ org_id: orgId, production_id: productionId, kind, title: str(formData, "title"), starts_at: startsAt, ends_at: endsAt, location: str(formData, "location"), note: str(formData, "note") })
+    .insert({
+      org_id: orgId,
+      production_id: productionId,
+      kind,
+      title: str(formData, "title"),
+      starts_at: startsAt,
+      ends_at: endsAt,
+      location: str(formData, "location"),
+      note: str(formData, "note"),
+      tentative: formData.get("tentative") === "on",
+      respond_by: str(formData, "respond_by") || null,
+    })
     .select("id")
     .single();
   if (error) throw new Error(error.message);
@@ -315,7 +367,16 @@ export async function updateSession(orgId: string, productionId: string, session
   const { startsAt, endsAt } = parseSlot(formData);
   const { error } = await supabaseAdmin()
     .from("rh_sessions")
-    .update({ title: str(formData, "title"), starts_at: startsAt, ends_at: endsAt, location: str(formData, "location"), note: str(formData, "note"), updated_at: new Date().toISOString() })
+    .update({
+      title: str(formData, "title"),
+      starts_at: startsAt,
+      ends_at: endsAt,
+      location: str(formData, "location"),
+      note: str(formData, "note"),
+      tentative: formData.get("tentative") === "on",
+      respond_by: str(formData, "respond_by") || null,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", sessionId)
     .eq("org_id", orgId);
   if (error) throw new Error(error.message);
@@ -342,6 +403,59 @@ export async function reopenSession(orgId: string, productionId: string, session
   await syncSession(sessionId);
   revalidatePath(`/o/${org.slug}/p/${productionId}/s/${sessionId}`);
   revalidatePath(`/o/${org.slug}/p/${productionId}`);
+}
+
+// 仮押さえを確定にする(召集メンバーに「予定変更」として通知)
+export async function confirmSession(orgId: string, productionId: string, sessionId: string) {
+  const { org } = await requireOrgById(orgId, "admin");
+  await supabaseAdmin().from("rh_sessions").update({ tentative: false, respond_by: null, updated_at: new Date().toISOString() }).eq("id", sessionId).eq("org_id", orgId);
+  await notifySessionMembers(sessionId, "update");
+  await syncSession(sessionId);
+  revalidatePath(`/o/${org.slug}/p/${productionId}/s/${sessionId}`);
+  revalidatePath(`/o/${org.slug}/p/${productionId}`);
+}
+
+// 日程テキストの取り込み: プレビューで確認・修正した行をまとめて登録する
+export async function importSessions(orgId: string, productionId: string, formData: FormData) {
+  const { org } = await requireOrgById(orgId, "admin");
+  const admin = supabaseAdmin();
+  const { data: prod } = await admin.from("rh_productions").select("id").eq("id", productionId).eq("org_id", orgId).maybeSingle();
+  if (!prod) throw new Error("公演が見つかりません");
+  const idx = list(formData, "row");
+  const inviteAll = formData.get("invite_all") === "on";
+  const tentative = formData.get("tentative") === "on";
+  const notify = formData.get("notify") === "on";
+  const { data: pm } = inviteAll ? await admin.from("rh_production_members").select("participant_id").eq("production_id", productionId) : { data: [] };
+  const memberIds = (pm ?? []).map((m) => m.participant_id);
+  let created = 0;
+  const createdIds: string[] = [];
+  for (const i of idx) {
+    if (!formData.has(`use_${i}`)) continue;
+    const date = str(formData, `date_${i}`);
+    const from = str(formData, `from_${i}`);
+    const to = str(formData, `to_${i}`);
+    if (!date || !from || !to) continue;
+    const startsAt = jstToIso(`${date}T${from}`);
+    const endsAt = jstToIso(`${date}T${to}`);
+    if (new Date(endsAt) <= new Date(startsAt)) throw new Error(`${date} ${from}〜${to}: 終了は開始より後にしてください`);
+    const kindRaw = str(formData, `kind_${i}`) as ParsedKind;
+    const kind: SessionKind = ["rehearsal", "performance", "other"].includes(kindRaw) ? kindRaw : "rehearsal";
+    const { data: session, error } = await admin
+      .from("rh_sessions")
+      .insert({ org_id: orgId, production_id: productionId, kind, title: str(formData, `title_${i}`), starts_at: startsAt, ends_at: endsAt, location: str(formData, `location_${i}`), note: "", tentative })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    if (memberIds.length) await admin.from("rh_session_members").insert(memberIds.map((p) => ({ session_id: session.id, participant_id: p, org_id: orgId })));
+    createdIds.push(session.id);
+    created++;
+  }
+  for (const id of createdIds) {
+    if (notify && memberIds.length) await notifySessionMembers(id, "invite");
+    await syncSession(id);
+  }
+  if (created === 0) throw new Error("登録する行がありません");
+  redirect(`/o/${org.slug}/p/${productionId}?imported=${created}`);
 }
 
 export async function saveSessionRecord(orgId: string, productionId: string, sessionId: string, formData: FormData) {

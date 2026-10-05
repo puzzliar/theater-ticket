@@ -5,6 +5,8 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/core/session";
 import { applySubstitution, respondToSession } from "@/lib/rehearsal/core";
 import { jstToIso } from "@/lib/rehearsal/time";
+import { redirect } from "next/navigation";
+import { ensurePersonalOrg } from "@/lib/rehearsal/personal";
 import type { Response } from "@/lib/rehearsal/types";
 
 async function requireMe() {
@@ -46,4 +48,23 @@ export async function deleteAvailability(id: string) {
   const me = await requireMe();
   await supabaseAdmin().from("rh_availability").delete().eq("id", id).eq("profile_id", me.id);
   revalidatePath("/me");
+}
+
+// セルフ公演: 主催者未登録でも自分で公演を作る(個人座組を自動作成)。作成後は公演ページへ
+export async function createSelfProduction(formData: FormData) {
+  const me = await requireMe();
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) throw new Error("公演名を入力してください");
+  const org = await ensurePersonalOrg(me);
+  const { data, error } = await supabaseAdmin()
+    .from("rh_productions")
+    .insert({ org_id: org.id, name, default_location: String(formData.get("default_location") ?? "").trim(), opens_on: String(formData.get("opens_on") ?? "").trim() || null })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  // 自分を公演メンバーにしておく(召集対象になる)
+  const { data: p } = await supabaseAdmin().from("rh_participants").select("id").eq("org_id", org.id).eq("profile_id", me.id).maybeSingle();
+  if (p) await supabaseAdmin().from("rh_production_members").upsert({ production_id: data.id, participant_id: p.id, org_id: org.id }, { onConflict: "production_id,participant_id", ignoreDuplicates: true });
+  revalidatePath("/me");
+  redirect(`/o/${org.slug}/p/${data.id}?self=1`);
 }

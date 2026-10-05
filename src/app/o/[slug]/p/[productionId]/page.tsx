@@ -6,7 +6,10 @@ import { checkAvailability, sceneProgress, type AvailabilityVerdict } from "@/li
 import { fmtDate, fmtRange, jstDateString, jstToIso, nowMs, ts } from "@/lib/rehearsal/time";
 import { SESSION_KIND_LABEL, SESSION_STATUS_LABEL, type ParticipantRow, type ProductionRow, type SceneRow, type SessionRow } from "@/lib/rehearsal/types";
 import { PART_LABEL } from "@/lib/core/types";
-import { addProductionMember, addProductionMembers, removeProductionMember, createScene, setSceneMembers, deleteScene, checkSessionSlot, createSession } from "../../actions";
+import { openTransferFor } from "@/lib/rehearsal/transfer";
+import { SITE_URL } from "@/lib/constants";
+import CopyButton from "@/components/CopyButton";
+import { addProductionMember, addProductionMembers, removeProductionMember, createScene, setSceneMembers, deleteScene, checkSessionSlot, createSession, updateProduction, startTransfer, cancelTransfer } from "../../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +26,8 @@ export default async function ProductionPage({ params, searchParams }: { params:
   const { data: production } = await db.from("rh_productions").select("*").eq("id", productionId).eq("org_id", org.id).maybeSingle();
   if (!production) notFound();
   const prod = production as ProductionRow;
+  const isPersonal = org.kind === "personal";
+  const transfer = isAdmin ? await openTransferFor(productionId) : null;
 
   const [{ data: pm }, { data: allParticipants }, { data: scenes }, { data: sceneMembers }, { data: sessions }, progress] = await Promise.all([
     db.from("rh_production_members").select("participant_id, role_name, rh_participants(id, display_name, part, profile_id, is_active)").eq("production_id", productionId),
@@ -66,7 +71,7 @@ export default async function ProductionPage({ params, searchParams }: { params:
       }
       for (const p of draft.participantIds) if (!needed.has(p)) needed.set(p, "手動");
       const ids = [...needed.keys()];
-      const result = await checkAvailability(ids, startsAt, endsAt);
+      const result = await checkAvailability(ids, startsAt, endsAt, undefined, productionId);
       verdicts = ids.map((id) => ({ id, name: nameOf.get(id) ?? "?", verdict: result.get(id)!, reason: needed.get(id)! })).sort((a, b) => a.verdict.status.localeCompare(b.verdict.status));
     } catch (e) {
       checkError = e instanceof Error ? e.message : "確認に失敗しました";
@@ -91,6 +96,7 @@ export default async function ProductionPage({ params, searchParams }: { params:
         <div>
           <p>
             <span className={`mr-2 rounded px-1.5 py-0.5 text-xs ${s.kind === "performance" ? "bg-rose-500/20 text-rose-300" : "bg-sky-500/20 text-sky-300"}`}>{SESSION_KIND_LABEL[s.kind]}</span>
+            {s.tentative && <span className="mr-2 rounded bg-orange-500/20 px-1.5 py-0.5 text-xs text-orange-300">仮</span>}
             <span className="font-medium">{fmtRange(s.starts_at, s.ends_at)}</span> {s.title}
             {s.status !== "scheduled" && <span className="ml-2 text-xs text-neutral-500">[{SESSION_STATUS_LABEL[s.status]}]</span>}
           </p>
@@ -109,7 +115,27 @@ export default async function ProductionPage({ params, searchParams }: { params:
       <div>
         <p className="text-sm text-neutral-500"><Link href={`/o/${slug}`} className="hover:text-neutral-300">← プロダクション一覧</Link></p>
         <h2 className="text-2xl font-bold">{prod.name}</h2>
-        <p className="text-sm text-neutral-400">{prod.rehearsal_starts_on && `稽古開始 ${prod.rehearsal_starts_on} `}{prod.opens_on && `／ 初日 ${prod.opens_on} `}{prod.default_location && `／ ${prod.default_location}`}</p>
+        <p className="text-sm text-neutral-400">{prod.rehearsal_starts_on && `稽古開始 ${prod.rehearsal_starts_on} `}{prod.opens_on && `／ 初日 ${prod.opens_on} `}{prod.closes_on && `〜 ${prod.closes_on} `}{prod.default_location && `／ ${prod.default_location}`}{prod.block_from && prod.block_to && ` ／ 他現場を入れない期間 ${prod.block_from}〜${prod.block_to}`}</p>
+        {one(sp.handover) && <p className="mt-2 rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-300">公演を引き受けました。参加していたキャストはこの座組のメンバーになっています。</p>}
+        {one(sp.imported) && <p className="mt-2 rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-300">{one(sp.imported)} 件の予定を取り込みました。</p>}
+        {one(sp.self) && <p className="mt-2 rounded border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">セルフ公演を作りました。「日程を貼り付けて取り込む」で届いた日程をまとめて登録できます。共演者は「共演者・招待」から招待できます。</p>}
+        {isAdmin && (
+          <details className="mt-3 rounded-lg border border-neutral-800 bg-neutral-900 p-3 text-sm">
+            <summary className="cursor-pointer text-neutral-300">公演の情報を編集</summary>
+            <form action={updateProduction.bind(null, org.id, productionId)} className="mt-3 grid gap-2 sm:grid-cols-3">
+              <input name="name" required defaultValue={prod.name} placeholder="公演名" className={`${input} sm:col-span-2`} />
+              <input name="default_location" defaultValue={prod.default_location} placeholder="既定の稽古場所" className={input} />
+              <label className="text-xs text-neutral-400">稽古開始日<input name="rehearsal_starts_on" type="date" defaultValue={prod.rehearsal_starts_on ?? ""} className={`${input} mt-1 w-full`} /></label>
+              <label className="text-xs text-neutral-400">初日<input name="opens_on" type="date" defaultValue={prod.opens_on ?? ""} className={`${input} mt-1 w-full`} /></label>
+              <label className="text-xs text-neutral-400">終演日<input name="closes_on" type="date" defaultValue={prod.closes_on ?? ""} className={`${input} mt-1 w-full`} /></label>
+              <label className="text-xs text-neutral-400">他現場を入れない期間(開始。小屋入りなど)<input name="block_from" type="date" defaultValue={prod.block_from ?? ""} className={`${input} mt-1 w-full`} /></label>
+              <label className="text-xs text-neutral-400">同(終了)<input name="block_to" type="date" defaultValue={prod.block_to ?? ""} className={`${input} mt-1 w-full`} /></label>
+              <input name="note" defaultValue={prod.note} placeholder="メモ" className={`${input} sm:col-span-3`} />
+              <p className="text-xs text-neutral-500 sm:col-span-3">「他現場を入れない期間」を設定すると、この公演のメンバーは期間中、他の座組の参加可否確認で「他現場(本番期間)」と表示されます。</p>
+              <div><button className="rounded-md bg-neutral-700 px-4 py-2 text-sm hover:bg-neutral-600">保存</button></div>
+            </form>
+          </details>
+        )}
       </div>
 
       <section className="space-y-3">
@@ -177,7 +203,10 @@ export default async function ProductionPage({ params, searchParams }: { params:
       </section>
 
       <section className="space-y-3">
-        <h3 className="text-lg font-semibold">予定(稽古・本番)</h3>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h3 className="text-lg font-semibold">予定(稽古・本番)</h3>
+          {isAdmin && <Link href={`/o/${slug}/p/${productionId}/import`} className="rounded-md border border-amber-500/50 px-3 py-1 text-xs text-amber-300 hover:bg-amber-500/10">日程を貼り付けて取り込む</Link>}
+        </div>
         <div className="space-y-2">
           {upcoming.length === 0 && <p className="text-sm text-neutral-400">今後の予定はありません。</p>}
           {upcoming.map((s) => <Row key={s.id} s={s} />)}
@@ -195,6 +224,8 @@ export default async function ProductionPage({ params, searchParams }: { params:
               <input name="to" type="time" required defaultValue={draft.to} className={input} />
               <input name="location" defaultValue={draft.location} placeholder="場所" className={input} />
               <input name="note" defaultValue={draft.note} placeholder="メモ(持ち物・入館方法など)" className={`${input} sm:col-span-4`} />
+              <label className="flex items-center gap-2 text-xs text-neutral-300 sm:col-span-2"><input type="checkbox" name="tentative" /> 仮押さえ(本決まり前。参加者の予定に「仮」と表示)</label>
+              <label className="text-xs text-neutral-400 sm:col-span-2">返答期限(仮押さえの場合)<input name="respond_by" type="date" className={`${input} mt-1 w-full`} /></label>
             </div>
             <p className="mt-3 text-xs text-neutral-400">対象シーン(必要メンバーが自動で召集されます)</p>
             <div className="mt-1 flex flex-wrap gap-3 text-xs">
@@ -251,6 +282,22 @@ export default async function ProductionPage({ params, searchParams }: { params:
             </div>
             <button className="rounded-md bg-neutral-700 px-3 py-2 text-sm hover:bg-neutral-600">チェックした参加者を追加</button>
           </form>
+        )}
+        {isAdmin && isPersonal && (
+          <div className="space-y-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
+            <p className="font-semibold text-amber-300">主催者に引き渡す</p>
+            <p className="text-neutral-300">主催者が ZAGUMI に座組を登録したら、この公演を予定・シーン・出欠記録ごと主催者の座組へ移せます。共演者も一緒に移動し、以降は主催者が管理します。下のリンクを主催者に送ってください。</p>
+            {transfer ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="break-all font-mono text-xs text-amber-300">{SITE_URL}/handover/{transfer.token}</span>
+                <CopyButton text={`${SITE_URL}/handover/${transfer.token}`} label="URL をコピー" className="rounded-md bg-neutral-700 px-3 py-1.5 text-xs hover:bg-neutral-600" />
+                <span className="text-xs text-neutral-500">期限 {fmtDate(transfer.expires_at)}</span>
+                <form action={cancelTransfer.bind(null, org.id, productionId, transfer.id)}><button className="text-xs text-neutral-500 hover:text-red-400">リンクを無効化</button></form>
+              </div>
+            ) : (
+              <form action={startTransfer.bind(null, org.id, productionId)}><button className="rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-black hover:bg-amber-400">引き渡しリンクを発行</button></form>
+            )}
+          </div>
         )}
         {isAdmin && (
           <form action={addProductionMember.bind(null, org.id, productionId)} className="flex flex-wrap items-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 p-3">

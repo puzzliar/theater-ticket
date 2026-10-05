@@ -8,7 +8,7 @@ const IS_REHEARSAL = process.env.NEXT_PUBLIC_APP === "rehearsal";
 const SIBLING = (IS_REHEARSAL ? process.env.NEXT_PUBLIC_TICKET_SITE_URL : process.env.NEXT_PUBLIC_REHEARSAL_SITE_URL) || null;
 
 const TICKET_ONLY = ["/admin", "/cast", "/reception", "/e", "/my", "/order", "/portal", "/api/checkout", "/api/guest-reservation", "/api/pay", "/api/stripe", "/api/cron/send-reminders"];
-const REHEARSAL_ONLY = ["/rehearsal", "/me", "/o", "/orgs", "/join", "/onboarding", "/platform", "/signup", "/auth/line", "/api/google", "/api/ical", "/api/line", "/api/push", "/api/me", "/api/cron/rehearsal-notify"];
+const REHEARSAL_ONLY = ["/rehearsal", "/me", "/o", "/orgs", "/join", "/onboarding", "/platform", "/signup", "/auth/line", "/a", "/handover", "/api/google", "/api/ical", "/api/line", "/api/push", "/api/me", "/api/cron/rehearsal-notify"];
 
 function hasPrefix(pathname: string, prefixes: string[]) {
   return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -30,7 +30,7 @@ export const config = {
   matcher: [
     "/admin/:path*", "/cast/:path*", "/reception/:path*", "/e/:path*", "/my/:path*", "/order/:path*", "/portal/:path*",
     "/api/checkout/:path*", "/api/guest-reservation/:path*", "/api/pay/:path*", "/api/stripe/:path*", "/api/cron/send-reminders/:path*",
-    "/rehearsal/:path*", "/me/:path*", "/o/:path*", "/orgs/:path*", "/join/:path*", "/onboarding/:path*", "/platform/:path*", "/signup/:path*", "/auth/line/:path*",
+    "/rehearsal/:path*", "/me/:path*", "/o/:path*", "/orgs/:path*", "/join/:path*", "/onboarding/:path*", "/platform/:path*", "/signup/:path*", "/auth/line/:path*", "/a/:path*", "/handover/:path*",
     "/api/google/:path*", "/api/ical/:path*", "/api/line/:path*", "/api/push/:path*", "/api/me/:path*", "/api/cron/rehearsal-notify/:path*",
   ],
 };

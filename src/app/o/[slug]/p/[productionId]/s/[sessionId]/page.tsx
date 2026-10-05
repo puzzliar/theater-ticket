@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { requireOrg } from "@/lib/core/session";
 import { checkAvailability } from "@/lib/rehearsal/schedule";
-import { fmtRange, isoToJstLocal } from "@/lib/rehearsal/time";
+import { fmtDateLabel, fmtRange, isoToJstLocal } from "@/lib/rehearsal/time";
 import { ATTENDANCE_LABEL, RESPONSE_LABEL, SESSION_KIND_LABEL, SESSION_STATUS_LABEL, type Attendance, type ParticipantRow, type Response, type SceneRow, type SceneStatus, type SessionRow, type SubstitutionRequestRow } from "@/lib/rehearsal/types";
-import { updateSession, cancelSession, reopenSession, saveSessionRecord, addSessionScene, removeSessionScene, addSessionMember, removeSessionMember, sendInvites, requestSubstitution, fillSubstitutionManually, cancelSubstitution } from "../../../../actions";
+import { updateSession, cancelSession, reopenSession, confirmSession, saveSessionRecord, addSessionScene, removeSessionScene, addSessionMember, removeSessionMember, sendInvites, requestSubstitution, fillSubstitutionManually, cancelSubstitution } from "../../../../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +35,7 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
   const participants = ((pm ?? []) as unknown as { participant_id: string; rh_participants: { id: string; display_name: string; is_active: boolean } | null }[]).filter((p) => p.rh_participants?.is_active);
   const nameOf = new Map(participants.map((p) => [p.participant_id, p.rh_participants!.display_name]));
   for (const m of sessionMembers) nameOf.set(m.participant_id, m.rh_participants!.display_name);
-  const verdicts = isAdmin && session.status === "scheduled" ? await checkAvailability([...memberIds], session.starts_at, session.ends_at, sessionId) : new Map();
+  const verdicts = isAdmin && session.status === "scheduled" ? await checkAvailability([...memberIds], session.starts_at, session.ends_at, sessionId, productionId) : new Map();
 
   type Req = SubstitutionRequestRow & { rh_substitution_candidates: { participant_id: string; applied_at: string | null; rh_participants: { display_name: string } | null }[] };
   const subRequests = (requests ?? []) as unknown as Req[];
@@ -52,11 +52,13 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
         <p className="text-sm text-neutral-500"><Link href={`/o/${slug}/p/${productionId}`} className="hover:text-neutral-300">← {session.rh_productions?.name}</Link></p>
         <h2 className="text-2xl font-bold">
           <span className={`mr-2 rounded px-2 py-0.5 text-sm ${session.kind === "performance" ? "bg-rose-500/20 text-rose-300" : "bg-sky-500/20 text-sky-300"}`}>{SESSION_KIND_LABEL[session.kind]}</span>
+          {session.tentative && <span className="mr-2 rounded bg-orange-500/20 px-2 py-0.5 text-sm text-orange-300">仮押さえ</span>}
           {fmtRange(session.starts_at, session.ends_at)} {session.title}
         </h2>
         <p className="text-sm text-neutral-400">
           状態: <span className={session.status === "done" ? "text-emerald-400" : session.status === "cancelled" ? "text-red-400" : "text-neutral-200"}>{SESSION_STATUS_LABEL[session.status]}</span>
           {session.location && ` ／ 📍${session.location}`}
+          {session.tentative && session.respond_by && ` ／ 返答期限 ${fmtDateLabel(session.respond_by)}`}
         </p>
         {session.note && <p className="mt-1 text-sm text-neutral-300">{session.note}</p>}
       </div>
@@ -89,12 +91,17 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
                 <input name="to" type="time" required defaultValue={localEnd.slice(11, 16)} className={input} />
                 <input name="location" defaultValue={session.location} placeholder="場所" className={input} />
                 <textarea name="note" defaultValue={session.note} placeholder="メモ" rows={2} className={`${input} sm:col-span-4`} />
+                <label className="flex items-center gap-2 text-xs text-neutral-300 sm:col-span-2"><input type="checkbox" name="tentative" defaultChecked={session.tentative} /> 仮押さえ(本決まり前)</label>
+                <label className="text-xs text-neutral-400 sm:col-span-2">返答期限<input name="respond_by" type="date" defaultValue={session.respond_by ?? ""} className={`${input} mt-1 w-full`} /></label>
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 <button disabled={!editable} className="rounded-md bg-neutral-700 px-4 py-2 text-sm hover:bg-neutral-600 disabled:opacity-40">保存</button>
                 <label className="flex items-center gap-1 text-xs text-neutral-300"><input type="checkbox" name="notify" defaultChecked /> 変更を召集メンバーに通知</label>
               </div>
             </form>
+            {session.tentative && editable && (
+              <form action={confirmSession.bind(null, ...a)}><button className="rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-black hover:bg-emerald-400">本決まりにする(召集メンバーに通知)</button></form>
+            )}
             <div className="text-xs">
               {session.status === "cancelled" ? (
                 <form action={reopenSession.bind(null, ...a)}><button className="text-neutral-400 hover:underline">中止を取り消す</button></form>

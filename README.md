@@ -3,7 +3,7 @@
 小劇場向けブランド **ZAGUMI**（座組）の 2 つのサービスを 1 つのリポジトリで開発している。運営は PUZZLIAR。**アカウント（ZAGUMIアカウント）は共通（同じ Supabase Auth・`core_` 基盤）だが、サービスとしては独立**しており、別ドメイン・別 Vercel プロジェクトで配信する。環境変数 `NEXT_PUBLIC_APP` でどちらとしてビルドするかを切り替える（`rehearsal`＝稽古管理、未設定＝チケット販売）。
 
 - **ZAGUMIチケット**: 指定席+自由席の混合販売、キャスト「扱い」管理とギャランティ連動、キャストによるゲスト予約、QRチェックイン
-- **ZAGUMIスケジュール**（無料・多主催者向け）: 稽古・本番の予定の召集と出欠、シーン進捗、空き時間、代役募集、Google カレンダー／LINE 連携
+- **ZAGUMIスケジュール**（無料・多主催者向け）: 稽古・本番の予定の召集と出欠、セルフ公演(主催者未登録でも使える)、空き状況の ○×△ 共有、仮押さえ、キャスト公式サイト、シーン進捗、空き時間、代役募集、Google カレンダー／LINE 連携
 
 - 要件定義: [docs/requirements.md](docs/requirements.md)(v1.1)
 - ドメインモデル・DB設計: [docs/domain-model.md](docs/domain-model.md)
@@ -42,6 +42,9 @@
 | `/orgs/new` `/join/[token]` | 主催者・招待された人 | 組織作成(招待制)・招待リンクの受諾 |
 | `/o/[slug]` 以下 | 組織 | プロダクション、シーン進捗、予定(稽古・本番。参加可否チェック)、出欠・実施記録、代役募集、空き時間マトリクス、メンバー・招待・参加者台帳 |
 | `/platform` | 運営 | 主催者コード発行、組織管理 |
+| `/me/availability` `/a/[token]` | 本人・主催者 | 空き状況の ○×△ テキスト(コピー/LINE で送る)と共有リンク |
+| `/me/site` `/[handle]` | 本人・公開 | キャスト公式サイト(出演履歴・近日の出演・写真・リンク) |
+| `/o/[slug]/p/[id]/import` `/handover/[token]` | 管理者・主催者 | 日程テキストの取り込み、セルフ公演の主催者への引き渡し |
 | `/api/ical/[token]` `/api/google/*` `/api/line/webhook` `/api/push/subscribe` `/api/cron/rehearsal-notify` | 連携 | iCal、Google Calendar API、LINE Messaging API、Web プッシュ、定時通知 |
 
 ## 開発
