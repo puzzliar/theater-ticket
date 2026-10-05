@@ -48,7 +48,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
     <div className="space-y-10">
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-sm text-neutral-500"><Link href="/me" className="hover:text-neutral-300">← 稽古予定</Link></p>
+          <p className="text-sm text-neutral-500"><Link href="/me" className="hover:text-neutral-300">← マイスケジュール</Link></p>
           <h1 className="text-2xl font-bold">アカウント設定</h1>
         </div>
         <form action={signOut}><button className="text-sm text-neutral-400 hover:underline">ログアウト</button></form>

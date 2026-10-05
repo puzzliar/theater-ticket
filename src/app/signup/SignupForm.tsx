@@ -61,7 +61,7 @@ export default function SignupForm() {
     <div className="mx-auto max-w-sm space-y-6">
       <div>
         <h1 className="text-xl font-bold">新規登録</h1>
-        <p className="mt-1 text-sm text-neutral-400">稽古管理は無料で使えます。1 つのアカウントで複数の劇団に参加できます。</p>
+        <p className="mt-1 text-sm text-neutral-400">ZAGUMIスケジュールは無料で使えます。1 つの ZAGUMIアカウントで複数の座組(劇団)に参加できます。</p>
       </div>
       <button onClick={google} disabled={busy} className="w-full rounded-md bg-white px-4 py-2.5 font-semibold text-black hover:bg-neutral-200 disabled:opacity-50">Google で登録</button>
       {process.env.NEXT_PUBLIC_LINE_LOGIN_ENABLED === "true" && (

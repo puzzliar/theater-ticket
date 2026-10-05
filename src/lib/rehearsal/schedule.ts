@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { fmtDate, fmtTime, overlaps, ts } from "./time";
 import { SESSION_KIND_LABEL, type SessionKind, type SessionStatus, type Response, type SceneProgressRow } from "./types";
 
-// 個人の予定(全組織横断)と、稽古枠に対する参加可否判定。
+// 個人の予定(全組織横断)と、予定(稽古・本番)に対する参加可否判定。
 // ここは service role で動く。他組織の予定は「他現場」という判定結果にだけ変換して返し、内容は返さない。
 
 export interface MemberSession {

@@ -2,7 +2,7 @@
 
 本アプリを `puzzliar.jp` 配下(推奨: `ticket.puzzliar.jp`)で公開するための手順。
 
-> **2026-10-04 追記**: 本書は**チケット販売サービス**(Vercel プロジェクト `theater-ticket`)の手順。同じリポジトリから稽古管理を別サービスとして配信する手順は [GO-LIVE-REHEARSAL.md](GO-LIVE-REHEARSAL.md) を参照。`theater-ticket` プロジェクトには環境変数 `NEXT_PUBLIC_APP` を**設定しない**(未設定＝チケット販売として動く)。
+> **2026-10-04 追記**: 本書は**ZAGUMIチケット**(ブランド ZAGUMI のチケット販売サービス。Vercel プロジェクト `theater-ticket`)の手順。ドメインは ZAGUMI ブランドに合わせて `ticket.zagumi.jp` にする案がある(未取得なら本書どおり `ticket.puzzliar.jp`)。同じリポジトリから稽古管理を別サービスとして配信する手順は [GO-LIVE-REHEARSAL.md](GO-LIVE-REHEARSAL.md) を参照。`theater-ticket` プロジェクトには環境変数 `NEXT_PUBLIC_APP` を**設定しない**(未設定＝チケット販売として動く)。
 コード側の準備(ビルド確認・Cron設定・環境変数テンプレート)は完了済み。以下の3ステップで公開できます。
 
 ## Step 1. Vercel プロジェクト作成(約3分)
@@ -21,7 +21,7 @@
 | `STRIPE_SECRET_KEY` | (任意)Stripeの `sk_live_...` または `sk_test_...` | **未設定の間はモック決済モード**(実課金なしで即確定。動作確認向け) |
 | `STRIPE_WEBHOOK_SECRET` | (任意)Step 3参照 | |
 | `RESEND_API_KEY` | (任意)Resendキー | 未設定の間はメール送信スキップ |
-| `EMAIL_FROM` | `PUZZLIAR チケット <tickets@puzzliar.jp>` | Resend側でドメイン認証が必要 |
+| `EMAIL_FROM` | `ZAGUMIチケット <tickets@puzzliar.jp>` | Resend側でドメイン認証が必要 |
 | `CRON_SECRET` | 任意のランダム文字列 | Cron保護(Vercelが自動でヘッダ付与) |
 
 4. Deploy を実行

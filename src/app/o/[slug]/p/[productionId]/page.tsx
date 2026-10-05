@@ -177,7 +177,7 @@ export default async function ProductionPage({ params, searchParams }: { params:
       </section>
 
       <section className="space-y-3">
-        <h3 className="text-lg font-semibold">稽古枠・本番</h3>
+        <h3 className="text-lg font-semibold">予定(稽古・本番)</h3>
         <div className="space-y-2">
           {upcoming.length === 0 && <p className="text-sm text-neutral-400">今後の予定はありません。</p>}
           {upcoming.map((s) => <Row key={s.id} s={s} />)}
@@ -186,7 +186,7 @@ export default async function ProductionPage({ params, searchParams }: { params:
 
         {isAdmin && (
           <form id="new-session" className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-            <p className="mb-2 font-medium">稽古枠を作成</p>
+            <p className="mb-2 font-medium">予定を作成</p>
             <div className="grid gap-2 sm:grid-cols-4">
               <select name="kind" defaultValue={draft.kind} className={input}><option value="rehearsal">稽古</option><option value="performance">本番(シフト)</option><option value="other">その他</option></select>
               <input name="title" defaultValue={draft.title} placeholder="タイトル(例: 通し稽古, 昼公演)" className={`${input} sm:col-span-3`} />

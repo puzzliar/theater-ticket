@@ -1,14 +1,14 @@
-# 🎫 PUZZLIAR チケット販売管理 / 🎭 PUZZLIAR 稽古管理
+# ZAGUMI — 🎭 ZAGUMIスケジュール / 🎫 ZAGUMIチケット
 
-小劇場向けの 2 つのサービスを 1 つのリポジトリで開発している。**アカウントは共通（同じ Supabase Auth・`core_` 基盤）だが、サービスとしては独立**しており、別ドメイン・別 Vercel プロジェクトで配信する。環境変数 `NEXT_PUBLIC_APP` でどちらとしてビルドするかを切り替える（`rehearsal`＝稽古管理、未設定＝チケット販売）。
+小劇場向けブランド **ZAGUMI**（座組）の 2 つのサービスを 1 つのリポジトリで開発している。運営は PUZZLIAR。**アカウント（ZAGUMIアカウント）は共通（同じ Supabase Auth・`core_` 基盤）だが、サービスとしては独立**しており、別ドメイン・別 Vercel プロジェクトで配信する。環境変数 `NEXT_PUBLIC_APP` でどちらとしてビルドするかを切り替える（`rehearsal`＝稽古管理、未設定＝チケット販売）。
 
-- **チケット販売管理**: 指定席+自由席の混合販売、キャスト「扱い」管理とギャランティ連動、キャストによるゲスト予約、QRチェックイン
-- **稽古管理**（無料・多主催者向け）: 稽古枠の召集と出欠、シーン進捗、空き時間、代役募集、Google カレンダー／LINE 連携
+- **ZAGUMIチケット**: 指定席+自由席の混合販売、キャスト「扱い」管理とギャランティ連動、キャストによるゲスト予約、QRチェックイン
+- **ZAGUMIスケジュール**（無料・多主催者向け）: 稽古・本番の予定の召集と出欠、シーン進捗、空き時間、代役募集、Google カレンダー／LINE 連携
 
 - 要件定義: [docs/requirements.md](docs/requirements.md)(v1.1)
 - ドメインモデル・DB設計: [docs/domain-model.md](docs/domain-model.md)
 - 稽古・シフト管理 要件定義(質問事項つき): [docs/rehearsal-requirements.md](docs/rehearsal-requirements.md)(v0.2: 多主催者向け無料 SaaS 化)
-- 共通アカウント基盤(PUZZLIAR ID)設計案: [docs/account-platform.md](docs/account-platform.md)
+- 共通アカウント基盤(ZAGUMIアカウント)設計案: [docs/account-platform.md](docs/account-platform.md)
 - 稽古管理 運用開始手順書: [docs/GO-LIVE-REHEARSAL.md](docs/GO-LIVE-REHEARSAL.md)
 - デプロイ手順: [docs/DEPLOY.md](docs/DEPLOY.md)
 
@@ -23,7 +23,7 @@
 
 `src/proxy.ts` が配信中のサービスに属さないパスを遮断する（API は 404、画面はトップへ転送）。`/login` `/auth/callback` `/terms` `/privacy` は両サービス共通。
 
-### チケット販売管理（`NEXT_PUBLIC_APP` 未設定。`tk_`）
+### ZAGUMIチケット（`NEXT_PUBLIC_APP` 未設定。`tk_`）
 
 | パス | 対象 | 内容 |
 |---|---|---|
@@ -33,14 +33,14 @@
 | `/cast` | キャスト | 自分の扱い売上・ギャラ見込み・ゲスト予約起票 |
 | `/reception` | 受付 | QR照合チェックイン・当日現金収受 |
 
-### 稽古管理（`NEXT_PUBLIC_APP=rehearsal`。無料・多主催者向け。`core_` 共通アカウント基盤 + `rh_`）
+### ZAGUMIスケジュール（`NEXT_PUBLIC_APP=rehearsal`。無料・多主催者向け。`core_` 共通アカウント基盤 + `rh_`）
 
 | パス | 対象 | 内容 |
 |---|---|---|
 | `/` `/signup` `/login` `/onboarding` | 全員 | 独立したトップページ(サービス紹介)・登録(メール/Google/LINE)・初回設定 |
 | `/me` `/me/settings` | 本人 | 全組織横断の予定、出欠、代役応募、空き時間、通知設定、LINE/Google 連携、Web プッシュ、iCal、退会 |
 | `/orgs/new` `/join/[token]` | 主催者・招待された人 | 組織作成(招待制)・招待リンクの受諾 |
-| `/o/[slug]` 以下 | 組織 | プロダクション、シーン進捗、稽古枠(参加可否チェック)、出欠・実施記録、代役募集、空き時間マトリクス、メンバー・招待・参加者台帳 |
+| `/o/[slug]` 以下 | 組織 | プロダクション、シーン進捗、予定(稽古・本番。参加可否チェック)、出欠・実施記録、代役募集、空き時間マトリクス、メンバー・招待・参加者台帳 |
 | `/platform` | 運営 | 主催者コード発行、組織管理 |
 | `/api/ical/[token]` `/api/google/*` `/api/line/webhook` `/api/push/subscribe` `/api/cron/rehearsal-notify` | 連携 | iCal、Google Calendar API、LINE Messaging API、Web プッシュ、定時通知 |
 

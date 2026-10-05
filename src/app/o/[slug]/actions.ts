@@ -260,7 +260,7 @@ export async function deleteScene(orgId: string, productionId: string, sceneId: 
   revalidatePath(`/o/${org.slug}/p/${productionId}`);
 }
 
-// ---------- 稽古枠 ----------
+// ---------- 予定(稽古・本番) ----------
 
 function parseSlot(formData: FormData): { startsAt: string; endsAt: string } {
   const date = str(formData, "date");

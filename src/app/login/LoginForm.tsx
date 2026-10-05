@@ -14,7 +14,7 @@ const ERROR_TEXT: Record<string, string> = {
   login_required: "先にログインしてください。",
 };
 
-// ログイン画面。アカウントは稽古管理・チケット販売で共通(同じ Supabase Auth)だが、画面と遷移先はサービスごと
+// ログイン画面。ZAGUMIアカウントはスケジュール・チケットで共通(同じ Supabase Auth)だが、画面と遷移先はサービスごと
 export default function LoginForm() {
   const router = useRouter();
   const sp = useSearchParams();
@@ -35,7 +35,7 @@ export default function LoginForm() {
       setBusy(false);
       return;
     }
-    // 稽古管理は初回設定(オンボーディング)を経由。チケットはロール別の振り分けへ
+    // スケジュールは初回設定(オンボーディング)を経由。チケットはロール別の振り分けへ
     router.push(IS_REHEARSAL ? `/onboarding?next=${encodeURIComponent(next)}` : next);
     router.refresh();
   }
@@ -58,7 +58,7 @@ export default function LoginForm() {
       <div>
         <h1 className="text-xl font-bold">{IS_REHEARSAL ? "ログイン" : "関係者ログイン"}</h1>
         <p className="mt-1 text-sm text-neutral-400">
-          {IS_REHEARSAL ? "PUZZLIAR 共通アカウントでログインします。" : "主催・キャスト・受付スタッフ用のログインです。PUZZLIAR 共通アカウントでログインします。"}
+          {IS_REHEARSAL ? "ZAGUMIアカウントでログインします。" : "主催・キャスト・受付スタッフ用のログインです。ZAGUMIアカウントでログインします。"}
         </p>
       </div>
       <div className="space-y-2">

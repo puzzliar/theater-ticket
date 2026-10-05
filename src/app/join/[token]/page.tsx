@@ -26,7 +26,7 @@ export default async function JoinPage({ params, searchParams }: { params: Promi
         <p className="text-sm text-neutral-400">招待</p>
         <h1 className="text-2xl font-bold">{inv.org.name}</h1>
         {inv.label && <p className="text-sm text-neutral-400">{inv.label}</p>}
-        <p className="mt-1 text-sm text-neutral-300">{inv.role === "admin" ? "管理者" : "メンバー"}として参加します。参加すると、この団体の稽古枠の召集や予定があなたの稽古予定に表示されます。</p>
+        <p className="mt-1 text-sm text-neutral-300">{inv.role === "admin" ? "管理者" : "メンバー"}として参加します。参加すると、この団体の稽古や本番の召集があなたのマイスケジュールに表示されます。</p>
         {inv.productions.length > 0 && (
           <p className="mt-2 text-sm text-neutral-300">
             参加する公演: <span className="text-amber-300">{inv.productions.map((p) => p.name).join("、")}</span>

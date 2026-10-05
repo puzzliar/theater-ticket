@@ -274,7 +274,7 @@ v0.1 からのモデル変更点:
 
 | # | 決定 |
 |---|---|
-| Q15 | PUZZLIAR のサブブランド。共通アカウントは「PUZZLIAR ID」（仮称） |
+| Q15 | ブランドは **ZAGUMI**（座組。出演者とスタッフの全体を指す演劇用語）。本サービスは **ZAGUMIスケジュール**（稽古だけでなく本番の出演日程まで扱うため「稽古」を名前に含めない）。以降は ZAGUMIチケット・ZAGUMI物販・ZAGUMI精算と機能名で揃える。共通アカウントは「ZAGUMIアカウント」。運営主体の表記は PUZZLIAR（2026-10-05 決定。当初は PUZZLIAR のサブブランド「PUZZLIAR 稽古管理」としていた） |
 | Q16 | 小劇場演劇とイマーシブシアター公演をメインターゲット。ダンス・音楽での利用も可。用語は演劇寄り |
 | Q17 | **Google ログインがメイン**。LINE ログインはオプション（実装済み・環境変数で有効化）。メール＋パスワードも提供 |
 | Q18 | 「基本機能は無料」と表現し、将来の有料機能の余地を残す（規約 4 条） |
@@ -355,7 +355,7 @@ LINE 側は審査不要。LINE Developers でプロバイダーを 1 つ作り�
 | `/terms` `/privacy` | 公開 | 規約・プライバシーポリシー（ドラフト。法務レビュー前） |
 | `/api/ical/[token]` `/api/google/*` `/api/line/webhook` `/api/push/subscribe` `/api/me/export` `/api/cron/rehearsal-notify` | 連携 | v0.1 と同様（個人単位に変更） |
 
-配信形態（Q29）: 稽古管理は `NEXT_PUBLIC_APP=rehearsal` でビルドした独立したデプロイ（Vercel プロジェクト `puzzliar-rehearsal`、独自ドメイン）。チケット販売のデプロイ（`theater-ticket`、`ticket.puzzliar.jp`）では上記の稽古管理パスは提供されず、逆も同様。共通なのはアカウント（Supabase Auth・`core_` テーブル）と `/login` `/auth/callback` `/terms` `/privacy` の実装のみ。
+配信形態（Q29）: ZAGUMIスケジュールは `NEXT_PUBLIC_APP=rehearsal` でビルドした独立したデプロイ（Vercel プロジェクト `zagumi-schedule`、ドメイン例 `schedule.zagumi.jp`）。ZAGUMIチケットのデプロイ（`theater-ticket`、ドメイン例 `ticket.zagumi.jp`）では上記の稽古管理パスは提供されず、逆も同様。共通なのはアカウント（Supabase Auth・`core_` テーブル）と `/login` `/auth/callback` `/terms` `/privacy` の実装のみ。
 
 環境変数（`.env.example`）: 既存に加え `NEXT_PUBLIC_APP`、`ORG_CREATION_OPEN`、`LINE_LOGIN_CHANNEL_ID/SECRET`、`NEXT_PUBLIC_LINE_LOGIN_ENABLED`、`LINE_PUSH_MONTHLY_LIMIT`、`NEXT_PUBLIC_VAPID_PUBLIC_KEY`、`VAPID_PRIVATE_KEY`、`VAPID_SUBJECT`。
 

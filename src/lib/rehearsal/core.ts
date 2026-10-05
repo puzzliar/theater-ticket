@@ -24,7 +24,7 @@ export async function loadSession(sessionId: string): Promise<SessionWithNames> 
     .select("*, rh_productions(name, core_organizations(name, slug))")
     .eq("id", sessionId)
     .maybeSingle();
-  if (!data) throw new RehearsalError("稽古枠が見つかりません");
+  if (!data) throw new RehearsalError("予定が見つかりません");
   const { rh_productions, ...rest } = data as SessionRow & { rh_productions: { name: string; core_organizations: { name: string; slug: string } | null } | null };
   return { ...rest, production_name: rh_productions?.name ?? "", org_name: rh_productions?.core_organizations?.name ?? "", org_slug: rh_productions?.core_organizations?.slug ?? "" };
 }
@@ -42,7 +42,7 @@ export async function respondToSession(profileId: string, sessionId: string, res
     .eq("session_id", sessionId)
     .eq("rh_participants.profile_id", profileId)
     .maybeSingle();
-  if (!row) throw new RehearsalError("この稽古枠には召集されていません");
+  if (!row) throw new RehearsalError("この予定には召集されていません");
   const { error } = await admin.from("rh_session_members").update({ response }).eq("session_id", sessionId).eq("participant_id", row.participant_id);
   if (error) throw new RehearsalError(error.message);
   await syncSession(sessionId, [row.participant_id]);
@@ -56,7 +56,7 @@ export async function notifySessionMembers(sessionId: string, kind: "invite" | "
   if (onlyParticipantIds?.length) q = q.in("participant_id", onlyParticipantIds);
   const { data: rows } = await q;
 
-  const title = kind === "invite" ? "稽古の召集" : kind === "update" ? "予定変更" : "中止";
+  const title = kind === "invite" ? "召集" : kind === "update" ? "予定変更" : "中止";
   const tail = kind === "cancel" ? "この予定は中止になりました。" : "出欠の回答をお願いします。";
   const text = `${sessionSummary(session)}\n${session.note ? `${session.note}\n` : ""}${tail}`;
   const stamp = kind === "invite" ? "" : `:${session.updated_at}`;

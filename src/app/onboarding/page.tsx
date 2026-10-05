@@ -46,7 +46,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
           </label>
           <label className="flex items-start gap-2">
             <input type="checkbox" name="marketing" className="mt-0.5" />
-            <span>PUZZLIAR の関連サービス(チケット販売・物販管理など)の案内を受け取る(任意)</span>
+            <span>ZAGUMI の他のサービス(チケット・物販・精算など)の案内を受け取る(任意)</span>
           </label>
         </div>
         <button className="w-full rounded-md bg-amber-500 px-4 py-2.5 font-semibold text-black hover:bg-amber-400">はじめる</button>

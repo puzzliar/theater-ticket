@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
       const url = `${SITE_URL}/my/${order.manage_token}`;
       const ok = await sendEmail(
         order.buyer_email!,
-        `【PUZZLIAR】まもなく開演です — ${ev.name}`,
+        `【ZAGUMIチケット】まもなく開演です — ${ev.name}`,
         `<p>${order.buyer_name} 様</p><p>「${ev.name}」(${stage.name})はまもなく開演です。受付では以下のページのQRコードをご提示ください。</p><p><a href="${url}">${url}</a></p><p>会場: ${ev.venue_name}</p>`,
       );
       if (ok) {

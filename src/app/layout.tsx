@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description: APP_DESCRIPTION,
 };
 
-// サービスごとに独立したヘッダー。稽古管理とチケット販売は共通アカウントだが相互リンクは置かない
+// サービスごとに独立したヘッダー。ZAGUMIスケジュールと ZAGUMIチケットは ZAGUMIアカウントを共有するが相互リンクは置かない
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja">
@@ -35,7 +35,7 @@ function TicketHeader() {
     <header className="border-b border-neutral-800">
       <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
         <Link href="/" className="text-lg font-semibold tracking-wide">
-          🎫 PUZZLIAR チケット
+          🎫 ZAGUMIチケット
         </Link>
         <nav className="text-sm text-neutral-400">
           <Link href="/login" className="hover:text-neutral-100">
@@ -54,12 +54,12 @@ async function RehearsalHeader() {
     <header className="border-b border-neutral-800">
       <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
         <Link href="/" className="text-lg font-semibold tracking-wide">
-          🎭 PUZZLIAR 稽古管理
+          🎭 ZAGUMIスケジュール
         </Link>
         <nav className="flex flex-wrap items-center gap-3 text-sm text-neutral-400">
           {session ? (
             <>
-              <Link href="/me" className="hover:text-neutral-100">稽古予定</Link>
+              <Link href="/me" className="hover:text-neutral-100">マイスケジュール</Link>
               {orgs.map((o) => (
                 <Link key={o.org.id} href={`/o/${o.org.slug}`} className="rounded border border-neutral-800 px-2 py-0.5 hover:text-neutral-100">{o.org.name}</Link>
               ))}

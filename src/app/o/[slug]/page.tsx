@@ -27,7 +27,7 @@ export default async function OrgHome({ params, searchParams }: { params: Promis
 
   return (
     <div className="space-y-10">
-      {sp.joined && <p className="rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-300">{org.name} に参加しました。召集されると稽古予定に表示されます。</p>}
+      {sp.joined && <p className="rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-300">{org.name} に参加しました。召集されるとマイスケジュールに表示されます。</p>}
       {sp.created && <p className="rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-300">団体を作成しました。「メンバー」から招待リンクを発行してキャストを招待してください。</p>}
       {sp.denied && <p className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">その操作には管理者権限が必要です。</p>}
 
