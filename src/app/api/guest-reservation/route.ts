@@ -184,7 +184,7 @@ export async function POST(req: NextRequest) {
     if (body.paymentMethod === "online" && order.buyer_email) {
       await sendEmail(
         order.buyer_email,
-        `【PUZZLIAR】${myCast.name}さんからのご予約のご案内`,
+        `【ZAGUMIチケット】${myCast.name}さんからのご予約のご案内`,
         `<p>${body.guestName} 様</p><p>${myCast.name} さんからチケットのご予約をお預かりしています。以下のページからお支払いをお願いします。</p><p><a href="${ticketUrl}">${ticketUrl}</a></p>`,
       );
     }

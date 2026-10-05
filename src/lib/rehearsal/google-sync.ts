@@ -96,7 +96,7 @@ async function syncOne(session: SessionForSync, participantId: string, cal: Cal,
   }
 }
 
-// 稽古枠の召集メンバー(連携済みの人)を同期
+// 予定の召集メンバー(連携済みの人)を同期
 export async function syncSession(sessionId: string, onlyParticipantIds?: string[]): Promise<void> {
   if (!googleConfigured()) return;
   const session = await loadSession(sessionId);

@@ -1,4 +1,4 @@
-# 🚀 稽古管理サービス 運用開始手順書（クローズド β 向け・操作手順版）
+# 🚀 ZAGUMIスケジュールサービス 運用開始手順書（クローズド β 向け・操作手順版）
 
 > `docs/rehearsal-requirements.md` v0.2 で実装した稽古・シフト管理サービス（共通アカウント基盤つき）を、招待制のクローズド β として公開するための手順。チケット販売システムと同じ GitHub リポジトリ・同じ Supabase プロジェクト（＝共通アカウント）を使うが、**別の Vercel プロジェクト・別ドメインで独立したサービスとして配信する**。
 >
@@ -12,17 +12,18 @@
 
 | # | 決めること | 例 | 使う場所 |
 |---|---|---|---|
-| 1 | 稽古管理の公開ドメイン | `keiko.puzzliar.jp` | A-2、A-3、A-5、B-1、F-3、G-1 のリダイレクト URL、`NEXT_PUBLIC_SITE_URL` |
-| 2 | 送信元メールアドレスと表示名 | `PUZZLIAR <noreply@puzzliar.jp>` | C、B-4、`EMAIL_FROM` |
+| 1 | ZAGUMIスケジュールの公開ドメイン | `schedule.zagumi.jp`（`zagumi.jp` を取得しない場合は `zagumi-schedule.puzzliar.jp`） | A-2、A-3、A-5、B-1、F-3、G-1 のリダイレクト URL、`NEXT_PUBLIC_SITE_URL` |
+| 1b | ZAGUMIチケットの公開ドメイン | `ticket.zagumi.jp`（現状の予定は `ticket.puzzliar.jp`） | B-1。本書では `<チケットのドメイン>` と書く |
+| 2 | 送信元メールアドレスと表示名 | `ZAGUMI <noreply@puzzliar.jp>` | C、B-4、`EMAIL_FROM` |
 | 3 | 問い合わせ先 | `support@puzzliar.jp` | D、F-2、`VAPID_SUBJECT` |
 
-本書で `<ドメイン>` と書いてあるものはすべて**稽古管理のドメイン**を指す。
+本書で `<ドメイン>` と書いてあるものはすべて**ZAGUMIスケジュールのドメイン**を指す。ブランドは **ZAGUMI**（座組）で、サービス名は ZAGUMIスケジュール（本書の対象）、ZAGUMIチケット、将来の ZAGUMI物販・ZAGUMI精算。共通アカウントは「ZAGUMIアカウント」、運営主体の表記は PUZZLIAR のまま。
 
-稽古管理とチケット販売は**共通アカウント（同じ Supabase プロジェクト）だが別サービス**として配信する。チケット販売の `ticket.puzzliar.jp`（Vercel プロジェクト `theater-ticket`）とは別に、稽古管理専用の Vercel プロジェクト（本書では `puzzliar-rehearsal`）とドメインを用意する。両プロジェクトは同じ GitHub リポジトリの `main` から自動デプロイされ、環境変数 `NEXT_PUBLIC_APP` でどちらのサービスとして動くかが決まる（`rehearsal`＝稽古管理、未設定＝チケット）。片方のサービスの URL（例: 稽古管理ドメインの `/admin`）を開くと相手サービスのトップへ戻され、画面上に相互リンクは置かない。ログイン状態はドメインごとに別で、同じメールアドレス／Google アカウントで双方にログインできる。
+ZAGUMIスケジュールとチケット販売は**共通アカウント（同じ Supabase プロジェクト）だが別サービス**として配信する。チケット販売の `<チケットのドメイン>`（Vercel プロジェクト `theater-ticket`）とは別に、ZAGUMIスケジュール専用の Vercel プロジェクト（本書では `zagumi-schedule`）とドメインを用意する。両プロジェクトは同じ GitHub リポジトリの `main` から自動デプロイされ、環境変数 `NEXT_PUBLIC_APP` でどちらのサービスとして動くかが決まる（`rehearsal`＝ZAGUMIスケジュール、未設定＝チケット）。片方のサービスの URL（例: ZAGUMIスケジュールドメインの `/admin`）を開くと相手サービスのトップへ戻され、画面上に相互リンクは置かない。ログイン状態はドメインごとに別で、同じメールアドレス／Google アカウントで双方にログインできる。
 
 ### 0-2. 手元に用意するもの
 
-- puzzliar.jp の DNS 管理画面にログインできること（お名前.com、Cloudflare など）
+- ドメインの DNS 管理画面にログインできること（`zagumi.jp` を取得する場合はその管理画面、puzzliar.jp 配下に置く場合は puzzliar.jp の管理画面。お名前.com、Cloudflare など）
 - GitHub `puzzliar/theater-ticket` の書き込み権限
 - Vercel、Supabase（プロジェクト `wiqnmebudaadwqdaxwko`）へのログイン
 - Google アカウント（Google Cloud 用）、LINE アカウント（LINE Developers 用）
@@ -51,27 +52,27 @@
 
 1. ブラウザで https://github.com/puzzliar/theater-ticket/compare/main...claude/theater-rehearsal-management-xpzffv を開く
 2. 緑の **Create pull request** ボタンを押す
-3. タイトルはそのまま（例: 「稽古管理 v0.2」）でよい。ページ下の **Create pull request** を押す
+3. タイトルはそのまま（例: 「ZAGUMIスケジュール v0.2」）でよい。ページ下の **Create pull request** を押す
 4. 作成された Pull Request ページで、下部の緑の **Merge pull request** → **Confirm merge** を押す
 5. 「Pull request successfully merged」と表示されれば完了。Vercel が `main` を自動でデプロイし始める（Vercel プロジェクト未作成なら A-2 で作ってからマージ後に再デプロイする）
 
-### A-2. 稽古管理用の Vercel プロジェクトを作る
+### A-2. ZAGUMIスケジュール用の Vercel プロジェクトを作る
 
 チケット販売用の `theater-ticket` プロジェクトはそのまま残し、**同じリポジトリから 2 つ目のプロジェクト**を作る。
 
 1. https://vercel.com/new を開く（チーム `puzzliar's projects` が選ばれていることを左上で確認）
 2. 「Import Git Repository」の一覧で `puzzliar/theater-ticket` の右の **Import** を押す（既に `theater-ticket` で使っているリポジトリでも、もう一度 Import できる）
-3. **Project Name** を `puzzliar-rehearsal` に書き換える
+3. **Project Name** を `zagumi-schedule` に書き換える
 4. Framework Preset が **Next.js** になっていることを確認（自動検出）。Root Directory は `./` のまま
 5. **Environment Variables** の欄を開き、まず Key `NEXT_PUBLIC_APP`、Value `rehearsal` を入れて **Add**。続けて A-3 の「必須」の変数を 1 行ずつ入れる
 6. **Deploy** を押す。数分で「Congratulations!」が出る
-7. 以降の A-3〜A-6 はこの `puzzliar-rehearsal` プロジェクトに対して行う。https://vercel.com/dashboard のプロジェクト一覧から `puzzliar-rehearsal` をクリックして開く
+7. 以降の A-3〜A-6 はこの `zagumi-schedule` プロジェクトに対して行う。https://vercel.com/dashboard のプロジェクト一覧から `zagumi-schedule` をクリックして開く
 
-> `theater-ticket` 側には `NEXT_PUBLIC_APP` を**設定しない**（未設定＝チケット販売として動く）。設定すると `ticket.puzzliar.jp` が稽古管理に変わってしまう。
+> `theater-ticket` 側には `NEXT_PUBLIC_APP` を**設定しない**（未設定＝チケット販売として動く）。設定すると `ticket.puzzliar.jp` がZAGUMIスケジュールに変わってしまう。
 
 ### A-3. 環境変数を登録する
 
-以下は稽古管理プロジェクト（`puzzliar-rehearsal`）に登録する。チケット側（`theater-ticket`）の環境変数は変更しない。
+以下はZAGUMIスケジュールプロジェクト（`zagumi-schedule`）に登録する。チケット側（`theater-ticket`）の環境変数は変更しない。
 
 1. Vercel のプロジェクト画面上部のタブ **Settings** をクリック
 2. 左メニュー **Environment Variables** をクリック
@@ -82,13 +83,13 @@
 
 | Key | Value | 備考 |
 |---|---|---|
-| `NEXT_PUBLIC_APP` | `rehearsal` | **稽古管理プロジェクトのみ**。これで `/` が稽古管理のトップページになり、チケット機能は提供されなくなる |
+| `NEXT_PUBLIC_APP` | `rehearsal` | **ZAGUMIスケジュールプロジェクトのみ**。これで `/` がZAGUMIスケジュールのトップページになり、チケット機能は提供されなくなる |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://wiqnmebudaadwqdaxwko.supabase.co` | チケットと同じ（共通アカウント） |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | B-0 で確認する `anon` キー | チケットと同じ |
 | `SUPABASE_SERVICE_ROLE_KEY` | B-0 で確認する `service_role` キー | チケットと同じ。**秘匿** |
 | `NEXT_PUBLIC_SITE_URL` | `https://<ドメイン>` | **末尾に `/` を付けない** |
 | `RESEND_API_KEY` | C-3 で取得 | C を終えてから登録 |
-| `EMAIL_FROM` | `PUZZLIAR 稽古管理 <noreply@puzzliar.jp>` | 稽古管理の通知の送信元。チケット側の `EMAIL_FROM` は別プロジェクトなので変更不要 |
+| `EMAIL_FROM` | `ZAGUMIスケジュール <noreply@puzzliar.jp>` | ZAGUMIスケジュールの通知の送信元。チケット側の `EMAIL_FROM` は別プロジェクトなので変更不要 |
 | `CRON_SECRET` | A-4 で生成したランダム文字列 | H-1 で同じ値を使う |
 | `ORG_CREATION_OPEN` | `false` | 招待制 |
 | `LINE_PUSH_MONTHLY_LIMIT` | `200` | |
@@ -121,14 +122,14 @@ Windows で `openssl` が無い場合は PowerShell で:
 ### A-5. ドメインを接続する
 
 1. Vercel プロジェクト → **Settings** → 左メニュー **Domains**
-2. 入力欄に `<ドメイン>`（例: `keiko.puzzliar.jp`）を入力し **Add** を押す
+2. 入力欄に `<ドメイン>`（例: `schedule.zagumi.jp`）を入力し **Add** を押す
 3. 「Add domain」のダイアログで既定のまま **Add** を押す
 4. 一覧に追加されたドメインの下に「Invalid Configuration」と DNS の指示が出る。表示された **CNAME** の値（通常 `cname.vercel-dns.com`）を控える
 5. DNS 管理画面（例: お名前.com の「DNS 設定／レコード追加」、Cloudflare なら **DNS → Records → Add record**）で次を追加して保存:
 
 ```
 種別: CNAME
-ホスト名(名前): keiko      ← <ドメイン> のサブドメイン部分
+ホスト名(名前): schedule   ← <ドメイン> のサブドメイン部分(puzzliar.jp 配下なら zagumi-schedule)
 値(ターゲット): cname.vercel-dns.com
 TTL: 自動 または 3600
 ```
@@ -141,10 +142,10 @@ TTL: 自動 または 3600
 1. Vercel プロジェクト → 上部タブ **Deployments**
 2. 一番上のデプロイ行の右端 **…** → **Redeploy** → ダイアログで **Redeploy**
 3. Status が **Ready** になったら、ブラウザで次を開く
-   - `https://<ドメイン>/` → 「今日、どこに行けばいいか。」の紹介ページ（ヘッダーが「🎭 PUZZLIAR 稽古管理」）
+   - `https://<ドメイン>/` → 「今日、どこに行けばいいか。」の紹介ページ（ヘッダーが「🎭 ZAGUMIスケジュール」）
    - `https://<ドメイン>/login` → 「Google でログイン」ボタンと「新規登録」リンクがある
-   - `https://<ドメイン>/admin` → トップページに戻される（チケット機能は稽古管理では提供しない）
-   - `https://ticket.puzzliar.jp/` → 従来どおり「公演一覧」。ヘッダーに稽古管理へのリンクが**無い**ことを確認
+   - `https://<ドメイン>/admin` → トップページに戻される（チケット機能はZAGUMIスケジュールでは提供しない）
+   - `https://<チケットのドメイン>/` → 従来どおり「公演一覧」。ヘッダーにZAGUMIスケジュールへのリンクが**無い**ことを確認
    - `https://<ドメイン>/terms` と `/privacy` → 文章が表示される
 
 ---
@@ -160,12 +161,12 @@ TTL: 自動 または 3600
 ### B-1. URL 設定（最重要）
 
 1. https://supabase.com/dashboard/project/wiqnmebudaadwqdaxwko/auth/url-configuration を開く（左メニュー **Authentication** → **URL Configuration** でも同じ）
-2. **Site URL** の欄を `https://<ドメイン>` に書き換え → **Save**（メールのリンクが既定で向く先。稽古管理を指定する）
+2. **Site URL** の欄を `https://<ドメイン>` に書き換え → **Save**（メールのリンクが既定で向く先。ZAGUMIスケジュールを指定する）
 3. **Redirect URLs** の **Add URL** を押し、次を 1 つずつ追加して **Save**:
    - `https://<ドメイン>/auth/callback`
    - `https://<ドメイン>/**`
-   - `https://ticket.puzzliar.jp/auth/callback`（チケット側でも同じアカウントで Google ログインを使うため）
-   - `https://ticket.puzzliar.jp/**`
+   - `https://<チケットのドメイン>/auth/callback`（チケット側でも同じ ZAGUMIアカウントで Google ログインを使うため）
+   - `https://<チケットのドメイン>/**`
    - `http://localhost:3000/**`（ローカル確認用）
 
 ここが未登録だと、Google ログインやメール確認リンクの後に `/login?error=auth` へ戻される。Supabase の Auth 設定は 1 プロジェクトに 1 つなので、両サービスのドメインをここにまとめて登録する。
@@ -304,7 +305,7 @@ abc...（長い文字列）
 ### F-2. OAuth 同意画面（Google Auth Platform）
 
 1. https://console.cloud.google.com/auth/overview を開く。初めての場合は **開始** を押してウィザードに従う（既に設定済みなら 2 へ）
-   - アプリ情報: アプリ名 `PUZZLIAR 稽古管理`、ユーザーサポートメール `support@puzzliar.jp` → **次へ**
+   - アプリ情報: アプリ名 `ZAGUMIスケジュール`、ユーザーサポートメール `support@puzzliar.jp` → **次へ**
    - 対象: **外部** → **次へ**
    - 連絡先情報: `support@puzzliar.jp` → **次へ**
    - 同意にチェック → **作成**
@@ -312,7 +313,7 @@ abc...（長い文字列）
 
 | 項目 | 値 |
 |---|---|
-| アプリ名 | PUZZLIAR 稽古管理 |
+| アプリ名 | ZAGUMIスケジュール |
 | ユーザーサポートメール | support@puzzliar.jp |
 | アプリのロゴ | 任意（設定すると審査対象が増えるので β では空でよい） |
 | アプリのホームページ | `https://<ドメイン>/` |
@@ -344,10 +345,10 @@ abc...（長い文字列）
 
 1. F-2 でテストユーザーに入れた Google アカウントで `https://<ドメイン>/login` → **Google でログイン**
 2. `https://<ドメイン>/me/settings` → 「Google カレンダー」欄の **Google カレンダーと連携する**
-3. Google の画面で「このアプリは Google で確認されていません」と出たら **詳細** → **PUZZLIAR 稽古管理（安全ではないページ）に移動** を押す（テスト状態では必ず出る）
+3. Google の画面で「このアプリは Google で確認されていません」と出たら **詳細** → **ZAGUMIスケジュール（安全ではないページ）に移動** を押す（テスト状態では必ず出る）
 4. 「カレンダーの予定の表示、編集…」にチェックが入った状態で **続行**
 5. `/me/settings` に戻り「Google カレンダーと連携しました」と表示される
-6. H-3 で稽古枠に召集されると Google カレンダーに即時に予定が入り、`/me` の空き時間一覧に「Googleカレンダーの予定」が「不可」として入る
+6. H-3 で予定に召集されると Google カレンダーに即時に予定が入り、`/me` の空き時間一覧に「Googleカレンダーの予定」が「不可」として入る
 
 **テスト状態の注意**: 認可は 7 日で失効する。失効すると自動で連携が解除され、`/me/settings` に再連携ボタンが出る。β 参加者には「週 1 回再連携が必要」と伝えるか、F-5 を早めに進める。
 
@@ -379,7 +380,7 @@ abc...（長い文字列）
 
 1. プロバイダー `PUZZLIAR` の画面で **チャネル設定** タブ → **新規チャネル作成** → **Messaging API** を選ぶ
 2. 「LINE 公式アカウントを作成」への案内が出た場合は **LINE Official Account Manager** に遷移するので、そこで:
-   - アカウント名 `PUZZLIAR 稽古管理`、業種 大業種 **サービス**／小業種 **その他** など → **確認** → **完了**
+   - アカウント名 `ZAGUMIスケジュール`、業種 大業種 **サービス**／小業種 **その他** など → **確認** → **完了**
    - 作成後、右上 **設定** → 左メニュー **Messaging API** → **Messaging API を利用する** → プロバイダーで `PUZZLIAR` を選択 → **同意する** → プライバシーポリシー URL（任意）→ **OK**
 3. LINE Developers コンソールに戻り、プロバイダー `PUZZLIAR` 配下に Messaging API チャネルが出ているのでクリック
 4. **チャネル基本設定** タブ:
@@ -389,7 +390,7 @@ abc...（長い文字列）
    - **Webhook の利用** を **ON**
    - ページ下部 **チャネルアクセストークン（長期）** の **発行** → 表示されたトークンをコピー → Vercel `LINE_CHANNEL_ACCESS_TOKEN`
    - 同じタブ上部の **QR コード**／**ボットのベーシック ID** の近くにある **友だち追加 URL**（`https://lin.ee/…`）をコピー → Vercel `LINE_ADD_FRIEND_URL`（見当たらなければ LINE Official Account Manager の **ホーム** → **友だちを増やす** → **友だち追加ガイド** → URL をコピー）
-6. **自動応答を止める**（重要）: https://manager.line.biz/ を開き、公式アカウント `PUZZLIAR 稽古管理` → 右上 **設定** → 左メニュー **応答設定**:
+6. **自動応答を止める**（重要）: https://manager.line.biz/ を開き、公式アカウント `ZAGUMIスケジュール` → 右上 **設定** → 左メニュー **応答設定**:
    - **応答メッセージ** を **オフ**
    - **Webhook** を **オン**
    - **あいさつメッセージ** は任意（オンなら Messaging API 側の follow 応答と二重になるのでオフ推奨）
@@ -398,7 +399,7 @@ abc...（長い文字列）
 ### G-3. LINE ログインチャネル（任意）
 
 1. プロバイダー `PUZZLIAR` → **チャネル設定** → **新規チャネル作成** → **LINE ログイン**
-2. 入力: チャネル名 `PUZZLIAR 稽古管理 ログイン`、チャネル説明、アプリタイプ **ウェブアプリ**、メールアドレス → 規約に同意 → **作成**
+2. 入力: チャネル名 `ZAGUMIスケジュール ログイン`、チャネル説明、アプリタイプ **ウェブアプリ**、メールアドレス → 規約に同意 → **作成**
 3. **チャネル基本設定** タブ:
    - **チャネル ID** → Vercel `LINE_LOGIN_CHANNEL_ID`
    - **チャネルシークレット** → Vercel `LINE_LOGIN_CHANNEL_SECRET`
@@ -495,13 +496,13 @@ update core_profiles set is_platform_admin = true where email = '<メールア�
 | 3 | A | `/orgs/new` → 団体名 `テスト劇団`、URL 名 `test-troupe` → **作成する**（運営はコード不要） | `https://<ドメイン>/o/test-troupe?created=1` に遷移。ヘッダーに「テスト劇団」 |
 | 4 | A | `/o/test-troupe` → 「新しいプロダクション」に公演名 `秋公演` → **作成**（先に公演を作る）。ヘッダー **メンバー** → 「参加者台帳」で名前 `テスト花子`、区分 キャスト → **仮メンバーを追加**。「招待リンク」でラベル `β テスト`、「この招待で参加する公演」の `秋公演` にチェック → **発行** | QR と `https://<ドメイン>/join/xxxx` が表示され、カードに「参加する公演: 秋公演」と出る |
 | 5 | B | 上のリンクを開く → 画面に「参加する公演: 秋公演」が出ている → 関わり方 キャスト → **参加する** | `/o/test-troupe?joined=1`。「この団体での参加者登録」に **テスト花子(キャスト) は私です** ボタン → 押す → 消える。`/o/test-troupe/p/<秋公演>` の参加メンバーに テスト花子 が入っている |
-| 6 | A | `/o/test-troupe/p/<秋公演>` → シーン欄でコード `1-1`、シーン名 `冒頭`、必要メンバーに テスト花子 → **追加** → 「稽古枠を作成」で明日の日付・18:00〜21:00、対象シーン `1-1`、「作成時に召集を通知」ON → **作成する** | 稽古枠詳細に遷移。メンバー表に テスト花子（未回答）。B にメール（E/G 設定済みならプッシュ／LINE）が届く |
+| 6 | A | `/o/test-troupe/p/<秋公演>` → シーン欄でコード `1-1`、シーン名 `冒頭`、必要メンバーに テスト花子 → **追加** → 「稽古枠を作成」で明日の日付・18:00〜21:00、対象シーン `1-1`、「作成時に召集を通知」ON → **作成する** | 予定詳細に遷移。メンバー表に テスト花子（未回答）。B にメール（E/G 設定済みならプッシュ／LINE）が届く |
 | 6b | A | `/o/test-troupe` で 2 つ目の公演 `冬公演` を作成 → ヘッダー **メンバー** → 参加者台帳の テスト花子 の行で `冬公演` にチェック → **公演を保存** | `/o/test-troupe/p/<冬公演>` の参加メンバーに テスト花子 が入る。B の `/me` には両公演の召集が並ぶ |
-| 7 | B | `/me` → 「要対応」の稽古枠で **参加** | 表示が「参加」。A が稽古枠詳細を再読み込みすると回答が「参加」 |
+| 7 | B | `/me` → 「要対応」の予定で **参加** | 表示が「参加」。A が予定詳細を再読み込みすると回答が「参加」 |
 | 8 | B | `/me` → 空き時間の登録で、明後日・「参加できない」・終日 → **登録** | 一覧に「不可」が出る。A が `/o/test-troupe/availability` を開くと該当日に赤い「不可」 |
-| 9 | A | 稽古枠を作成する画面で明後日 18:00〜21:00、シーン `1-1` を選び **参加可否を確認** | テスト花子に「× 不可」と表示 |
-| 10 | A | 稽古枠詳細 → 「代役募集」で欠ける人 テスト花子 → **代役を募集する** | 「[募集中] テスト花子 さんの代役 / 候補 0 名」（候補がいる劇団では候補に通知が届き、「入れます」で確定） |
-| 11 | A | 稽古枠詳細 → シーン `1-1` を **実施** → 「保存と同時に完了にする」にチェック → **記録を保存** | プロダクション画面のシーン進捗が `1 / 1`、「未消化 0」「全シーン一巡済み」 |
+| 9 | A | 予定を作成する画面で明後日 18:00〜21:00、シーン `1-1` を選び **参加可否を確認** | テスト花子に「× 不可」と表示 |
+| 10 | A | 予定詳細 → 「代役募集」で欠ける人 テスト花子 → **代役を募集する** | 「[募集中] テスト花子 さんの代役 / 候補 0 名」（候補がいる劇団では候補に通知が届き、「入れます」で確定） |
+| 11 | A | 予定詳細 → シーン `1-1` を **実施** → 「保存と同時に完了にする」にチェック → **記録を保存** | プロダクション画面のシーン進捗が `1 / 1`、「未消化 0」「全シーン一巡済み」 |
 | 12 | B | `/me/settings` → **Google カレンダーと連携する**（F 設定後） | Google カレンダーに `[稽古] テスト劇団 秋公演` が入る |
 | 13 | B | `/me/settings` → 「自分の予定・出欠・空き時間を CSV でダウンロード」 | CSV が保存される |
 | 14 | B | `/me/settings` → **アカウントを削除(退会)** → `退会` と入力 → **退会する** | `https://<ドメイン>/?deleted=1`（「退会が完了しました」）。A の **メンバー** から B が消え、参加者台帳に「退会済みユーザー」 |
@@ -510,7 +511,7 @@ update core_profiles set is_platform_admin = true where email = '<メールア�
 
 ### H-4. β 参加劇団への案内文（例）
 
-> PUZZLIAR 稽古管理（β）のご案内
+> ZAGUMIスケジュール（β）のご案内
 >
 > ■ 主催者の方
 > 1. `https://<ドメイン>/signup` で登録（Google アカウントが簡単です）
@@ -581,7 +582,7 @@ where channel = 'line' and sent_at >= date_trunc('month', now() at time zone 'As
 
 | Key | 必須 | 用途 | 取得箇所 |
 |---|---|---|---|
-| `NEXT_PUBLIC_APP` | 必須 | `rehearsal`＝稽古管理として配信（未設定＝チケット販売） | A-2 |
+| `NEXT_PUBLIC_APP` | 必須 | `rehearsal`＝ZAGUMIスケジュールとして配信（未設定＝チケット販売） | A-2 |
 | `NEXT_PUBLIC_SUPABASE_URL` `NEXT_PUBLIC_SUPABASE_ANON_KEY` `SUPABASE_SERVICE_ROLE_KEY` | 必須 | DB・認証（チケットと共通） | B-0 |
 | `NEXT_PUBLIC_SITE_URL` | 必須 | 公開 URL | 0-1 |
 | `RESEND_API_KEY` `EMAIL_FROM` | 必須 | メール通知 | C-3 |
@@ -599,7 +600,7 @@ where channel = 'line' and sent_at >= date_trunc('month', now() at time zone 'As
 | 登録先 | 画面 | 値 |
 |---|---|---|
 | Supabase | Authentication → URL Configuration → Site URL | `https://<ドメイン>` |
-| Supabase | 同 → Redirect URLs | `https://<ドメイン>/auth/callback`、`https://<ドメイン>/**`、`https://ticket.puzzliar.jp/auth/callback`、`https://ticket.puzzliar.jp/**` |
+| Supabase | 同 → Redirect URLs | `https://<ドメイン>/auth/callback`、`https://<ドメイン>/**`、`https://<チケットのドメイン>/auth/callback`、`https://<チケットのドメイン>/**` |
 | Google Cloud | クライアント → 承認済みのリダイレクト URI | `https://<ドメイン>/api/google/callback`、`https://wiqnmebudaadwqdaxwko.supabase.co/auth/v1/callback` |
 | Google Cloud | ブランディング → ホームページ／プライバシー／規約 | `https://<ドメイン>/`、`/privacy`、`/terms` |
 | LINE Developers | Messaging API 設定 → Webhook URL | `https://<ドメイン>/api/line/webhook` |
@@ -608,8 +609,8 @@ where channel = 'line' and sent_at >= date_trunc('month', now() at time zone 'As
 
 ## 付録 3. 公開前チェックリスト
 
-- [ ] A-1 `main` にマージ済み ／ A-2 `puzzliar-rehearsal` プロジェクト作成（`NEXT_PUBLIC_APP=rehearsal`） ／ A-5 ドメインが Valid Configuration ／ A-6 トップページが開き、`ticket.puzzliar.jp` は従来どおり
-- [ ] A-3 必須 12 変数を稽古管理プロジェクトに登録
+- [ ] A-1 `main` にマージ済み ／ A-2 `zagumi-schedule` プロジェクト作成（`NEXT_PUBLIC_APP=rehearsal`） ／ A-5 ドメインが Valid Configuration ／ A-6 トップページが開き、`ticket.puzzliar.jp` は従来どおり
+- [ ] A-3 必須 12 変数をZAGUMIスケジュールプロジェクトに登録
 - [ ] B-1 Site URL と Redirect URLs ／ B-3 Confirm email ON ／ B-5 Custom SMTP ON
 - [ ] C-2 Resend Domain が Verified ／ C-4 Click Tracking Disabled
 - [ ] D 規約・ポリシー確定、運営者情報記載、`TERMS_VERSION` 更新

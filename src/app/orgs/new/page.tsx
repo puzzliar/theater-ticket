@@ -15,7 +15,7 @@ export default async function NewOrgPage({ searchParams }: { searchParams: Promi
   return (
     <div className="mx-auto max-w-md space-y-6">
       <div>
-        <p className="text-sm text-neutral-500"><Link href="/me" className="hover:text-neutral-300">← 稽古予定</Link></p>
+        <p className="text-sm text-neutral-500"><Link href="/me" className="hover:text-neutral-300">← マイスケジュール</Link></p>
         <h1 className="text-xl font-bold">劇団・団体を作成</h1>
         <p className="mt-1 text-sm text-neutral-400">作成した人がオーナーになります。メンバーは招待リンクで参加します。</p>
       </div>

@@ -6,13 +6,13 @@ export default function TermsPage() {
     <article className="prose prose-invert max-w-none space-y-4 text-sm leading-relaxed text-neutral-200">
       <h1 className="text-2xl font-bold">利用規約</h1>
       <p className="text-xs text-neutral-500">版: {TERMS_VERSION}（ドラフト）</p>
-      <p>本規約は、PUZZLIAR（以下「当社」）が提供する稽古・シフト管理サービスおよび共通アカウント（以下「本サービス」）の利用条件を定めるものです。</p>
+      <p>本規約は、PUZZLIAR（以下「当社」）が提供するスケジュール管理サービス「ZAGUMIスケジュール」および共通アカウント「ZAGUMIアカウント」（以下「本サービス」）の利用条件を定めるものです。</p>
       <h2 className="text-lg font-semibold">1. アカウント</h2>
       <p>利用者は正確な情報でアカウントを登録し、認証情報を自己の責任で管理します。1 人につき 1 アカウントとし、複数の団体に所属できます。</p>
       <h2 className="text-lg font-semibold">2. 団体（組織）と権限</h2>
       <p>団体を作成した利用者はオーナーとして、団体内のデータと参加者の管理に責任を負います。管理者は招待・召集・出欠記録などの操作を行えます。団体間でデータは共有されません。</p>
       <h2 className="text-lg font-semibold">3. 空き時間の共有</h2>
-      <p>利用者が登録した空き時間および外部カレンダーから取り込んだ「予定あり」の情報は、利用者が所属するすべての団体の管理者に対し、稽古枠ごとの「参加可／不可／他現場／未回答」という判定結果としてのみ提示されます。予定の内容や他団体の名称は提示されません。</p>
+      <p>利用者が登録した空き時間および外部カレンダーから取り込んだ「予定あり」の情報は、利用者が所属するすべての団体の管理者に対し、予定ごとの「参加可／不可／他現場／未回答」という判定結果としてのみ提示されます。予定の内容や他団体の名称は提示されません。</p>
       <h2 className="text-lg font-semibold">4. 料金</h2>
       <p>本サービスの基本機能は無料で提供します。将来、有料の追加機能を提供する場合は事前に告知し、無料の基本機能は継続します。</p>
       <h2 className="text-lg font-semibold">5. 通知</h2>

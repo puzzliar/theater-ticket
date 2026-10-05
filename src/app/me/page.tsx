@@ -38,7 +38,7 @@ export default async function MePage() {
     <div className="space-y-10">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold">稽古予定</h1>
+          <h1 className="text-2xl font-bold">マイスケジュール</h1>
           <p className="text-sm text-neutral-400">{me.profile.display_name} さん ／ 今週 {weekCount} 件</p>
         </div>
         <Link href="/me/settings" className="text-sm text-amber-400 hover:underline">通知・連携の設定</Link>

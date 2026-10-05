@@ -114,7 +114,7 @@ export default async function MembersPage({ params }: { params: Promise<{ slug: 
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">参加者台帳 ({parts.filter((p) => p.is_active).length})</h2>
-        <p className="text-sm text-neutral-400">シーンや稽古枠に割り当てる単位です。本人がまだ登録していなくても「仮メンバー」として先に登録し、後から本人のアカウントに紐づけられます。1 人の参加者は複数の公演に所属できます。</p>
+        <p className="text-sm text-neutral-400">シーンや予定に割り当てる単位です。本人がまだ登録していなくても「仮メンバー」として先に登録し、後から本人のアカウントに紐づけられます。1 人の参加者は複数の公演に所属できます。</p>
         <div className="grid gap-1 text-sm">
           {parts.map((p) => (
             <div key={p.id} className={`flex flex-wrap items-center justify-between gap-2 rounded border border-neutral-800 px-3 py-1.5 ${p.is_active ? "" : "text-neutral-600"}`}>

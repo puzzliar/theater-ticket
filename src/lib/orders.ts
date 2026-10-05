@@ -267,7 +267,7 @@ export async function finalizeOrder(
     const url = `${SITE_URL}/my/${order.manage_token}`;
     await sendEmail(
       order.buyer_email,
-      "【PUZZLIAR】チケット購入が完了しました",
+      "【ZAGUMIチケット】チケット購入が完了しました",
       `<p>${order.buyer_name} 様</p><p>チケットのご購入ありがとうございます。当日は以下のページのQRコードを受付でご提示ください。</p><p><a href="${url}">${url}</a></p>`,
     );
   }

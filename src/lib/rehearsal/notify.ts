@@ -66,7 +66,7 @@ export async function notifyProfile(profileId: string, kind: NotifyKind, dedupeK
       if (ok) return finalize(dedupeKey, "webpush");
     } else if (ch === "email") {
       if (!profile.email || profile.email.endsWith("@line.puzzliar.jp")) continue;
-      if (await sendEmail(profile.email, `【稽古管理】${msg.title}`, `<pre style="font-family:inherit;white-space:pre-wrap">${escapeHtml(fullText)}</pre>`)) return finalize(dedupeKey, "email");
+      if (await sendEmail(profile.email, `【ZAGUMIスケジュール】${msg.title}`, `<pre style="font-family:inherit;white-space:pre-wrap">${escapeHtml(fullText)}</pre>`)) return finalize(dedupeKey, "email");
     }
   }
   // どのチャネルでも送れなかった: 記録は残す(画面上の「要対応」で拾える)
