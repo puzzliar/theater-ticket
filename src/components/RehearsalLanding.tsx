@@ -7,7 +7,9 @@ export default function RehearsalLanding({ me, deleted }: { me: SessionUser | nu
     <div className="space-y-12">
       {deleted && <p className="rounded border border-neutral-700 bg-neutral-900 p-3 text-sm text-neutral-300">退会が完了しました。ご利用ありがとうございました。</p>}
       <section className="space-y-4">
-        <p className="text-sm text-amber-400">ZAGUMIスケジュール(無料)</p>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/zagumi-schedule-white.svg" alt="ZAGUMIスケジュール" className="h-16 w-auto" />
+        <p className="text-sm text-amber-400">無料で使える、座組のための予定表</p>
         <h1 className="text-3xl font-bold leading-tight">今日、どこに行けばいいか。<br />誰がいつ来られるか。</h1>
         <p className="max-w-2xl text-neutral-300">小劇場・イマーシブシアターの稽古から本番までの予定を、主催者とキャストの両方が一つの場所で把握できるサービスです。複数の座組を掛け持ちするキャストも、1 つのアカウントで全部の予定が見えます。</p>
         <div className="flex flex-wrap gap-3">

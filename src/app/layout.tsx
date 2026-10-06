@@ -34,8 +34,9 @@ function TicketHeader() {
   return (
     <header className="border-b border-neutral-800">
       <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-        <Link href="/" className="text-lg font-semibold tracking-wide">
-          🎫 ZAGUMIチケット
+        <Link href="/" aria-label="ZAGUMIチケット" className="flex items-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/zagumi-ticket-white.svg" alt="ZAGUMIチケット" className="h-10 w-auto" />
         </Link>
         <nav className="text-sm text-neutral-400">
           <Link href="/login" className="hover:text-neutral-100">
@@ -53,8 +54,9 @@ async function RehearsalHeader() {
   return (
     <header className="border-b border-neutral-800">
       <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-        <Link href="/" className="text-lg font-semibold tracking-wide">
-          🎭 ZAGUMIスケジュール
+        <Link href="/" aria-label="ZAGUMIスケジュール" className="flex items-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/zagumi-schedule-white.svg" alt="ZAGUMIスケジュール" className="h-10 w-auto" />
         </Link>
         <nav className="flex flex-wrap items-center gap-3 text-sm text-neutral-400">
           {session ? (
