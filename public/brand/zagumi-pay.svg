@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 736 214" width="736" height="214" role="img" aria-label="ZAGUMI 精算">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 776 214" width="776" height="214" role="img" aria-label="ZAGUMI 精算">
   
   <g transform="translate(24 47) scale(1.2)">
     <path d="M23.84 23.84 L76.16 23.84 L23.84 76.16 L76.16 76.16" fill="none" stroke="#121212" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -11,6 +11,6 @@
     <circle cx="13.00" cy="50.00" r="6" fill="#121212"/>
     <circle cx="23.84" cy="23.84" r="6" fill="#121212"/>
   </g>
-  <g transform="translate(180 24)"><g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 10)"><path d="M10 0 H74 L10 100 H74" stroke="#121212"/><path d="M104 100 L140 0 L176 100 M119 64 H161" stroke="#121212"/><path d="M282.45 29.13 A42 42 0 1 0 288 50 H250" stroke="#121212"/><path d="M314 0 V62 A35 35 0 0 0 384 62 V0" stroke="#121212"/><path d="M414 100 V0 L453 56 L492 0 V100" stroke="#121212"/><path d="M522 0 V100" stroke="#121212"/></g></g>
+  <g transform="translate(180 24)"><g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 10)"><path d="M10 0 H82 L10 100 H82" stroke="#121212"/><path d="M110 100 L150 0 L190 100 M127 64 H173" stroke="#121212"/><path d="M310.63 23.87 A50 50 0 1 0 318 50 H274" stroke="#121212"/><path d="M346 0 V62 A38 38 0 0 0 422 62 V0" stroke="#121212"/><path d="M450 100 V0 L492 58 L534 0 V100" stroke="#121212"/><path d="M562 0 V100" stroke="#121212"/></g></g>
   <text x="182" y="178" font-family="'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif" font-weight="600" font-size="34" letter-spacing="2" fill="#121212">精算</text>
 </svg>
