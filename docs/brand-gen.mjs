@@ -26,15 +26,16 @@ function mark({ ink, accent, size = 100 }) {
 
 // ---- ワードマーク: 線だけで組んだ幾何学的な大文字。ストローク 16、キャップハイト 100 ----
 const SW = 16;
+// 各文字の高さを揃える: 直線の文字は y=0〜100、円の文字(G)は半径 50 で同じ高さにし、U の底も 100 に合わせる
 const letters = {
-  Z: { w: 64, d: (x) => `M${x} 0 H${x + 64} L${x} 100 H${x + 64}` },
-  A: { w: 72, d: (x) => `M${x} 100 L${x + 36} 0 L${x + 72} 100 M${x + 15} 64 H${x + 57}` },
-  G: { w: 78, d: (x) => { const c = x + 40, r = 42; const sx = c + r * Math.cos(-0.52), sy = 50 + r * Math.sin(-0.52); return `M${sx.toFixed(2)} ${sy.toFixed(2)} A${r} ${r} 0 1 0 ${c + r} 50 H${c + 4}`; } },
-  U: { w: 70, d: (x) => `M${x} 0 V62 A35 35 0 0 0 ${x + 70} 62 V0` },
-  M: { w: 78, d: (x) => `M${x} 100 V0 L${x + 39} 56 L${x + 78} 0 V100` },
+  Z: { w: 72, d: (x) => `M${x} 0 H${x + 72} L${x} 100 H${x + 72}` },
+  A: { w: 80, d: (x) => `M${x} 100 L${x + 40} 0 L${x + 80} 100 M${x + 17} 64 H${x + 63}` },
+  G: { w: 100, d: (x) => { const c = x + 50, r = 50; const a = -0.55; const sx = c + r * Math.cos(a), sy = 50 + r * Math.sin(a); return `M${sx.toFixed(2)} ${sy.toFixed(2)} A${r} ${r} 0 1 0 ${c + r} 50 H${c + 6}`; } },
+  U: { w: 76, d: (x) => `M${x} 0 V62 A38 38 0 0 0 ${x + 76} 62 V0` },
+  M: { w: 84, d: (x) => `M${x} 100 V0 L${x + 42} 58 L${x + 84} 0 V100` },
   I: { w: 0, d: (x) => `M${x} 0 V100` },
 };
-const GAP = 30;
+const GAP = 28;
 function wordmark({ ink, accentLetter = null, accent }) {
   let x = SW / 2 + 2;
   const paths = [];
