@@ -55,14 +55,14 @@ export default async function MyTicketsPage({
     <div className="mx-auto max-w-lg space-y-6">
       <div>
         <h1 className="text-xl font-bold">{stage.tk_events.name}</h1>
-        <p className="mt-1 text-sm text-neutral-400">
+        <p className="mt-1 text-sm text-muted">
           {stage.name} ／ {fmtDateTime(stage.starts_at)} 開演
           {stage.doors_open_at && ` ／ ${fmtDateTime(stage.doors_open_at)} 開場`}
         </p>
-        <p className="text-sm text-neutral-400">{stage.tk_events.venue_name}</p>
+        <p className="text-sm text-muted">{stage.tk_events.venue_name}</p>
       </div>
 
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-sm">
+      <div className="rounded-xl border border-line bg-surface p-4 text-sm">
         <p>
           {order.buyer_name} 様 ／ 合計 {yen(order.total)} ／{" "}
           <span className={order.payment_status === "paid" ? "text-emerald-400" : "text-yellow-400"}>
@@ -70,7 +70,7 @@ export default async function MyTicketsPage({
           </span>
         </p>
         {order.payment_status === "pending" && !cancelled && (
-          <p className="mt-1 text-neutral-400">
+          <p className="mt-1 text-muted">
             お支払い方法: {PAYMENT_METHOD_LABEL[order.payment_method]}
             {order.payment_method === "cash_at_door" && "(当日受付でお支払いください)"}
           </p>
@@ -79,20 +79,20 @@ export default async function MyTicketsPage({
       </div>
 
       {cancelled ? (
-        <p className="text-neutral-400">この注文はキャンセルされました。</p>
+        <p className="text-muted">この注文はキャンセルされました。</p>
       ) : (
         <div className="grid gap-4">
           {(tickets ?? []).map((t, idx) => {
             const seat = t.tk_seats as unknown as { row_label: string; seat_number: number } | null;
             return (
-              <div key={t.id} className="rounded-lg border border-neutral-700 bg-white p-5 text-center text-neutral-900">
-                <p className="text-sm font-semibold text-neutral-500">TICKET {idx + 1}</p>
+              <div key={t.id} className="rounded-xl border border-line-strong bg-white p-5 text-center text-neutral-900">
+                <p className="text-sm font-semibold text-dim">TICKET {idx + 1}</p>
                 <p className="mt-1 text-lg font-bold">
                   {seat ? `${seat.row_label}列 ${seat.seat_number}番` : `自由席 整理番号 ${t.entry_number ?? "-"}`}
                 </p>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={qrImages.get(t.id)} alt="チケットQRコード" className="mx-auto mt-2" />
-                <p className="text-xs text-neutral-500">
+                <p className="text-xs text-dim">
                   {t.checkin_status === "checked_in" ? `✅ 入場済み (${fmtDateTime(t.checked_in_at)})` : "受付でこのQRをご提示ください"}
                 </p>
               </div>

@@ -1,22 +1,95 @@
 @import "tailwindcss";
 
-/* アプリ全体はダーク基調で設計している(neutral-950 の背景に neutral-100 の文字)。
-   OS がライトモードでも配色が崩れないよう、背景・文字色は固定する */
+/* ===== ZAGUMI デザイントークン =====
+   ダーク基調。表面(surface)を 3 段、罫線(line)を 2 段、文字(fg)を 4 段に絞り、
+   琥珀(accent)だけを強調色として使う。OS のライト/ダーク設定には追従せず固定する。 */
+@theme {
+  --color-bg: #0b0b0e;
+  --color-surface: #131316;
+  --color-surface-2: #1a1a1f;
+  --color-surface-3: #232329;
+  --color-line: #26262d;
+  --color-line-strong: #35353e;
+  --color-fg: #f2f2f4;
+  --color-fg-2: #c9c9d1;
+  --color-muted: #8f8f9b;
+  --color-dim: #62626e;
+  --color-accent: #f5a524;
+  --color-accent-hover: #ffb83d;
+  --color-accent-soft: #ffd27a;
+  --color-accent-ink: #1a1200;
+  --font-sans: "Inter", "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --shadow-card: 0 1px 0 0 rgb(255 255 255 / 0.03) inset, 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --shadow-pop: 0 12px 40px -12px rgb(0 0 0 / 0.7);
+}
+
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
   color-scheme: dark;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html {
+  background: var(--color-bg);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-feature-settings: "palt" 1, "cv11" 1, "ss01" 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.01em;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-accent) 35%, transparent);
+}
+
+/* コントロールの共通挙動: フォーカスリング、ホバーのトランジション */
+a, button, input, select, textarea, summary {
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+}
+:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--color-accent) 70%, transparent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+input::placeholder, textarea::placeholder {
+  color: var(--color-dim);
+}
+input[type="date"], input[type="time"], input[type="datetime-local"] {
+  color-scheme: dark;
+}
+summary {
+  list-style: none;
+}
+summary::-webkit-details-marker {
+  display: none;
+}
+details > summary::before {
+  content: "›";
+  display: inline-block;
+  width: 1em;
+  color: var(--color-dim);
+  transition: transform 120ms ease;
+}
+details[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+/* 細いスクロールバー */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+/* 表: 行の罫線を淡く、ヘッダーを小さく */
+thead {
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
 }

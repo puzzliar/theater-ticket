@@ -98,14 +98,14 @@ export default function PurchaseForm(props: Props) {
             const areaSeats = props.seats.filter((s) => s.area_id === sc.area_id);
             const sel = seatsBySc[sc.id] ?? [];
             return (
-              <div key={sc.id} className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+              <div key={sc.id} className="rounded-xl border border-line bg-surface p-4">
                 <div className="mb-2 flex items-baseline justify-between">
                   <p className="font-medium">
-                    {sc.name} <span className="text-sm text-neutral-400">(座席指定)</span>
+                    {sc.name} <span className="text-sm text-muted">(座席指定)</span>
                   </p>
-                  <p className="text-amber-400">{yen(tt.price)}</p>
+                  <p className="text-accent">{yen(tt.price)}</p>
                 </div>
-                <p className="mb-2 text-xs text-neutral-400">座席図から席を選んでください(複数選択可)</p>
+                <p className="mb-2 text-xs text-muted">座席図から席を選んでください(複数選択可)</p>
                 <SeatMap
                   seats={areaSeats}
                   takenSeatIds={taken}
@@ -121,7 +121,7 @@ export default function PurchaseForm(props: Props) {
                   }
                 />
                 {sel.length > 0 && (
-                  <p className="mt-2 text-sm text-neutral-300">
+                  <p className="mt-2 text-sm text-fg-2">
                     選択中:{" "}
                     {areaSeats
                       .filter((s) => sel.includes(s.id))
@@ -136,20 +136,20 @@ export default function PurchaseForm(props: Props) {
           const st = props.stock.find((x) => x.area_id === sc.area_id);
           const remaining = st?.remaining ?? 0;
           return (
-            <div key={sc.id} className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+            <div key={sc.id} className="rounded-xl border border-line bg-surface p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">
-                    {sc.name} <span className="text-sm text-neutral-400">(自由席・整理番号付き)</span>
+                    {sc.name} <span className="text-sm text-muted">(自由席・整理番号付き)</span>
                   </p>
-                  <p className="text-sm text-neutral-400">
+                  <p className="text-sm text-muted">
                     {remaining > 0 ? `残り${remaining}枚` : "完売"}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <p className="text-amber-400">{yen(tt.price)}</p>
+                  <p className="text-accent">{yen(tt.price)}</p>
                   <select
-                    className="rounded-md border border-neutral-700 bg-neutral-800 px-2 py-1"
+                    className="rounded-lg border border-line-strong bg-surface-2 px-2 py-1"
                     value={qtyBySc[sc.id] ?? 0}
                     onChange={(e) => setQtyBySc((p) => ({ ...p, [sc.id]: Number(e.target.value) }))}
                     disabled={remaining === 0}
@@ -170,14 +170,14 @@ export default function PurchaseForm(props: Props) {
       {/* 扱い選択 */}
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">2. ご案内キャスト</h2>
-        <p className="text-sm text-neutral-400">
+        <p className="text-sm text-muted">
           どちらのお客様かをお選びください(出演者からのご案内でない場合は「一般」)。
         </p>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setCastId("")}
-            className={`rounded-full border px-4 py-1.5 text-sm ${castId === "" ? "border-amber-400 bg-amber-500/20 text-amber-300" : "border-neutral-700 bg-neutral-900 text-neutral-300"}`}
+            className={`rounded-full border px-4 py-1.5 text-sm ${castId === "" ? "border-accent bg-accent/15 text-accent" : "border-line-strong bg-surface text-fg-2"}`}
           >
             一般
           </button>
@@ -186,7 +186,7 @@ export default function PurchaseForm(props: Props) {
               key={cast.id}
               type="button"
               onClick={() => setCastId(cast.id)}
-              className={`rounded-full border px-4 py-1.5 text-sm ${castId === cast.id ? "border-amber-400 bg-amber-500/20 text-amber-300" : "border-neutral-700 bg-neutral-900 text-neutral-300"}`}
+              className={`rounded-full border px-4 py-1.5 text-sm ${castId === cast.id ? "border-accent bg-accent/15 text-accent" : "border-line-strong bg-surface text-fg-2"}`}
             >
               {cast.name}
             </button>
@@ -199,13 +199,13 @@ export default function PurchaseForm(props: Props) {
         <h2 className="text-lg font-semibold">3. お客様情報</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <input
-            className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2"
+            className="rounded-lg border border-line-strong bg-surface px-3 py-2"
             placeholder="お名前"
             value={buyerName}
             onChange={(e) => setBuyerName(e.target.value)}
           />
           <input
-            className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2"
+            className="rounded-lg border border-line-strong bg-surface px-3 py-2"
             placeholder="メールアドレス"
             type="email"
             value={buyerEmail}
@@ -215,9 +215,9 @@ export default function PurchaseForm(props: Props) {
       </section>
 
       {/* 確定 */}
-      <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+      <section className="rounded-xl border border-line bg-surface p-4">
         {items.length > 0 && (
-          <ul className="mb-3 space-y-1 text-sm text-neutral-300">
+          <ul className="mb-3 space-y-1 text-sm text-fg-2">
             {items.map((i) => (
               <li key={i.ticketTypeId}>
                 {i.label} × {i.qty}枚 = {yen(i.price * i.qty)}
@@ -230,13 +230,13 @@ export default function PurchaseForm(props: Props) {
           <button
             onClick={submit}
             disabled={submitting}
-            className="rounded-md bg-amber-500 px-6 py-2 font-semibold text-black hover:bg-amber-400 disabled:opacity-50"
+            className="rounded-lg bg-accent px-6 py-2 font-semibold text-accent-ink hover:bg-accent-hover disabled:opacity-50"
           >
             {submitting ? "処理中..." : "決済へ進む"}
           </button>
         </div>
         {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
-        <p className="mt-3 text-xs text-neutral-500">
+        <p className="mt-3 text-xs text-dim">
           お支払い完了後、チケット(QRコード)ページのURLをメールでお送りします。購入者都合のキャンセルは販売額の5%+決済手数料を差し引いて返金します。
         </p>
       </section>

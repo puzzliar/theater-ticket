@@ -59,7 +59,7 @@ export default async function PurchasePage({
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold">{event.name}</h1>
-        <p className="mt-1 text-sm text-neutral-400">
+        <p className="mt-1 text-sm text-muted">
           {stage.name} ／ {fmtDateTime(stage.starts_at)} 開演 ／ {event.venue_name}
         </p>
       </div>

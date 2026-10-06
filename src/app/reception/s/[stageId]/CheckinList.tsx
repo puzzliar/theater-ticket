@@ -53,13 +53,13 @@ export default function CheckinList({ stageId, orders }: { stageId: string; orde
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-        <p className="text-sm text-neutral-400">
+      <div className="rounded-xl border border-line bg-surface p-4">
+        <p className="text-sm text-muted">
           入場 {checkedCount} / {totalCount} 枚
         </p>
         <div className="mt-2 flex gap-2">
           <input
-            className="flex-1 rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2"
+            className="flex-1 rounded-lg border border-line-strong bg-surface-2 px-3 py-2"
             placeholder="QRコードの読取値を入力/ペースト、またはお名前で検索"
             value={query}
             onChange={(e) => {
@@ -71,24 +71,24 @@ export default function CheckinList({ stageId, orders }: { stageId: string; orde
           <button
             onClick={scanSubmit}
             disabled={pending}
-            className="rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
           >
             照合
           </button>
         </div>
         {flash && <p className="mt-2 text-sm">{flash}</p>}
-        <p className="mt-2 text-xs text-neutral-500">
+        <p className="mt-2 text-xs text-dim">
           QRリーダー/カメラアプリで読み取った値をそのまま入力欄に貼り付けてEnterで照合できます。
         </p>
       </div>
 
       <div className="space-y-3">
         {filtered.map((o) => (
-          <div key={o.id} className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+          <div key={o.id} className="rounded-xl border border-line bg-surface p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="font-medium">{o.buyerName} 様</p>
-                <p className="text-xs text-neutral-400">
+                <p className="text-xs text-muted">
                   {CHANNEL_LABEL[o.channel]} ／ {PAYMENT_METHOD_LABEL[o.paymentMethod]} ／ {yen(o.total)}
                 </p>
               </div>
@@ -96,7 +96,7 @@ export default function CheckinList({ stageId, orders }: { stageId: string; orde
                 <button
                   onClick={() => startTransition(() => receiveCash(o.id, stageId))}
                   disabled={pending}
-                  className="rounded-md bg-yellow-500 px-3 py-1.5 text-sm font-semibold text-black disabled:opacity-50"
+                  className="rounded-lg bg-yellow-500 px-3 py-1.5 text-sm font-semibold text-accent-ink disabled:opacity-50"
                 >
                   💴 未収 {yen(o.total)} を収受
                 </button>
@@ -112,10 +112,10 @@ export default function CheckinList({ stageId, orders }: { stageId: string; orde
                     startTransition(() => (t.checkedIn ? undoCheckin(t.id, stageId) : checkinTicket(t.id, stageId)))
                   }
                   disabled={pending}
-                  className={`rounded-md border px-3 py-1.5 text-sm disabled:opacity-50 ${
+                  className={`rounded-lg border px-3 py-1.5 text-sm disabled:opacity-50 ${
                     t.checkedIn
                       ? "border-emerald-600 bg-emerald-900/40 text-emerald-300"
-                      : "border-neutral-600 bg-neutral-800 text-neutral-200 hover:border-amber-400"
+                      : "border-neutral-600 bg-surface-2 text-fg hover:border-accent"
                   }`}
                 >
                   {t.checkedIn ? "✅" : "🎫"} {t.label}
@@ -124,7 +124,7 @@ export default function CheckinList({ stageId, orders }: { stageId: string; orde
             </div>
           </div>
         ))}
-        {filtered.length === 0 && <p className="text-sm text-neutral-500">該当する予約がありません。</p>}
+        {filtered.length === 0 && <p className="text-sm text-dim">該当する予約がありません。</p>}
       </div>
     </div>
   );

@@ -68,10 +68,10 @@ export default function GuestReservationForm({ stages, seatClasses }: Props) {
     }
   }
 
-  const inputCls = "rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm";
+  const inputCls = "rounded-lg border border-line-strong bg-surface-2 px-3 py-2 text-sm";
 
   return (
-    <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+    <div className="rounded-xl border border-line bg-surface p-4">
       <div className="grid gap-2 sm:grid-cols-2">
         <select className={inputCls} value={stageId} onChange={(e) => setStageId(e.target.value)}>
           {stages.map((s) => (
@@ -127,7 +127,7 @@ export default function GuestReservationForm({ stages, seatClasses }: Props) {
       <button
         onClick={() => submit(false)}
         disabled={busy || !guestName.trim()}
-        className="mt-3 rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-black hover:bg-amber-400 disabled:opacity-50"
+        className="mt-3 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-ink hover:bg-accent-hover disabled:opacity-50"
       >
         {busy ? "処理中..." : "予約を確定する"}
       </button>
@@ -136,7 +136,7 @@ export default function GuestReservationForm({ stages, seatClasses }: Props) {
           {message.text}
         </p>
       )}
-      <p className="mt-2 text-xs text-neutral-500">
+      <p className="mt-2 text-xs text-dim">
         指定席は空き席から自動で割り当てます(複数枚は横並び連番を優先)。予約は即確定し、一般販売と同じ在庫から確保されます。
       </p>
     </div>

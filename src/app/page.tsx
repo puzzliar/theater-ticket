@@ -29,7 +29,7 @@ async function TicketHome() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">公演一覧</h1>
       {(events ?? []).length === 0 && (
-        <p className="text-neutral-400">現在販売中の公演はありません。</p>
+        <p className="text-muted">現在販売中の公演はありません。</p>
       )}
       <div className="grid gap-4">
         {(events ?? []).map((e) => {
@@ -38,12 +38,12 @@ async function TicketHome() {
             <Link
               key={e.id}
               href={`/e/${e.id}`}
-              className="rounded-lg border border-neutral-800 bg-neutral-900 p-5 transition hover:border-neutral-600"
+              className="rounded-xl border border-line bg-surface p-5 transition hover:border-accent/50"
             >
               <h2 className="text-lg font-semibold">{e.name}</h2>
-              <p className="mt-1 text-sm text-neutral-400">{e.venue_name}</p>
+              <p className="mt-1 text-sm text-muted">{e.venue_name}</p>
               {stages.length > 0 && (
-                <p className="mt-2 text-sm text-neutral-300">
+                <p className="mt-2 text-sm text-fg-2">
                   {fmtDateTime(stages[0].starts_at)}
                   {stages.length > 1 &&
                     ` 〜 ${fmtDateTime(stages[stages.length - 1].starts_at)}（全${stages.length}ステージ）`}

@@ -59,7 +59,7 @@ export default async function ReceptionStagePage({ params }: { params: Promise<{
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold">{(stage.tk_events as unknown as { name: string }).name}</h1>
-        <p className="text-sm text-neutral-400">
+        <p className="text-sm text-muted">
           {stage.name} ／ {fmtDateTime(stage.starts_at)} 開演 ── 受付
         </p>
       </div>
