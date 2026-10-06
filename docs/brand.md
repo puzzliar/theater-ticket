@@ -8,6 +8,21 @@
 - **ワードマーク**: 線だけで組んだ幾何学的な大文字。丸い線端で柔らかく、裏方の道具らしい実用感を残す
 - **色**: 墨 `#121212`、琥珀 `#F5A524`(アプリのアクセント amber と同系)、紙 `#FFFFFF`。暗い背景では墨を白に置き換える
 
+## サービスごとの琥珀の点
+
+円周の 8 つの点のうち、琥珀色にする位置でサービスを表す。真上がブランド(ZAGUMI 全体・アカウント)、以降は時計回りに割り当てる。8 サービスを超える場合はロゴ自体を見直す。
+
+| 位置(真上を 0、時計回り) | 用途 | ファイル |
+|---|---|---|
+| 0(真上) | ZAGUMI ブランド、ZAGUMIアカウント、アプリアイコン | `zagumi-logo.svg`、`zagumi-mark.svg`、`zagumi-icon.svg` |
+| 1(右上) | ZAGUMIスケジュール | `zagumi-schedule*.svg` |
+| 2(右) | ZAGUMIチケット | `zagumi-ticket*.svg` |
+| 3(右下) | ZAGUMI物販 | `zagumi-goods*.svg` |
+| 4(真下) | ZAGUMI精算 | `zagumi-pay*.svg` |
+| 5〜7 | 予備 | |
+
+割り当ては `docs/brand-gen.mjs` の `SERVICE_DOT` が正。
+
 ## ファイル
 
 | ファイル | 用途 |
@@ -16,7 +31,7 @@
 | `zagumi-mark.svg` / `-white` / `-mono` | シンボル単体。SNS アイコン、小さい表示、単色印刷 |
 | `zagumi-wordmark.svg` | 文字のみ |
 | `zagumi-icon.svg` | アプリアイコン(琥珀の角丸に墨のマーク)。`src/app/icon.svg` と同じ |
-| `zagumi-schedule.svg` 等 | サービス名つき(スケジュール・チケット・物販・精算)。`-white` は暗い背景用 |
+| `zagumi-schedule.svg` 等 | サービス名つき(スケジュール・チケット・物販・精算)。`-white` は暗い背景用、`-mark` はそのサービスの点位置のシンボル単体 |
 | `preview.png` | 一覧プレビュー |
 
 ## 使い方の決まり
