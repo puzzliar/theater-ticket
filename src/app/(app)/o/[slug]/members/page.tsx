@@ -57,7 +57,7 @@ export default async function MembersPage({ params }: { params: Promise<{ slug: 
                       <div className="flex gap-1">
                         {(["owner", "admin", "member"] as OrgRole[]).map((r) => (
                           <form key={r} action={setMemberRole.bind(null, org.id, m.profile_id, r)}>
-                            <button disabled={r === "owner" && membership.role !== "owner"} className={`rounded px-2 py-0.5 ${m.role === r ? "bg-accent text-black" : "bg-surface-2 text-muted hover:bg-surface-3"} disabled:opacity-40`}>{ROLE_LABEL[r]}</button>
+                            <button disabled={r === "owner" && membership.role !== "owner"} className={`rounded px-2 py-0.5 ${m.role === r ? "bg-accent text-accent-ink" : "bg-surface-2 text-muted hover:bg-surface-3"} disabled:opacity-40`}>{ROLE_LABEL[r]}</button>
                           </form>
                         ))}
                       </div>
@@ -65,7 +65,7 @@ export default async function MembersPage({ params }: { params: Promise<{ slug: 
                       ROLE_LABEL[m.role]
                     )}
                   </td>
-                  {isAdmin && <td className="p-2 text-right">{m.profile_id !== user.id && m.role !== "owner" && <form action={removeMember.bind(null, org.id, m.profile_id)}><button className="text-xs text-dim/70 hover:text-red-400">除名</button></form>}</td>}
+                  {isAdmin && <td className="p-2 text-right">{m.profile_id !== user.id && m.role !== "owner" && <form action={removeMember.bind(null, org.id, m.profile_id)}><button className="text-xs text-dim/70 hover:text-red-600">除名</button></form>}</td>}
                 </tr>
               ))}
             </tbody>
@@ -85,9 +85,9 @@ export default async function MembersPage({ params }: { params: Promise<{ slug: 
                 <div className="min-w-0 flex-1 space-y-1">
                   <p className="font-medium">{i.label || (i.role === "admin" ? "管理者用" : "メンバー用")} <span className="text-xs text-dim">{ROLE_LABEL[i.role]}{i.part && `／${PART_LABEL[i.part]}`}</span></p>
                   <p className="text-xs text-muted">{invProductions(i).length ? `参加する公演: ${invProductions(i).join("、")}` : "公演の指定なし(団体のみ参加)"}</p>
-                  <p className="break-all font-mono text-xs text-accent">{SITE_URL}/join/{i.token}</p>
+                  <p className="break-all font-mono text-xs text-accent-text">{SITE_URL}/join/{i.token}</p>
                   <p className="text-xs text-dim">期限 {fmtDate(i.expires_at)} ／ 使用 {i.used_count}{i.max_uses ? `/${i.max_uses}` : ""}</p>
-                  <form action={revokeInvitation.bind(null, org.id, i.id)}><button className="text-xs text-dim hover:text-red-400">無効化</button></form>
+                  <form action={revokeInvitation.bind(null, org.id, i.id)}><button className="text-xs text-dim hover:text-red-600">無効化</button></form>
                 </div>
               </div>
             ))}
@@ -120,7 +120,7 @@ export default async function MembersPage({ params }: { params: Promise<{ slug: 
             <div key={p.id} className={`flex flex-wrap items-center justify-between gap-2 rounded border border-line px-3 py-1.5 ${p.is_active ? "" : "text-dim/70"}`}>
               <span className="min-w-40">
                 {p.display_name} <span className="text-xs text-dim">{PART_LABEL[p.part]}</span>
-                {p.profile_id ? <span className="ml-1 text-xs text-emerald-500">登録済</span> : <span className="ml-1 text-xs text-yellow-500">未登録</span>}
+                {p.profile_id ? <span className="ml-1 text-xs text-emerald-600">登録済</span> : <span className="ml-1 text-xs text-amber-600">未登録</span>}
               </span>
               {prods.length > 0 && (
                 isAdmin && p.is_active ? (

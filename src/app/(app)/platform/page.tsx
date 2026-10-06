@@ -36,9 +36,9 @@ export default async function PlatformPage() {
         <div className="space-y-1 text-sm">
           {((codes ?? []) as OrganizerCodeRow[]).map((c) => (
             <div key={c.code} className="flex flex-wrap items-center justify-between gap-2 rounded border border-line px-3 py-1.5">
-              <span><span className="font-mono text-accent">{c.code}</span> <span className="text-muted">{c.note}</span></span>
+              <span><span className="font-mono text-accent-text">{c.code}</span> <span className="text-muted">{c.note}</span></span>
               <span className="text-xs text-dim">{c.used_count}/{c.max_uses} 使用{c.expires_at && ` ／ 期限 ${fmtDate(c.expires_at)}`}</span>
-              <form action={deleteOrganizerCode.bind(null, c.code)}><button className="text-xs text-dim hover:text-red-400">削除</button></form>
+              <form action={deleteOrganizerCode.bind(null, c.code)}><button className="text-xs text-dim hover:text-red-600">削除</button></form>
             </div>
           ))}
         </div>
@@ -51,8 +51,8 @@ export default async function PlatformPage() {
             <div key={o.id} className="flex flex-wrap items-center justify-between gap-2 rounded border border-line px-3 py-1.5">
               <span>{o.name} <span className="text-xs text-dim">/{o.slug} ／ {o.core_org_members.length}名 ／ {o.status}</span></span>
               <div className="flex gap-2 text-xs">
-                {o.status !== "active" && <form action={setOrgStatus.bind(null, o.id, "active")}><button className="text-emerald-400 hover:underline">有効化</button></form>}
-                {o.status === "active" && <form action={setOrgStatus.bind(null, o.id, "suspended")}><button className="text-dim hover:text-red-400">凍結</button></form>}
+                {o.status !== "active" && <form action={setOrgStatus.bind(null, o.id, "active")}><button className="text-emerald-600 hover:underline">有効化</button></form>}
+                {o.status === "active" && <form action={setOrgStatus.bind(null, o.id, "suspended")}><button className="text-dim hover:text-red-600">凍結</button></form>}
               </div>
             </div>
           ))}

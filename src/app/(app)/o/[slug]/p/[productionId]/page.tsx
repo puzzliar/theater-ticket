@@ -84,7 +84,7 @@ export default async function ProductionPage({ params, searchParams }: { params:
   const upcoming = all.filter((s) => ts(s.ends_at) >= now && s.status !== "cancelled");
   const past = all.filter((s) => ts(s.ends_at) < now || s.status === "cancelled").reverse();
   const input = "rounded-lg border border-line-strong bg-surface-2 px-3 py-2 text-sm";
-  const verdictCls: Record<AvailabilityVerdict["status"], string> = { available: "text-emerald-400", unavailable: "text-red-400", conflict: "text-orange-400", unknown: "text-muted" };
+  const verdictCls: Record<AvailabilityVerdict["status"], string> = { available: "text-emerald-600", unavailable: "text-red-600", conflict: "text-orange-600", unknown: "text-muted" };
   const verdictLabel: Record<AvailabilityVerdict["status"], string> = { available: "○ 参加可", unavailable: "× 不可", conflict: "△ 重複", unknown: "? 未回答" };
 
   const Row = ({ s }: { s: S }) => {
@@ -95,8 +95,8 @@ export default async function ProductionPage({ params, searchParams }: { params:
       <Link href={`/o/${slug}/p/${productionId}/s/${s.id}`} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface p-3 text-sm hover:border-accent/50">
         <div>
           <p>
-            <span className={`mr-2 rounded px-1.5 py-0.5 text-xs ${s.kind === "performance" ? "bg-rose-500/20 text-rose-300" : "bg-sky-500/20 text-sky-300"}`}>{SESSION_KIND_LABEL[s.kind]}</span>
-            {s.tentative && <span className="mr-2 rounded bg-orange-500/20 px-1.5 py-0.5 text-xs text-orange-300">仮</span>}
+            <span className={`mr-2 rounded px-1.5 py-0.5 text-xs ${s.kind === "performance" ? "bg-rose-500/20 text-rose-700" : "bg-sky-500/20 text-sky-700"}`}>{SESSION_KIND_LABEL[s.kind]}</span>
+            {s.tentative && <span className="mr-2 rounded bg-orange-500/20 px-1.5 py-0.5 text-xs text-orange-700">仮</span>}
             <span className="font-medium">{fmtRange(s.starts_at, s.ends_at)}</span> {s.title}
             {s.status !== "scheduled" && <span className="ml-2 text-xs text-dim">[{SESSION_STATUS_LABEL[s.status]}]</span>}
           </p>
@@ -105,7 +105,7 @@ export default async function ProductionPage({ params, searchParams }: { params:
             {s.rh_session_scenes.length > 0 && `シーン: ${s.rh_session_scenes.map((x) => `${x.rh_scenes?.code ?? ""}${x.status === "done" ? "✓" : x.status === "skipped" ? "−" : ""}`).join(", ")}`}
           </p>
         </div>
-        <p className="text-xs text-muted">召集{s.rh_session_members.length} ／ <span className="text-emerald-400">参加{yes}</span> ／ <span className="text-red-400">不参加{no}</span> ／ <span className="text-yellow-400">未回答{pending}</span></p>
+        <p className="text-xs text-muted">召集{s.rh_session_members.length} ／ <span className="text-emerald-600">参加{yes}</span> ／ <span className="text-red-600">不参加{no}</span> ／ <span className="text-amber-600">未回答{pending}</span></p>
       </Link>
     );
   };
@@ -116,9 +116,9 @@ export default async function ProductionPage({ params, searchParams }: { params:
         <p className="text-sm text-dim"><Link href={`/o/${slug}`} className="hover:text-fg">← プロダクション一覧</Link></p>
         <h2 className="text-2xl font-bold">{prod.name}</h2>
         <p className="text-sm text-muted">{prod.rehearsal_starts_on && `稽古開始 ${prod.rehearsal_starts_on} `}{prod.opens_on && `／ 初日 ${prod.opens_on} `}{prod.closes_on && `〜 ${prod.closes_on} `}{prod.default_location && `／ ${prod.default_location}`}{prod.block_from && prod.block_to && ` ／ 他現場を入れない期間 ${prod.block_from}〜${prod.block_to}`}</p>
-        {one(sp.handover) && <p className="mt-2 rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-300">公演を引き受けました。参加していたキャストはこの座組のメンバーになっています。</p>}
-        {one(sp.imported) && <p className="mt-2 rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-300">{one(sp.imported)} 件の予定を取り込みました。</p>}
-        {one(sp.self) && <p className="mt-2 rounded border border-accent/40 bg-accent/10 p-3 text-sm text-accent-soft">セルフ公演を作りました。「日程を貼り付けて取り込む」で届いた日程をまとめて登録できます。共演者は「共演者・招待」から招待できます。</p>}
+        {one(sp.handover) && <p className="mt-2 rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-700">公演を引き受けました。参加していたキャストはこの座組のメンバーになっています。</p>}
+        {one(sp.imported) && <p className="mt-2 rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-700">{one(sp.imported)} 件の予定を取り込みました。</p>}
+        {one(sp.self) && <p className="mt-2 rounded border border-accent/40 bg-accent/10 p-3 text-sm text-accent-text">セルフ公演を作りました。「日程を貼り付けて取り込む」で届いた日程をまとめて登録できます。共演者は「共演者・招待」から招待できます。</p>}
         {isAdmin && (
           <details className="mt-3 rounded-xl border border-line bg-surface p-3 text-sm">
             <summary className="cursor-pointer text-fg-2">公演の情報を編集</summary>
@@ -142,9 +142,9 @@ export default async function ProductionPage({ params, searchParams }: { params:
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="text-lg font-semibold">シーン進捗</h3>
           <p className="text-sm">
-            全{progress.length}シーン中 <span className="font-semibold text-accent">未消化 {remaining.length}</span>
+            全{progress.length}シーン中 <span className="font-semibold text-accent-text">未消化 {remaining.length}</span>
             {remaining.length > 0 && <span className="text-muted">({remaining.map((r) => r.code).join(", ")})</span>}
-            {progress.length > 0 && remaining.length === 0 && <span className="text-emerald-400"> 全シーン一巡済み</span>}
+            {progress.length > 0 && remaining.length === 0 && <span className="text-emerald-600"> 全シーン一巡済み</span>}
           </p>
         </div>
         <div className="overflow-x-auto rounded-xl border border-line">
@@ -175,9 +175,9 @@ export default async function ProductionPage({ params, searchParams }: { params:
                         <span className="text-xs text-fg-2">{ids.map((m) => nameOf.get(m) ?? "?").join(", ")}</span>
                       )}
                     </td>
-                    <td className={`p-2 font-semibold ${done < sc.target_count ? "text-accent" : "text-emerald-400"}`}>{done} / {sc.target_count}</td>
+                    <td className={`p-2 font-semibold ${done < sc.target_count ? "text-accent-text" : "text-emerald-600"}`}>{done} / {sc.target_count}</td>
                     <td className="p-2 text-xs text-muted">{p?.last_done_at ? fmtDate(p.last_done_at) : "-"}</td>
-                    <td className="p-2 text-right">{isAdmin && <form action={deleteScene.bind(null, org.id, productionId, sc.id)}><button className="text-xs text-dim/70 hover:text-red-400">削除</button></form>}</td>
+                    <td className="p-2 text-right">{isAdmin && <form action={deleteScene.bind(null, org.id, productionId, sc.id)}><button className="text-xs text-dim/70 hover:text-red-600">削除</button></form>}</td>
                   </tr>
                 );
               })}
@@ -205,7 +205,7 @@ export default async function ProductionPage({ params, searchParams }: { params:
       <section className="space-y-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="text-lg font-semibold">予定(稽古・本番)</h3>
-          {isAdmin && <Link href={`/o/${slug}/p/${productionId}/import`} className="rounded-lg border border-accent/40 px-3 py-1 text-xs text-accent hover:bg-accent/10">日程を貼り付けて取り込む</Link>}
+          {isAdmin && <Link href={`/o/${slug}/p/${productionId}/import`} className="rounded-lg border border-accent/40 px-3 py-1 text-xs text-accent-text hover:bg-accent/10">日程を貼り付けて取り込む</Link>}
         </div>
         <div className="space-y-2">
           {upcoming.length === 0 && <p className="text-sm text-muted">今後の予定はありません。</p>}
@@ -232,7 +232,7 @@ export default async function ProductionPage({ params, searchParams }: { params:
               {((scenes ?? []) as SceneRow[]).map((sc) => {
                 const p = progress.find((x) => x.scene_id === sc.id);
                 const isRemaining = Number(p?.done_count ?? 0) < sc.target_count;
-                return <label key={sc.id} className={`flex items-center gap-1 ${isRemaining ? "text-accent-soft" : "text-muted"}`}><input type="checkbox" name="scene_ids" value={sc.id} defaultChecked={draft.sceneIds.includes(sc.id)} />{sc.code} {sc.name}</label>;
+                return <label key={sc.id} className={`flex items-center gap-1 ${isRemaining ? "text-accent-text" : "text-muted"}`}><input type="checkbox" name="scene_ids" value={sc.id} defaultChecked={draft.sceneIds.includes(sc.id)} />{sc.code} {sc.name}</label>;
               })}
             </div>
             <p className="mt-3 text-xs text-muted">追加で召集するメンバー</p>
@@ -242,7 +242,7 @@ export default async function ProductionPage({ params, searchParams }: { params:
             {checking && (
               <div className="mt-3 rounded-lg border border-line-strong bg-bg p-3 text-sm">
                 <p className="mb-1 font-medium">参加可否の確認 ({draft.date} {draft.from}〜{draft.to})</p>
-                {checkError && <p className="text-red-400">{checkError}</p>}
+                {checkError && <p className="text-red-600">{checkError}</p>}
                 {!checkError && verdicts.length === 0 && <p className="text-muted">対象メンバーがいません。</p>}
                 <ul className="grid gap-1 sm:grid-cols-2">
                   {verdicts.map((v) => (
@@ -252,7 +252,7 @@ export default async function ProductionPage({ params, searchParams }: { params:
               </div>
             )}
             <div className="mt-3 flex flex-wrap items-center gap-3">
-              <button formAction={checkSessionSlot.bind(null, org.id, productionId)} className="rounded-lg border border-accent px-4 py-2 text-sm font-semibold text-accent hover:bg-accent/10">参加可否を確認</button>
+              <button formAction={checkSessionSlot.bind(null, org.id, productionId)} className="rounded-lg border border-accent px-4 py-2 text-sm font-semibold text-accent-text hover:bg-accent/10">参加可否を確認</button>
               <button formAction={createSession.bind(null, org.id, productionId)} className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-ink hover:bg-accent-hover">作成する</button>
               <label className="flex items-center gap-1 text-xs text-fg-2"><input type="checkbox" name="notify" defaultChecked /> 作成時に召集を通知</label>
             </div>
@@ -268,7 +268,7 @@ export default async function ProductionPage({ params, searchParams }: { params:
               <span>
                 {m.rh_participants!.display_name} <span className="text-xs text-dim">{PART_LABEL[m.rh_participants!.part]}{m.role_name && ` ／ ${m.role_name}`}{!m.rh_participants!.profile_id && " ／ 未登録"}</span>
               </span>
-              {isAdmin && <form action={removeProductionMember.bind(null, org.id, productionId, m.participant_id)}><button className="text-xs text-dim/70 hover:text-red-400">外す</button></form>}
+              {isAdmin && <form action={removeProductionMember.bind(null, org.id, productionId, m.participant_id)}><button className="text-xs text-dim/70 hover:text-red-600">外す</button></form>}
             </div>
           ))}
         </div>
@@ -285,14 +285,14 @@ export default async function ProductionPage({ params, searchParams }: { params:
         )}
         {isAdmin && isPersonal && (
           <div className="space-y-2 rounded-xl border border-accent/30 bg-accent/5 p-4 text-sm">
-            <p className="font-semibold text-accent">主催者に引き渡す</p>
+            <p className="font-semibold text-accent-text">主催者に引き渡す</p>
             <p className="text-fg-2">主催者が ZAGUMI に座組を登録したら、この公演を予定・シーン・出欠記録ごと主催者の座組へ移せます。共演者も一緒に移動し、以降は主催者が管理します。下のリンクを主催者に送ってください。</p>
             {transfer ? (
               <div className="flex flex-wrap items-center gap-2">
-                <span className="break-all font-mono text-xs text-accent">{SITE_URL}/handover/{transfer.token}</span>
+                <span className="break-all font-mono text-xs text-accent-text">{SITE_URL}/handover/{transfer.token}</span>
                 <CopyButton text={`${SITE_URL}/handover/${transfer.token}`} label="URL をコピー" className="rounded-lg bg-surface-3 px-3 py-1.5 text-xs hover:bg-line-strong" />
                 <span className="text-xs text-dim">期限 {fmtDate(transfer.expires_at)}</span>
-                <form action={cancelTransfer.bind(null, org.id, productionId, transfer.id)}><button className="text-xs text-dim hover:text-red-400">リンクを無効化</button></form>
+                <form action={cancelTransfer.bind(null, org.id, productionId, transfer.id)}><button className="text-xs text-dim hover:text-red-600">リンクを無効化</button></form>
               </div>
             ) : (
               <form action={startTransfer.bind(null, org.id, productionId)}><button className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-ink hover:bg-accent-hover">引き渡しリンクを発行</button></form>

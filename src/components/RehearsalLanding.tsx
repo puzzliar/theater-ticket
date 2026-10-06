@@ -14,7 +14,7 @@ const FEATURES: [string, string][] = [
 export default function RehearsalLanding({ me, deleted }: { me: SessionUser | null; deleted?: boolean }) {
   return (
     <div className="relative">
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(60rem_24rem_at_50%_-4rem,rgb(245_165_36_/_0.18),transparent_70%)]" />
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(60rem_24rem_at_50%_-4rem,rgb(245_165_36_/_0.22),transparent_70%)]" />
       <div className="mx-auto max-w-5xl space-y-20 px-4 pb-10 pt-16">
         {deleted && <p className="rounded-xl border border-line bg-surface p-3 text-sm text-fg-2">退会が完了しました。ご利用ありがとうございました。</p>}
 
@@ -40,7 +40,7 @@ export default function RehearsalLanding({ me, deleted }: { me: SessionUser | nu
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map(([t, d], i) => (
             <div key={t} className="rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-card)]">
-              <p className="mb-3 inline-flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 font-mono text-xs text-accent">{String(i + 1).padStart(2, "0")}</p>
+              <p className="mb-3 inline-flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 font-mono text-xs text-accent-text">{String(i + 1).padStart(2, "0")}</p>
               <h2 className="font-semibold">{t}</h2>
               <p className="mt-1.5 text-sm leading-relaxed text-muted">{d}</p>
             </div>

@@ -20,7 +20,7 @@ export default async function AvailabilityTextPage({ searchParams }: { searchPar
   const [statuses, shares] = await Promise.all([computeDayStatuses(me.id, opts), listShares(me.id)]);
   const text = formatAvailabilityText(me.profile.display_name, statuses, opts);
   const input = "rounded-lg border border-line-strong bg-surface-2 px-3 py-2 text-sm";
-  const markCls: Record<string, string> = { "○": "text-emerald-400", "×": "text-red-400", "△": "text-yellow-400", "−": "text-dim" };
+  const markCls: Record<string, string> = { "○": "text-emerald-600", "×": "text-red-600", "△": "text-amber-600", "−": "text-dim" };
 
   return (
     <div className="space-y-8">
@@ -48,7 +48,7 @@ export default async function AvailabilityTextPage({ searchParams }: { searchPar
           <div className="max-h-[32rem] overflow-y-auto rounded-xl border border-line text-sm">
             {statuses.map((d) => (
               <div key={d.date} className="flex items-center justify-between border-b border-line/60 px-3 py-1.5 last:border-0">
-                <span className={d.date === today ? "text-accent" : ""}>{fmtDateLabel(d.date)}</span>
+                <span className={d.date === today ? "text-accent-text" : ""}>{fmtDateLabel(d.date)}</span>
                 <span className={`font-semibold ${markCls[d.mark]}`}>{d.mark}<span className="ml-2 text-xs font-normal text-muted">{d.mark === "△" && d.free.map((r) => `${r.from}〜${r.to}`).join(", ")}</span></span>
               </div>
             ))}
@@ -76,12 +76,12 @@ export default async function AvailabilityTextPage({ searchParams }: { searchPar
                 <div key={s.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface p-3">
                   <div className="min-w-0">
                     <p className="font-medium">{s.label || "共有リンク"} <span className="text-xs text-dim">{fmtDateLabel(s.from_date)}〜{fmtDateLabel(s.to_date)} ／ {shareOptions(s).windowFrom}〜{shareOptions(s).windowTo} ／ 期限 {fmtDate(s.expires_at)}</span></p>
-                    <p className="break-all font-mono text-xs text-accent">{url}</p>
+                    <p className="break-all font-mono text-xs text-accent-text">{url}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <CopyButton text={url} label="URL をコピー" className="rounded-lg bg-surface-3 px-3 py-1.5 text-xs hover:bg-line-strong" />
                     <a href={lineShareUrl(`${me.profile.display_name}の空き状況です。\n${url}`)} target="_blank" rel="noopener" className="rounded-lg bg-[#06C755] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90">LINE で送る</a>
-                    <form action={removeShare.bind(null, s.id)}><button className="text-xs text-dim hover:text-red-400">無効化</button></form>
+                    <form action={removeShare.bind(null, s.id)}><button className="text-xs text-dim hover:text-red-600">無効化</button></form>
                   </div>
                 </div>
               );

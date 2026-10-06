@@ -103,7 +103,7 @@ export default function PurchaseForm(props: Props) {
                   <p className="font-medium">
                     {sc.name} <span className="text-sm text-muted">(座席指定)</span>
                   </p>
-                  <p className="text-accent">{yen(tt.price)}</p>
+                  <p className="text-accent-text">{yen(tt.price)}</p>
                 </div>
                 <p className="mb-2 text-xs text-muted">座席図から席を選んでください(複数選択可)</p>
                 <SeatMap
@@ -147,7 +147,7 @@ export default function PurchaseForm(props: Props) {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <p className="text-accent">{yen(tt.price)}</p>
+                  <p className="text-accent-text">{yen(tt.price)}</p>
                   <select
                     className="rounded-lg border border-line-strong bg-surface-2 px-2 py-1"
                     value={qtyBySc[sc.id] ?? 0}
@@ -177,7 +177,7 @@ export default function PurchaseForm(props: Props) {
           <button
             type="button"
             onClick={() => setCastId("")}
-            className={`rounded-full border px-4 py-1.5 text-sm ${castId === "" ? "border-accent bg-accent/15 text-accent" : "border-line-strong bg-surface text-fg-2"}`}
+            className={`rounded-full border px-4 py-1.5 text-sm ${castId === "" ? "border-accent bg-accent/15 text-accent-text" : "border-line-strong bg-surface text-fg-2"}`}
           >
             一般
           </button>
@@ -186,7 +186,7 @@ export default function PurchaseForm(props: Props) {
               key={cast.id}
               type="button"
               onClick={() => setCastId(cast.id)}
-              className={`rounded-full border px-4 py-1.5 text-sm ${castId === cast.id ? "border-accent bg-accent/15 text-accent" : "border-line-strong bg-surface text-fg-2"}`}
+              className={`rounded-full border px-4 py-1.5 text-sm ${castId === cast.id ? "border-accent bg-accent/15 text-accent-text" : "border-line-strong bg-surface text-fg-2"}`}
             >
               {cast.name}
             </button>
@@ -235,7 +235,7 @@ export default function PurchaseForm(props: Props) {
             {submitting ? "処理中..." : "決済へ進む"}
           </button>
         </div>
-        {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
         <p className="mt-3 text-xs text-dim">
           お支払い完了後、チケット(QRコード)ページのURLをメールでお送りします。購入者都合のキャンセルは販売額の5%+決済手数料を差し引いて返金します。
         </p>

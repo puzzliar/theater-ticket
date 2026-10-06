@@ -26,8 +26,8 @@ export default async function MySitePage() {
         <p className="mt-1 text-sm text-muted">あなたの出演履歴と近日の出演をまとめた公開ページを作れます。出演履歴は参加した公演から自動で積み上がり、ZAGUMI 以前の経歴は手で追加できます。</p>
         {url && (
           <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
-            <span className={`rounded px-2 py-0.5 text-xs ${site!.is_public ? "bg-emerald-500/20 text-emerald-300" : "bg-surface-2 text-muted"}`}>{site!.is_public ? "公開中" : "非公開"}</span>
-            <a href={url} target="_blank" rel="noopener" className="break-all font-mono text-accent hover:underline">{url}</a>
+            <span className={`rounded px-2 py-0.5 text-xs ${site!.is_public ? "bg-emerald-500/20 text-emerald-700" : "bg-surface-2 text-muted"}`}>{site!.is_public ? "公開中" : "非公開"}</span>
+            <a href={url} target="_blank" rel="noopener" className="break-all font-mono text-accent-text hover:underline">{url}</a>
             <CopyButton text={url} label="URL をコピー" className="rounded-lg bg-surface-3 px-3 py-1.5 text-xs hover:bg-line-strong" />
           </div>
         )}
@@ -63,7 +63,7 @@ export default async function MySitePage() {
                   <input name="photo" type="file" accept="image/jpeg,image/png,image/webp" required className="text-xs" />
                   <button className="rounded-lg bg-surface-3 px-3 py-1.5 text-xs hover:bg-line-strong">アップロード</button>
                 </form>
-                {site.photo_url && <form action={removePhoto}><button className="text-xs text-dim hover:text-red-400">写真を削除</button></form>}
+                {site.photo_url && <form action={removePhoto}><button className="text-xs text-dim hover:text-red-600">写真を削除</button></form>}
                 <p className="text-xs text-dim">JPEG・PNG・WebP、3MB まで。正方形に近い画像がきれいに表示されます。</p>
               </>
             ) : (
@@ -82,7 +82,7 @@ export default async function MySitePage() {
               <summary className="cursor-pointer">
                 <span className="font-medium">{c.title}</span>
                 <span className="ml-2 text-xs text-muted">{c.role_name && `${c.role_name} ／ `}{c.org_name && `${c.org_name} ／ `}{c.started_on ?? "日程未定"}{c.ended_on && c.ended_on !== c.started_on && `〜${c.ended_on}`} ／ {CREDIT_KIND_LABEL[c.kind]}</span>
-                <span className={`ml-2 rounded px-1.5 py-0.5 text-xs ${c.source === "auto" ? "bg-sky-500/20 text-sky-300" : "bg-surface-2 text-muted"}`}>{c.source === "auto" ? "公演から自動" : "手入力"}</span>
+                <span className={`ml-2 rounded px-1.5 py-0.5 text-xs ${c.source === "auto" ? "bg-sky-500/20 text-sky-700" : "bg-surface-2 text-muted"}`}>{c.source === "auto" ? "公演から自動" : "手入力"}</span>
                 {!c.is_public && <span className="ml-2 text-xs text-dim">非公開</span>}
               </summary>
               <form action={saveCredit.bind(null, c.id)} className="mt-3 grid gap-2 sm:grid-cols-3">
@@ -99,7 +99,7 @@ export default async function MySitePage() {
                 <div className="flex items-center gap-3 sm:col-span-3">
                   <button className="rounded-lg bg-surface-3 px-3 py-1.5 text-xs hover:bg-line-strong">保存</button>
                   <button formAction={toggleCredit.bind(null, c.id, !c.is_public)} className="text-xs text-muted hover:underline">{c.is_public ? "非公開にする" : "公開にする"}</button>
-                  {c.source === "manual" && <button formAction={deleteCredit.bind(null, c.id)} className="text-xs text-dim hover:text-red-400">削除</button>}
+                  {c.source === "manual" && <button formAction={deleteCredit.bind(null, c.id)} className="text-xs text-dim hover:text-red-600">削除</button>}
                 </div>
               </form>
             </details>

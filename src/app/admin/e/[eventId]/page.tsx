@@ -75,7 +75,7 @@ export default async function AdminEventPage({ params }: { params: Promise<{ eve
         </div>
         <form action={togglePublish.bind(null, eventId, !event.is_published)}>
           <button
-            className={`rounded-lg px-4 py-2 text-sm font-semibold ${event.is_published ? "bg-surface-3 text-fg" : "bg-emerald-500 text-black hover:bg-emerald-400"}`}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold ${event.is_published ? "bg-surface-3 text-fg" : "bg-emerald-600 text-white hover:bg-emerald-700"}`}
           >
             {event.is_published ? "非公開にする" : "公開する"}
           </button>
@@ -86,14 +86,14 @@ export default async function AdminEventPage({ params }: { params: Promise<{ eve
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">売上サマリ</h2>
-          <a href={`/admin/e/${eventId}/export`} className="text-sm text-accent hover:underline">
+          <a href={`/admin/e/${eventId}/export`} className="text-sm text-accent-text hover:underline">
             CSVエクスポート
           </a>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-line bg-surface p-4">
             <p className="text-sm text-muted">確定売上(純額)</p>
-            <p className="text-2xl font-bold text-accent">{yen(totalSales)}</p>
+            <p className="text-2xl font-bold text-accent-text">{yen(totalSales)}</p>
           </div>
           <div className="rounded-xl border border-line bg-surface p-4">
             <p className="text-sm text-muted">未収(当日現金など)</p>
@@ -216,7 +216,7 @@ export default async function AdminEventPage({ params }: { params: Promise<{ eve
                     {rule.rule_type === "quota" && `ノルマ${rule.quota_threshold}枚超過分 ${yen(rule.quota_amount ?? 0)}/枚`}
                   </span>
                 )}
-                {!cast.user_id && <span className="ml-2 text-yellow-500">(アカウント未紐づけ)</span>}
+                {!cast.user_id && <span className="ml-2 text-amber-600">(アカウント未紐づけ)</span>}
               </p>
               <p className="mt-1 break-all text-xs text-dim">
                 個別URL: {SITE_URL}/e/{eventId}?c={cast.slug}
@@ -277,7 +277,7 @@ export default async function AdminEventPage({ params }: { params: Promise<{ eve
                   <td className="p-2">
                     {o.status === "active" && (
                       <form action={adminCancelOrder.bind(null, o.id, eventId, "buyer")}>
-                        <button className="text-xs text-red-400 hover:underline">キャンセル</button>
+                        <button className="text-xs text-red-600 hover:underline">キャンセル</button>
                       </form>
                     )}
                   </td>

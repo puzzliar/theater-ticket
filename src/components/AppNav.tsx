@@ -39,7 +39,7 @@ export function MobileNav({ items }: { items: NavItem[] }) {
       {items.map((it) => {
         const active = it.match === "prefix" ? pathname.startsWith(it.href) : pathname === it.href;
         return (
-          <Link key={it.href} href={it.href} className={`flex flex-col items-center gap-0.5 py-2 text-[11px] ${active ? "text-accent" : "text-muted"}`}>
+          <Link key={it.href} href={it.href} className={`flex flex-col items-center gap-0.5 py-2 text-[11px] ${active ? "text-accent-text" : "text-muted"}`}>
             <span className={`flex h-6 w-6 items-center justify-center rounded-md text-xs ${active ? "bg-accent text-accent-ink" : "bg-surface-3 text-fg-2"}`}>{it.icon}</span>
             {it.label}
           </Link>

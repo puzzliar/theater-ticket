@@ -1,31 +1,33 @@
 @import "tailwindcss";
 
 /* ===== ZAGUMI デザイントークン =====
-   ダーク基調。表面(surface)を 3 段、罫線(line)を 2 段、文字(fg)を 4 段に絞り、
-   琥珀(accent)だけを強調色として使う。OS のライト/ダーク設定には追従せず固定する。 */
+   国内の業務 SaaS(SmartHR・freee・note など)に倣った白基調。ページ背景は紙のような暖色寄りの薄いグレー、
+   カードは白、罫線は淡く、文字は墨。琥珀(accent)はボタンの面に使い、文字に使うときは濃い琥珀(accent-text)で
+   コントラストを確保する。OS のライト/ダーク設定には追従せず固定する。 */
 @theme {
-  --color-bg: #0b0b0e;
-  --color-surface: #131316;
-  --color-surface-2: #1a1a1f;
-  --color-surface-3: #232329;
-  --color-line: #26262d;
-  --color-line-strong: #35353e;
-  --color-fg: #f2f2f4;
-  --color-fg-2: #c9c9d1;
-  --color-muted: #8f8f9b;
-  --color-dim: #62626e;
+  --color-bg: #f7f6f3;
+  --color-surface: #ffffff;
+  --color-surface-2: #f3f2ee;
+  --color-surface-3: #e9e7e1;
+  --color-line: #e6e4de;
+  --color-line-strong: #cfccc4;
+  --color-fg: #23221f;
+  --color-fg-2: #4a4845;
+  --color-muted: #6f6c66;
+  --color-dim: #9c9890;
   --color-accent: #f5a524;
-  --color-accent-hover: #ffb83d;
-  --color-accent-soft: #ffd27a;
+  --color-accent-hover: #e9981a;
+  --color-accent-text: #a35f00;
+  --color-accent-soft: #fff1d6;
   --color-accent-ink: #1a1200;
   --font-sans: "Inter", "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --shadow-card: 0 1px 0 0 rgb(255 255 255 / 0.03) inset, 0 1px 2px 0 rgb(0 0 0 / 0.4);
-  --shadow-pop: 0 12px 40px -12px rgb(0 0 0 / 0.7);
+  --shadow-card: 0 1px 2px 0 rgb(35 34 31 / 0.05), 0 0 0 1px rgb(35 34 31 / 0.02);
+  --shadow-pop: 0 8px 24px -8px rgb(232 147 12 / 0.45);
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html {
@@ -46,7 +48,7 @@ h1, h2, h3 {
 }
 
 ::selection {
-  background: color-mix(in oklab, var(--color-accent) 35%, transparent);
+  background: color-mix(in oklab, var(--color-accent) 30%, white);
 }
 
 /* コントロールの共通挙動: フォーカスリング、ホバーのトランジション */
@@ -62,7 +64,7 @@ input::placeholder, textarea::placeholder {
   color: var(--color-dim);
 }
 input[type="date"], input[type="time"], input[type="datetime-local"] {
-  color-scheme: dark;
+  color-scheme: light;
 }
 summary {
   list-style: none;

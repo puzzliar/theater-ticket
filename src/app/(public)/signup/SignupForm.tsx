@@ -63,7 +63,7 @@ export default function SignupForm() {
         <h1 className="text-xl font-bold">新規登録</h1>
         <p className="mt-1 text-sm text-muted">ZAGUMIスケジュールは無料で使えます。1 つの ZAGUMIアカウントで複数の座組(劇団)に参加できます。</p>
       </div>
-      <button onClick={google} disabled={busy} className="w-full rounded-lg bg-white px-4 py-2.5 font-semibold text-accent-ink hover:bg-neutral-200 disabled:opacity-50">Google で登録</button>
+      <button onClick={google} disabled={busy} className="w-full rounded-lg border border-line-strong bg-white px-4 py-2.5 font-semibold text-fg hover:bg-surface-2 disabled:opacity-50">Google で登録</button>
       {process.env.NEXT_PUBLIC_LINE_LOGIN_ENABLED === "true" && (
         <a href={`/auth/line?next=${encodeURIComponent(next)}`} className="block w-full rounded-lg bg-[#06C755] px-4 py-2.5 text-center font-semibold text-white hover:opacity-90">LINE で登録</a>
       )}
@@ -75,14 +75,14 @@ export default function SignupForm() {
         <label className="flex items-start gap-2 text-xs text-fg-2">
           <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
           <span>
-            <Link href="/terms" target="_blank" className="text-accent hover:underline">利用規約</Link> と <Link href="/privacy" target="_blank" className="text-accent hover:underline">プライバシーポリシー</Link> に同意します
+            <Link href="/terms" target="_blank" className="text-accent-text hover:underline">利用規約</Link> と <Link href="/privacy" target="_blank" className="text-accent-text hover:underline">プライバシーポリシー</Link> に同意します
           </span>
         </label>
         <button type="submit" disabled={busy} className="w-full rounded-lg bg-accent px-4 py-2.5 font-semibold text-accent-ink hover:bg-accent-hover disabled:opacity-50">{busy ? "登録中..." : "メールで登録"}</button>
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <p className="text-sm text-red-600">{error}</p>}
       </form>
       <p className="text-center text-sm text-muted">
-        登録済みの方は <Link href={`/login?next=${encodeURIComponent(next)}`} className="text-accent hover:underline">ログイン</Link>
+        登録済みの方は <Link href={`/login?next=${encodeURIComponent(next)}`} className="text-accent-text hover:underline">ログイン</Link>
       </p>
     </div>
   );

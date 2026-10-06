@@ -19,7 +19,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
   const statuses = await computeDayStatuses(share.profile_id, opts);
   const text = formatAvailabilityText(share.display_name, statuses, opts);
   const today = jstDateString();
-  const markCls: Record<string, string> = { "○": "text-emerald-400", "×": "text-red-400", "△": "text-yellow-400", "−": "text-dim" };
+  const markCls: Record<string, string> = { "○": "text-emerald-600", "×": "text-red-600", "△": "text-amber-600", "−": "text-dim" };
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
@@ -30,7 +30,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
       <div className="rounded-xl border border-line text-sm">
         {statuses.map((d) => (
           <div key={d.date} className="flex items-center justify-between border-b border-line/60 px-3 py-1.5 last:border-0">
-            <span className={d.date === today ? "text-accent" : ""}>{fmtDateLabel(d.date)}</span>
+            <span className={d.date === today ? "text-accent-text" : ""}>{fmtDateLabel(d.date)}</span>
             <span className={`font-semibold ${markCls[d.mark]}`}>{d.mark}<span className="ml-2 text-xs font-normal text-muted">{d.mark === "△" && d.free.map((r) => `${r.from}〜${r.to}`).join(", ")}</span></span>
           </div>
         ))}
@@ -40,9 +40,9 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
         <CopyButton text={text} label="テキストでコピー" className="rounded-lg bg-surface-3 px-3 py-1.5 text-xs hover:bg-line-strong" />
       </div>
       <div className="rounded-xl border border-line bg-surface p-4 text-sm text-fg-2">
-        <p className="font-semibold text-accent">主催者の方へ</p>
+        <p className="font-semibold text-accent-text">主催者の方へ</p>
         <p className="mt-1">ZAGUMIスケジュールに座組を登録すると、キャスト全員の空き状況を一覧で確かめながら稽古や本番の予定を作れます。予定を作るとキャストに自動で召集が届きます。</p>
-        <Link href="/" className="mt-2 inline-block text-accent hover:underline">ZAGUMIスケジュールについて</Link>
+        <Link href="/" className="mt-2 inline-block text-accent-text hover:underline">ZAGUMIスケジュールについて</Link>
       </div>
     </div>
   );

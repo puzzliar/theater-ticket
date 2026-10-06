@@ -62,7 +62,7 @@ export default function LoginForm() {
         </p>
       </div>
       <div className="space-y-2">
-        <button onClick={google} disabled={busy} className={`${btn} bg-white text-black hover:bg-neutral-200`}>Google でログイン</button>
+        <button onClick={google} disabled={busy} className={`${btn} border border-line-strong bg-white text-fg hover:bg-surface-2`}>Google でログイン</button>
         {lineEnabled && (
           <a href={`/auth/line?next=${encodeURIComponent(next)}`} className={`${btn} block bg-[#06C755] text-center text-white hover:opacity-90`}>LINE でログイン</a>
         )}
@@ -71,12 +71,12 @@ export default function LoginForm() {
       <form onSubmit={login} className="space-y-3">
         <input className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2" type="email" placeholder="メールアドレス" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <input className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2" type="password" placeholder="パスワード" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <button type="submit" disabled={busy} className={`${btn} bg-accent text-black hover:bg-accent-hover`}>{busy ? "ログイン中..." : "メールでログイン"}</button>
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        <button type="submit" disabled={busy} className={`${btn} bg-accent text-accent-ink hover:bg-accent-hover`}>{busy ? "ログイン中..." : "メールでログイン"}</button>
+        {error && <p className="text-sm text-red-600">{error}</p>}
       </form>
       {IS_REHEARSAL && (
         <p className="text-center text-sm text-muted">
-          アカウントをお持ちでない方は <Link href={`/signup?next=${encodeURIComponent(next)}`} className="text-accent hover:underline">新規登録</Link>
+          アカウントをお持ちでない方は <Link href={`/signup?next=${encodeURIComponent(next)}`} className="text-accent-text hover:underline">新規登録</Link>
         </p>
       )}
     </div>

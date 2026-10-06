@@ -61,7 +61,7 @@ export default async function ImportPage({ params, searchParams }: { params: Pro
                     <td className="p-2"><select name={`kind_${i}`} defaultValue={it.kind} className={input}><option value="rehearsal">稽古</option><option value="performance">本番</option><option value="other">その他</option></select></td>
                     <td className="p-2"><input name={`title_${i}`} defaultValue={it.title} className={`${input} w-40`} /></td>
                     <td className="p-2"><input name={`location_${i}`} defaultValue={it.location} className={`${input} w-32`} /></td>
-                    <td className="p-2 text-xs text-dim"><span className="block">{it.raw}</span>{it.warnings.map((w) => <span key={w} className="block text-yellow-500">{w}</span>)}</td>
+                    <td className="p-2 text-xs text-dim"><span className="block">{it.raw}</span>{it.warnings.map((w) => <span key={w} className="block text-amber-600">{w}</span>)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -19,7 +19,7 @@ export default async function NewOrgPage({ searchParams }: { searchParams: Promi
         <h1 className="text-xl font-bold">劇団・団体を作成</h1>
         <p className="mt-1 text-sm text-muted">作成した人がオーナーになります。メンバーは招待リンクで参加します。</p>
       </div>
-      {sp.error && <p className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{sp.error}</p>}
+      {sp.error && <p className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-700">{sp.error}</p>}
       <form action={createOrg} className="space-y-3">
         <label className="block text-sm">団体名<input name="name" required className={`${input} mt-1`} placeholder="例: 劇団○○" /></label>
         <label className="block text-sm">

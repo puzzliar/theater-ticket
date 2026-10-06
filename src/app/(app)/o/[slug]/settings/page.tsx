@@ -28,7 +28,7 @@ export default async function OrgSettingsPage({ params }: { params: Promise<{ sl
       </section>
       {membership.role === "owner" && (
         <section className="space-y-2 border-t border-line pt-6">
-          <h2 className="text-lg font-semibold text-red-400">団体をアーカイブ</h2>
+          <h2 className="text-lg font-semibold text-red-600">団体をアーカイブ</h2>
           <p className="text-sm text-muted">団体を非表示にします。メンバーのスケジュールからも消えます。運営に依頼すれば復元できます。</p>
           <form action={archiveOrg.bind(null, org.id)}><button className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500">アーカイブする</button></form>
         </section>

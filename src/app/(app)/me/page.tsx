@@ -75,7 +75,7 @@ export default async function MePage() {
           )}
         </div>
         <div className={tile}><p className="text-xs text-dim">今週の予定</p><p className="mt-1 text-2xl font-semibold tabular-nums">{weekCount}<span className="ml-1 text-sm font-normal text-muted">件</span></p></div>
-        <div className={tile}><p className="text-xs text-dim">未回答の召集</p><p className={`mt-1 text-2xl font-semibold tabular-nums ${pending.length ? "text-accent" : ""}`}>{pending.length}<span className="ml-1 text-sm font-normal text-muted">件</span></p></div>
+        <div className={tile}><p className="text-xs text-dim">未回答の召集</p><p className={`mt-1 text-2xl font-semibold tabular-nums ${pending.length ? "text-accent-text" : ""}`}>{pending.length}<span className="ml-1 text-sm font-normal text-muted">件</span></p></div>
       </section>
 
       {/* 所属 */}
@@ -83,7 +83,7 @@ export default async function MePage() {
         {realOrgs.length === 0 && <span className="text-muted">まだどの座組にも参加していません。主催者から招待リンクを受け取るか、下の「セルフ公演」で自分の予定を管理できます。</span>}
         {realOrgs.map((o) => (
           <Link key={o.org.id} href={`/o/${o.org.slug}`} className="rounded-full border border-line bg-surface px-3 py-1 hover:border-accent/50">
-            {o.org.name} {isAdminRole(o.role) && <span className="text-xs text-accent">管理</span>}
+            {o.org.name} {isAdminRole(o.role) && <span className="text-xs text-accent-text">管理</span>}
           </Link>
         ))}
         <Link href="/orgs/new" className="rounded-full border border-dashed border-line-strong px-3 py-1 text-muted hover:text-fg">＋ 座組を作る</Link>
@@ -91,10 +91,10 @@ export default async function MePage() {
 
       {holdConflicts.length > 0 && (
         <section className="space-y-2 rounded-2xl border border-orange-500/40 bg-orange-500/5 p-4 text-sm">
-          <h2 className="font-semibold text-orange-300">仮押さえが重なっています</h2>
+          <h2 className="font-semibold text-orange-700">仮押さえが重なっています</h2>
           {holdConflicts.map(({ t, others }) => (
             <div key={t.id} className="rounded-xl border border-line bg-surface p-3">
-              <p><span className="rounded bg-orange-500/20 px-1.5 py-0.5 text-xs text-orange-300">仮</span> {fmtRange(t.startsAt, t.endsAt)} {t.orgName}／{t.productionName}{t.title && ` ${t.title}`}{t.respondBy && <span className="ml-2 text-xs text-muted">返答期限 {fmtDateLabel(t.respondBy)}</span>}</p>
+              <p><span className="rounded bg-orange-500/20 px-1.5 py-0.5 text-xs text-orange-700">仮</span> {fmtRange(t.startsAt, t.endsAt)} {t.orgName}／{t.productionName}{t.title && ` ${t.title}`}{t.respondBy && <span className="ml-2 text-xs text-muted">返答期限 {fmtDateLabel(t.respondBy)}</span>}</p>
               <p className="mt-1 text-xs text-muted">重なる予定: {others.map((o) => `${fmtRange(o.startsAt, o.endsAt)} ${o.orgName}／${o.productionName}${o.tentative ? "(仮)" : "(確定)"}`).join(" ／ ")}</p>
             </div>
           ))}
@@ -104,7 +104,7 @@ export default async function MePage() {
 
       {(pending.length > 0 || openRequests.length > 0) && (
         <section className="space-y-3 rounded-2xl border border-accent/40 bg-accent/5 p-4">
-          <h2 className="font-semibold text-accent">要対応</h2>
+          <h2 className="font-semibold text-accent-text">要対応</h2>
           {openRequests.map((r) => (
             <div key={r.requestId} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface p-3 text-sm">
               <div>
@@ -116,19 +116,19 @@ export default async function MePage() {
                 )}
                 {r.reason && <p className="text-xs text-dim">{r.reason}</p>}
               </div>
-              <form action={apply.bind(null, r.requestId)}><button className={`${btn} bg-accent text-black hover:bg-accent-hover`}>入れます</button></form>
+              <form action={apply.bind(null, r.requestId)}><button className={`${btn} bg-accent text-accent-ink hover:bg-accent-hover`}>入れます</button></form>
             </div>
           ))}
           {pending.map((s) => (
             <div key={s.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface p-3 text-sm">
               <div>
-                <p className="font-medium">{s.tentative && <span className="mr-1 rounded bg-orange-500/20 px-1.5 py-0.5 text-xs text-orange-300">仮</span>}{fmtRange(s.startsAt, s.endsAt)} {s.orgName}／{s.productionName}({SESSION_KIND_LABEL[s.kind]}){s.title && ` ${s.title}`}{s.respondBy && <span className="ml-2 text-xs text-muted">返答期限 {fmtDateLabel(s.respondBy)}</span>}</p>
+                <p className="font-medium">{s.tentative && <span className="mr-1 rounded bg-orange-500/20 px-1.5 py-0.5 text-xs text-orange-700">仮</span>}{fmtRange(s.startsAt, s.endsAt)} {s.orgName}／{s.productionName}({SESSION_KIND_LABEL[s.kind]}){s.title && ` ${s.title}`}{s.respondBy && <span className="ml-2 text-xs text-muted">返答期限 {fmtDateLabel(s.respondBy)}</span>}</p>
                 <p className="text-xs text-muted">{s.location && `@${s.location} `}{s.scenes.length > 0 && `シーン: ${s.scenes.map((x) => x.code).join(", ")}`}</p>
               </div>
               <div className="flex gap-2">
-                <form action={respond.bind(null, s.id, "yes")}><button className={`${btn} bg-emerald-500 text-black hover:bg-emerald-400`}>参加</button></form>
+                <form action={respond.bind(null, s.id, "yes")}><button className={`${btn} bg-emerald-600 text-white hover:bg-emerald-700`}>参加</button></form>
                 <form action={respond.bind(null, s.id, "maybe")}><button className={`${btn} bg-surface-3 hover:bg-line-strong`}>未定</button></form>
-                <form action={respond.bind(null, s.id, "no")}><button className={`${btn} bg-surface-3 text-red-300 hover:bg-line-strong`}>不参加</button></form>
+                <form action={respond.bind(null, s.id, "no")}><button className={`${btn} bg-surface-3 text-red-700 hover:bg-line-strong`}>不参加</button></form>
               </div>
             </div>
           ))}
@@ -143,15 +143,15 @@ export default async function MePage() {
           if (!list) return null;
           return (
             <div key={d} className="rounded-xl border border-line bg-surface/60 p-3">
-              <p className={`mb-2 text-sm font-semibold ${d === today ? "text-accent" : "text-fg-2"}`}>{d === today ? "今日 " : d === addDays(today, 1) ? "明日 " : ""}{fmtDateLabel(d)}</p>
+              <p className={`mb-2 text-sm font-semibold ${d === today ? "text-accent-text" : "text-fg-2"}`}>{d === today ? "今日 " : d === addDays(today, 1) ? "明日 " : ""}{fmtDateLabel(d)}</p>
               <div className="space-y-2">
                 {list.map((s) => (
                   <div key={s.id} className="flex flex-wrap items-start justify-between gap-2 text-sm">
                     <div>
                       <p>
                         <span className="font-mono text-fg">{fmtTime(s.startsAt)}〜{fmtTime(s.endsAt)}</span>{" "}
-                        <span className={`rounded px-1.5 py-0.5 text-xs ${s.kind === "performance" ? "bg-rose-500/20 text-rose-300" : "bg-sky-500/20 text-sky-300"}`}>{SESSION_KIND_LABEL[s.kind]}</span>{" "}
-                        {s.tentative && <span className="mr-1 rounded bg-orange-500/20 px-1.5 py-0.5 text-xs text-orange-300">仮</span>}
+                        <span className={`rounded px-1.5 py-0.5 text-xs ${s.kind === "performance" ? "bg-rose-500/20 text-rose-700" : "bg-sky-500/20 text-sky-700"}`}>{SESSION_KIND_LABEL[s.kind]}</span>{" "}
+                        {s.tentative && <span className="mr-1 rounded bg-orange-500/20 px-1.5 py-0.5 text-xs text-orange-700">仮</span>}
                         <span className="text-muted">{s.orgName}／</span><span className="font-medium">{s.productionName}</span>
                         {s.title && <span className="text-fg-2"> {s.title}</span>}
                       </p>
@@ -159,7 +159,7 @@ export default async function MePage() {
                       {s.note && <p className="text-xs text-dim">{s.note}</p>}
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`text-xs ${s.response === "yes" ? "text-emerald-400" : s.response === "no" ? "text-red-400" : "text-yellow-400"}`}>{RESPONSE_LABEL[s.response]}</span>
+                      <span className={`text-xs ${s.response === "yes" ? "text-emerald-600" : s.response === "no" ? "text-red-600" : "text-amber-600"}`}>{RESPONSE_LABEL[s.response]}</span>
                       {s.response !== "pending" && s.status === "scheduled" && (
                         <form action={respond.bind(null, s.id, s.response === "yes" ? "no" : "yes")}>
                           <button className="text-xs text-dim hover:text-fg hover:underline">{s.response === "yes" ? "不参加にする" : "参加にする"}</button>
@@ -217,11 +217,11 @@ export default async function MePage() {
           {((availability ?? []) as AvailabilityRow[]).map((a) => (
             <div key={a.id} className="flex items-center justify-between rounded border border-line px-3 py-1.5">
               <span>
-                <span className={a.status === "available" ? "text-emerald-400" : "text-red-400"}>{a.status === "available" ? "可" : "不可"}</span> {fmtRange(a.starts_at, a.ends_at)}
+                <span className={a.status === "available" ? "text-emerald-600" : "text-red-600"}>{a.status === "available" ? "可" : "不可"}</span> {fmtRange(a.starts_at, a.ends_at)}
                 {a.note && <span className="text-dim"> ({a.note})</span>}
                 {a.source === "calendar" && <span className="ml-1 text-xs text-dim/70">Google</span>}
               </span>
-              <form action={deleteAvailability.bind(null, a.id)}><button className="text-xs text-dim hover:text-red-400">削除</button></form>
+              <form action={deleteAvailability.bind(null, a.id)}><button className="text-xs text-dim hover:text-red-600">削除</button></form>
             </div>
           ))}
         </div>

@@ -29,13 +29,13 @@ export default async function JoinPage({ params, searchParams }: { params: Promi
         <p className="mt-1 text-sm text-fg-2">{inv.role === "admin" ? "管理者" : "メンバー"}として参加します。参加すると、この団体の稽古や本番の召集があなたのマイスケジュールに表示されます。</p>
         {inv.productions.length > 0 && (
           <p className="mt-2 text-sm text-fg-2">
-            参加する公演: <span className="text-accent">{inv.productions.map((p) => p.name).join("、")}</span>
+            参加する公演: <span className="text-accent-text">{inv.productions.map((p) => p.name).join("、")}</span>
             <span className="block text-xs text-dim">すでにこの団体に参加している方も、この公演に追加されます。</span>
           </p>
         )}
       </div>
-      {!usable.ok && <p className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{usable.reason}</p>}
-      {sp.error && <p className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{sp.error}</p>}
+      {!usable.ok && <p className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-700">{usable.reason}</p>}
+      {sp.error && <p className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-700">{sp.error}</p>}
       {usable.ok && !me && (
         <div className="space-y-2">
           <Link href={`/login?next=${next}`} className="block w-full rounded-lg bg-accent px-4 py-2.5 text-center font-semibold text-accent-ink hover:bg-accent-hover">ログインして参加</Link>
