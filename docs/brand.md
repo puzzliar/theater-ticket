@@ -40,3 +40,19 @@
 - 最小サイズ: マーク単体 16px、横組みロゴ 120px 幅
 - 色は上記 3 色のみ。グラデーション・影・変形(縦横比の変更、回転)はしない
 - サービス名の文字はシステムの日本語フォントで描かれる。印刷物など字形を固定したい場合はアウトライン化した版を別途作る
+
+## 画面の配色トークン(アプリ UI)
+
+`src/app/globals.css` の `@theme` で定義し、Tailwind のユーティリティ(`bg-surface`、`text-muted` など)として使う。素の `neutral-*` は使わない。
+
+| トークン | 値 | 用途 |
+|---|---|---|
+| `bg` | `#0b0b0e` | ページ背景 |
+| `surface` / `surface-2` / `surface-3` | `#131316` / `#1a1a1f` / `#232329` | カード／入力欄・ホバー／ボタン |
+| `line` / `line-strong` | `#26262d` / `#35353e` | 罫線／入力欄の枠 |
+| `fg` / `fg-2` / `muted` / `dim` | `#f2f2f4` / `#c9c9d1` / `#8f8f9b` / `#62626e` | 本文／二次／補足／控えめ |
+| `accent` / `accent-hover` / `accent-soft` / `accent-ink` | `#f5a524` / `#ffb83d` / `#ffd27a` / `#1a1200` | 強調・主ボタン／ホバー／淡い強調／主ボタン上の文字 |
+
+- 角丸: 入力欄・ボタン `rounded-lg`、カード `rounded-xl`〜`rounded-2xl`
+- フォント: Inter + Noto Sans JP(Google Fonts。未読込時はシステムフォント)
+- レイアウト: ログイン後はサイドバー(デスクトップ)／下部タブ(モバイル)の `src/app/(app)/layout.tsx`。公開ページは `src/app/(public)/layout.tsx`

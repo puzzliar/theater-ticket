@@ -64,10 +64,10 @@ export default function SeatMap({ seats, takenSeatIds, selectedSeatIds, onToggle
           );
         })}
       </svg>
-      <div className="mt-1 flex gap-4 text-xs text-neutral-400">
+      <div className="mt-1 flex gap-4 text-xs text-muted">
         <span>○ 空席</span>
-        <span className="text-amber-400">● 選択中</span>
-        <span className="text-neutral-600">● 販売済み</span>
+        <span className="text-accent">● 選択中</span>
+        <span className="text-dim/70">● 販売済み</span>
       </div>
     </div>
   );

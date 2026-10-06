@@ -15,7 +15,7 @@ export default function CopyButton({ text, label = "コピー", className = "" }
     setTimeout(() => setState("idle"), 2000);
   }
   return (
-    <button type="button" onClick={copy} className={className || "rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-black hover:bg-amber-400"}>
+    <button type="button" onClick={copy} className={className || "rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-ink hover:bg-accent-hover"}>
       {state === "done" ? "コピーしました" : state === "error" ? "コピーできませんでした" : label}
     </button>
   );

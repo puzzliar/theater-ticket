@@ -39,9 +39,9 @@ export default async function CastPage() {
   return (
     <div className="space-y-10">
       <h1 className="text-2xl font-bold">キャストダッシュボード</h1>
-      <p className="text-sm text-neutral-400">{user.displayName} さん</p>
+      <p className="text-sm text-muted">{user.displayName} さん</p>
       {sections.length === 0 && (
-        <p className="text-neutral-400">出演公演がまだ登録されていません。主催者にお問い合わせください。</p>
+        <p className="text-muted">出演公演がまだ登録されていません。主催者にお問い合わせください。</p>
       )}
 
       {sections.map(({ cast, event, stages, seatClasses, orders }) => {
@@ -62,32 +62,32 @@ export default async function CastPage() {
         }
 
         return (
-          <section key={cast.id} className="space-y-5 rounded-xl border border-neutral-800 bg-neutral-900/50 p-5">
+          <section key={cast.id} className="space-y-5 rounded-2xl border border-line bg-surface/60 p-5">
             <div>
               <h2 className="text-xl font-semibold">{event.name}</h2>
-              <p className="mt-1 break-all text-xs text-neutral-500">
+              <p className="mt-1 break-all text-xs text-dim">
                 あなたの案内用URL:{" "}
-                <span className="text-amber-400">{SITE_URL}/e/{event.id}?c={cast.slug}</span>
+                <span className="text-accent">{SITE_URL}/e/{event.id}?c={cast.slug}</span>
                 (このURL経由の購入は自動的にあなたの扱いになります)
               </p>
             </div>
 
             {/* リアルタイム売上 */}
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-                <p className="text-sm text-neutral-400">あなたの扱い売上(確定)</p>
-                <p className="text-2xl font-bold text-amber-400">{yen(sales)}</p>
-                <p className="text-sm text-neutral-400">{soldCount}枚</p>
+              <div className="rounded-xl border border-line bg-surface p-4">
+                <p className="text-sm text-muted">あなたの扱い売上(確定)</p>
+                <p className="text-2xl font-bold text-accent">{yen(sales)}</p>
+                <p className="text-sm text-muted">{soldCount}枚</p>
               </div>
-              <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-                <p className="text-sm text-neutral-400">ギャラ見込み(チケット分)</p>
+              <div className="rounded-xl border border-line bg-surface p-4">
+                <p className="text-sm text-muted">ギャラ見込み(チケット分)</p>
                 <p className="text-2xl font-bold">{yen(calcGuarantee(units))}</p>
-                <p className="text-xs text-neutral-500">物販との合算は物販システム側で確認</p>
+                <p className="text-xs text-dim">物販との合算は物販システム側で確認</p>
               </div>
-              <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-                <p className="text-sm text-neutral-400">ステージ別枚数</p>
+              <div className="rounded-xl border border-line bg-surface p-4">
+                <p className="text-sm text-muted">ステージ別枚数</p>
                 {stages.map((s) => (
-                  <p key={s.id} className="text-sm text-neutral-300">
+                  <p key={s.id} className="text-sm text-fg-2">
                     {s.name}: {byStage.get(s.id) ?? 0}枚
                   </p>
                 ))}
@@ -108,17 +108,17 @@ export default async function CastPage() {
                 {active
                   .filter((o) => o.channel === "guest")
                   .map((o) => (
-                    <div key={o.id} className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-900 p-3 text-sm">
+                    <div key={o.id} className="flex items-center justify-between rounded-xl border border-line bg-surface p-3 text-sm">
                       <div>
                         <p>
                           {o.buyer_name} 様 ／ {stages.find((s) => s.id === o.stage_id)?.name} ／ {yen(o.total)}
                         </p>
-                        <p className="text-xs text-neutral-400">
+                        <p className="text-xs text-muted">
                           {PAYMENT_METHOD_LABEL[o.payment_method]}
                           {o.settlement_method && ` (${SETTLEMENT_LABEL[o.settlement_method]})`} ／{" "}
                           {PAYMENT_STATUS_LABEL[o.payment_status]}
                         </p>
-                        <p className="break-all text-xs text-neutral-500">
+                        <p className="break-all text-xs text-dim">
                           チケットURL: {SITE_URL}/my/{o.manage_token}
                         </p>
                       </div>
@@ -135,7 +135,7 @@ export default async function CastPage() {
               <h3 className="mb-2 font-semibold">あなたの扱いの購入一覧</h3>
               <div className="space-y-1 text-sm">
                 {active.slice(0, 30).map((o) => (
-                  <p key={o.id} className="text-neutral-300">
+                  <p key={o.id} className="text-fg-2">
                     {fmtDateTime(o.created_at)} ／ {o.buyer_name} 様 ／ {yen(o.total)} ／{" "}
                     <span className={o.payment_status === "paid" ? "text-emerald-400" : "text-yellow-400"}>
                       {PAYMENT_STATUS_LABEL[o.payment_status]}

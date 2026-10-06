@@ -37,9 +37,9 @@ export default async function EventPage({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">{event.name}</h1>
-        <p className="mt-1 text-neutral-400">{event.venue_name}</p>
+        <p className="mt-1 text-muted">{event.venue_name}</p>
         {event.description && (
-          <p className="mt-4 whitespace-pre-wrap text-sm text-neutral-300">{event.description}</p>
+          <p className="mt-4 whitespace-pre-wrap text-sm text-fg-2">{event.description}</p>
         )}
       </div>
       <div className="space-y-3">
@@ -51,11 +51,11 @@ export default async function EventPage({
           return (
             <div
               key={s.id}
-              className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-900 p-4"
+              className="flex items-center justify-between rounded-xl border border-line bg-surface p-4"
             >
               <div>
                 <p className="font-medium">{s.name}</p>
-                <p className="text-sm text-neutral-400">
+                <p className="text-sm text-muted">
                   {fmtDateTime(s.starts_at)} 開演
                   {s.doors_open_at && ` ／ ${fmtDateTime(s.doors_open_at)} 開場`}
                 </p>
@@ -63,12 +63,12 @@ export default async function EventPage({
               {open ? (
                 <Link
                   href={`/e/${eventId}/s/${s.id}${castParam}`}
-                  className="rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-black hover:bg-amber-400"
+                  className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-ink hover:bg-accent-hover"
                 >
                   チケット購入
                 </Link>
               ) : (
-                <span className="text-sm text-neutral-500">販売期間外</span>
+                <span className="text-sm text-dim">販売期間外</span>
               )}
             </div>
           );

@@ -29,7 +29,7 @@ export default function PayButton({ token }: { token: string }) {
       <button
         onClick={pay}
         disabled={busy}
-        className="rounded-md bg-amber-500 px-5 py-2 font-semibold text-black hover:bg-amber-400 disabled:opacity-50"
+        className="rounded-lg bg-accent px-5 py-2 font-semibold text-accent-ink hover:bg-accent-hover disabled:opacity-50"
       >
         {busy ? "処理中..." : "オンラインで支払う"}
       </button>
