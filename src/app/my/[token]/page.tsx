@@ -65,7 +65,7 @@ export default async function MyTicketsPage({
       <div className="rounded-xl border border-line bg-surface p-4 text-sm">
         <p>
           {order.buyer_name} 様 ／ 合計 {yen(order.total)} ／{" "}
-          <span className={order.payment_status === "paid" ? "text-emerald-400" : "text-yellow-400"}>
+          <span className={order.payment_status === "paid" ? "text-emerald-600" : "text-amber-600"}>
             {cancelled ? "キャンセル済み" : PAYMENT_STATUS_LABEL[order.payment_status]}
           </span>
         </p>
@@ -85,7 +85,7 @@ export default async function MyTicketsPage({
           {(tickets ?? []).map((t, idx) => {
             const seat = t.tk_seats as unknown as { row_label: string; seat_number: number } | null;
             return (
-              <div key={t.id} className="rounded-xl border border-line-strong bg-white p-5 text-center text-neutral-900">
+              <div key={t.id} className="rounded-xl border border-line-strong bg-white p-5 text-center text-fg">
                 <p className="text-sm font-semibold text-dim">TICKET {idx + 1}</p>
                 <p className="mt-1 text-lg font-bold">
                   {seat ? `${seat.row_label}列 ${seat.seat_number}番` : `自由席 整理番号 ${t.entry_number ?? "-"}`}

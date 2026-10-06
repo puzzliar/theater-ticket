@@ -16,15 +16,15 @@ import { updateProfile, updateNotifyPrefs, newLineCode, unlinkLine, importGoogle
 export const dynamic = "force-dynamic";
 
 const GOOGLE_MSG: Record<string, { cls: string; text: string }> = {
-  connected: { cls: "text-emerald-400", text: "Google カレンダーと連携しました。今後の召集を登録し、カレンダーの予定を「不可」として取り込みました。" },
-  denied: { cls: "text-yellow-500", text: "Google の認可がキャンセルされました。" },
-  error: { cls: "text-red-400", text: "Google 連携に失敗しました。時間をおいて再度お試しください。" },
-  state_mismatch: { cls: "text-red-400", text: "連携の確認に失敗しました。もう一度やり直してください。" },
-  not_configured: { cls: "text-yellow-500", text: "Google 連携はこの環境では設定されていません。" },
+  connected: { cls: "text-emerald-600", text: "Google カレンダーと連携しました。今後の召集を登録し、カレンダーの予定を「不可」として取り込みました。" },
+  denied: { cls: "text-amber-600", text: "Google の認可がキャンセルされました。" },
+  error: { cls: "text-red-600", text: "Google 連携に失敗しました。時間をおいて再度お試しください。" },
+  state_mismatch: { cls: "text-red-600", text: "連携の確認に失敗しました。もう一度やり直してください。" },
+  not_configured: { cls: "text-amber-600", text: "Google 連携はこの環境では設定されていません。" },
 };
 const LINE_MSG: Record<string, { cls: string; text: string }> = {
-  linked: { cls: "text-emerald-400", text: "LINE を連携しました。" },
-  taken: { cls: "text-red-400", text: "その LINE アカウントは別のユーザーに連携されています。" },
+  linked: { cls: "text-emerald-600", text: "LINE を連携しました。" },
+  taken: { cls: "text-red-600", text: "その LINE アカウントは別のユーザーに連携されています。" },
 };
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ google?: string; line?: string }> }) {
@@ -92,17 +92,17 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           {lineMsg && <p className={`text-sm ${lineMsg.cls}`}>{lineMsg.text}</p>}
           {line ? (
             <>
-              <p className="text-sm text-emerald-400">連携済み{line.display_name && `(${line.display_name})`}。LINE で「今日」「今週」「参加」「不参加」「入れます」と送ると応答します。</p>
-              {!lineConfigured() && <p className="text-xs text-yellow-500">(公式アカウントが未設定のため、通知はメール等で届きます)</p>}
-              <form action={unlinkLine}><button className="text-xs text-dim hover:text-red-400">連携を解除</button></form>
+              <p className="text-sm text-emerald-600">連携済み{line.display_name && `(${line.display_name})`}。LINE で「今日」「今週」「参加」「不参加」「入れます」と送ると応答します。</p>
+              {!lineConfigured() && <p className="text-xs text-amber-600">(公式アカウントが未設定のため、通知はメール等で届きます)</p>}
+              <form action={unlinkLine}><button className="text-xs text-dim hover:text-red-600">連携を解除</button></form>
             </>
           ) : (
             <>
-              <p className="text-sm text-fg-2">公式アカウントを友だち追加すると、LINE から予定の確認や出欠回答ができます。{lineAddFriendUrl() && <a href={lineAddFriendUrl()!} target="_blank" rel="noreferrer" className="text-accent hover:underline">(友だち追加)</a>}</p>
+              <p className="text-sm text-fg-2">公式アカウントを友だち追加すると、LINE から予定の確認や出欠回答ができます。{lineAddFriendUrl() && <a href={lineAddFriendUrl()!} target="_blank" rel="noreferrer" className="text-accent-text hover:underline">(友だち追加)</a>}</p>
               {lineLoginConfigured() && <a href="/auth/line?mode=link&next=/me/settings" className={`inline-block ${btn} bg-[#06C755] text-white`}>LINE アカウントで連携</a>}
               <div className="text-xs text-muted">
                 または、下のコードを LINE で「連携 123456」の形式で送信:
-                {lineCodeValid ? <span className="ml-2 font-mono text-lg tracking-widest text-accent">{settings.line_link_code}</span> : <form action={newLineCode} className="mt-1"><button className={`${btn} bg-surface-3 hover:bg-line-strong`}>連携コードを発行(10分有効)</button></form>}
+                {lineCodeValid ? <span className="ml-2 font-mono text-lg tracking-widest text-accent-text">{settings.line_link_code}</span> : <form action={newLineCode} className="mt-1"><button className={`${btn} bg-surface-3 hover:bg-line-strong`}>連携コードを発行(10分有効)</button></form>}
               </div>
             </>
           )}
@@ -113,30 +113,30 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           {googleConfigured() ? (
             google ? (
               <>
-                <p className="text-sm text-emerald-400">連携済み{google.email && `(${google.email})`}。召集予定は即時にカレンダーへ登録・更新・削除されます。</p>
+                <p className="text-sm text-emerald-600">連携済み{google.email && `(${google.email})`}。召集予定は即時にカレンダーへ登録・更新・削除されます。</p>
                 <div className="flex items-center gap-2 text-sm text-fg-2">
                   <form action={setFreebusyImport.bind(null, !settings.google_freebusy_import)}>
-                    <button className={`rounded px-2 py-0.5 text-xs ${settings.google_freebusy_import ? "bg-emerald-500 text-black" : "bg-surface-3"}`}>{settings.google_freebusy_import ? "ON" : "OFF"}</button>
+                    <button className={`rounded px-2 py-0.5 text-xs ${settings.google_freebusy_import ? "bg-emerald-600 text-white" : "bg-surface-3"}`}>{settings.google_freebusy_import ? "ON" : "OFF"}</button>
                   </form>
                   <span>カレンダーの「予定あり」を空き時間の「不可」として毎朝取り込む(内容は取得しません)</span>
                 </div>
                 <div className="flex gap-3 text-xs">
-                  {settings.google_freebusy_import && <form action={importGoogleBusy}><button className="text-accent hover:underline">今すぐ取り込む</button></form>}
-                  <form action={disconnectGoogle}><button className="text-dim hover:text-red-400">連携を解除(登録した予定も削除)</button></form>
+                  {settings.google_freebusy_import && <form action={importGoogleBusy}><button className="text-accent-text hover:underline">今すぐ取り込む</button></form>}
+                  <form action={disconnectGoogle}><button className="text-dim hover:text-red-600">連携を解除(登録した予定も削除)</button></form>
                 </div>
               </>
             ) : (
               <>
                 <p className="text-sm text-fg-2">認可すると、所属するすべての劇団の召集が Google カレンダーに即時反映され、カレンダーの予定を空き時間として自動で取り込めます。</p>
-                <a href="/api/google/connect" className={`inline-block ${btn} bg-accent text-black hover:bg-accent-hover`}>Google カレンダーと連携する</a>
+                <a href="/api/google/connect" className={`inline-block ${btn} bg-accent text-accent-ink hover:bg-accent-hover`}>Google カレンダーと連携する</a>
               </>
             )
           ) : (
-            <p className="text-xs text-yellow-500">(この環境では Google API 連携は未設定です。下の購読 URL をご利用ください)</p>
+            <p className="text-xs text-amber-600">(この環境では Google API 連携は未設定です。下の購読 URL をご利用ください)</p>
           )}
           <details className="pt-2">
             <summary className="cursor-pointer text-sm text-fg-2">購読 URL で表示する(Google / Apple / Outlook)</summary>
-            <p className="mt-1 break-all rounded bg-surface-2 p-2 font-mono text-xs text-accent">{icalUrl}</p>
+            <p className="mt-1 break-all rounded bg-surface-2 p-2 font-mono text-xs text-accent-text">{icalUrl}</p>
             <p className="text-xs text-dim">本人専用の URL です。Google 側の更新は数時間遅れることがあります。</p>
           </details>
         </div>
@@ -148,16 +148,16 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         {orgs.map((o) => (
           <div key={o.org.id} className="flex items-center justify-between text-sm">
             <span><Link href={`/o/${o.org.slug}`} className="hover:underline">{o.org.name}</Link> <span className="text-xs text-dim">{ROLE_LABEL[o.role]}／{PART_LABEL[o.part]}</span></span>
-            <form action={leaveOrg.bind(null, o.org.id)}><button className="text-xs text-dim hover:text-red-400">離脱</button></form>
+            <form action={leaveOrg.bind(null, o.org.id)}><button className="text-xs text-dim hover:text-red-600">離脱</button></form>
           </div>
         ))}
       </section>
 
       <section className="space-y-2 rounded-xl border border-line bg-surface p-4">
         <h2 className="font-semibold">データと退会</h2>
-        <p className="text-sm"><a href="/api/me/export" className="text-accent hover:underline">自分の予定・出欠・空き時間を CSV でダウンロード</a></p>
+        <p className="text-sm"><a href="/api/me/export" className="text-accent-text hover:underline">自分の予定・出欠・空き時間を CSV でダウンロード</a></p>
         <details>
-          <summary className="cursor-pointer text-sm text-red-400">アカウントを削除(退会)</summary>
+          <summary className="cursor-pointer text-sm text-red-600">アカウントを削除(退会)</summary>
           <form action={deleteMyAccount} className="mt-2 space-y-2 text-sm">
             <p className="text-muted">空き時間・連携情報などの個人データは即時に削除されます。参加していた劇団の出欠記録は「退会済みユーザー」として残ります。取り消せません。</p>
             <div className="flex items-center gap-2">

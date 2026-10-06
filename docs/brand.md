@@ -43,16 +43,20 @@
 
 ## 画面の配色トークン(アプリ UI)
 
-`src/app/globals.css` の `@theme` で定義し、Tailwind のユーティリティ(`bg-surface`、`text-muted` など)として使う。素の `neutral-*` は使わない。
+国内の業務 SaaS(SmartHR、freee、note など)に倣った**白基調**。`src/app/globals.css` の `@theme` で定義し、Tailwind のユーティリティ(`bg-surface`、`text-muted` など)として使う。素の `neutral-*` は使わない。
 
 | トークン | 値 | 用途 |
 |---|---|---|
-| `bg` | `#0b0b0e` | ページ背景 |
-| `surface` / `surface-2` / `surface-3` | `#131316` / `#1a1a1f` / `#232329` | カード／入力欄・ホバー／ボタン |
-| `line` / `line-strong` | `#26262d` / `#35353e` | 罫線／入力欄の枠 |
-| `fg` / `fg-2` / `muted` / `dim` | `#f2f2f4` / `#c9c9d1` / `#8f8f9b` / `#62626e` | 本文／二次／補足／控えめ |
-| `accent` / `accent-hover` / `accent-soft` / `accent-ink` | `#f5a524` / `#ffb83d` / `#ffd27a` / `#1a1200` | 強調・主ボタン／ホバー／淡い強調／主ボタン上の文字 |
+| `bg` | `#f7f6f3` | ページ背景(紙のような暖色寄りの薄いグレー) |
+| `surface` / `surface-2` / `surface-3` | `#ffffff` / `#f3f2ee` / `#e9e7e1` | カード／入力欄・ホバー／二次ボタン |
+| `line` / `line-strong` | `#e6e4de` / `#cfccc4` | 罫線／入力欄の枠 |
+| `fg` / `fg-2` / `muted` / `dim` | `#23221f` / `#4a4845` / `#6f6c66` / `#9c9890` | 本文／二次／補足／控えめ |
+| `accent` / `accent-hover` | `#f5a524` / `#e9981a` | 主ボタンの面(文字は `accent-ink`) |
+| `accent-text` | `#a35f00` | 文字・リンクとしての琥珀(白地でのコントラスト確保) |
+| `accent-soft` / `accent-ink` | `#fff1d6` / `#1a1200` | 淡い強調の面／主ボタン上の文字 |
 
-- 角丸: 入力欄・ボタン `rounded-lg`、カード `rounded-xl`〜`rounded-2xl`
+- 意味色(成功・警告・エラー・種別)は Tailwind の 600〜700 番台を文字に、50〜500/10 を面に使う
+- 角丸: 入力欄・ボタン `rounded-lg`、カード `rounded-xl`〜`rounded-2xl`。影はカードに `shadow-card`、主要 CTA に `shadow-pop`
 - フォント: Inter + Noto Sans JP(Google Fonts。未読込時はシステムフォント)
 - レイアウト: ログイン後はサイドバー(デスクトップ)／下部タブ(モバイル)の `src/app/(app)/layout.tsx`。公開ページは `src/app/(public)/layout.tsx`
+- ロゴは墨版(`zagumi-*.svg`)を使う。暗い面に置く場合のみ `-white`

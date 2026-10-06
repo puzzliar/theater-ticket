@@ -27,8 +27,8 @@ export default async function HandoverPage({ params, searchParams }: { params: P
         <p className="mt-1 text-sm text-fg-2">{t.fromOrg?.name ?? "キャスト"} で管理されていた公演を、あなたの座組へ引き渡します。予定・シーン・出欠の記録と、参加している {t.memberCount} 名がそのまま移り、以降はあなたの座組の管理者が管理します。</p>
         <p className="mt-1 text-xs text-dim">リンクの期限 {fmtDate(t.expires_at)}</p>
       </div>
-      {!usable.ok && <p className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{usable.reason}</p>}
-      {sp.error && <p className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{sp.error}</p>}
+      {!usable.ok && <p className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-700">{usable.reason}</p>}
+      {sp.error && <p className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-700">{sp.error}</p>}
       {usable.ok && !me && (
         <div className="space-y-2">
           <Link href={`/login?next=${next}`} className="block w-full rounded-lg bg-accent px-4 py-2.5 text-center font-semibold text-accent-ink hover:bg-accent-hover">ログインして引き受ける</Link>

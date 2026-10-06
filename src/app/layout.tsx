@@ -42,7 +42,7 @@ function TicketTopBar() {
       <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
         <Link href="/" aria-label="ZAGUMIチケット" className="flex items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/zagumi-ticket-white.svg" alt="ZAGUMIチケット" className="h-9 w-auto" />
+          <img src="/brand/zagumi-ticket.svg" alt="ZAGUMIチケット" className="h-9 w-auto" />
         </Link>
         <nav className="text-sm text-muted">
           <Link href="/login" className="rounded-lg border border-line px-3 py-1.5 hover:bg-surface-2 hover:text-fg">関係者ログイン</Link>
@@ -60,7 +60,7 @@ async function RehearsalTopBar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         <Link href={session ? "/me" : "/"} aria-label="ZAGUMIスケジュール" className="flex items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/zagumi-schedule-white.svg" alt="ZAGUMIスケジュール" className="h-9 w-auto" />
+          <img src="/brand/zagumi-schedule.svg" alt="ZAGUMIスケジュール" className="h-9 w-auto" />
         </Link>
         <nav className="flex items-center gap-2 text-sm">
           {session ? (

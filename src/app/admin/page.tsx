@@ -30,7 +30,7 @@ export default async function AdminHome() {
               className="flex items-center justify-between rounded-xl border border-line bg-surface p-4 hover:border-accent/50"
             >
               <span>{e.name}</span>
-              <span className={`text-sm ${e.is_published ? "text-emerald-400" : "text-dim"}`}>
+              <span className={`text-sm ${e.is_published ? "text-emerald-600" : "text-dim"}`}>
                 {e.is_published ? "公開中" : "非公開"}
               </span>
             </Link>

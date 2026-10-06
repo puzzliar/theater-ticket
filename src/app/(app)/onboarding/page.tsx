@@ -37,7 +37,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
           <label className="flex items-start gap-2">
             <input type="checkbox" name="terms" required className="mt-0.5" />
             <span>
-              <Link href="/terms" target="_blank" className="text-accent hover:underline">利用規約</Link> と <Link href="/privacy" target="_blank" className="text-accent hover:underline">プライバシーポリシー</Link> に同意します(必須)
+              <Link href="/terms" target="_blank" className="text-accent-text hover:underline">利用規約</Link> と <Link href="/privacy" target="_blank" className="text-accent-text hover:underline">プライバシーポリシー</Link> に同意します(必須)
             </span>
           </label>
           <label className="flex items-start gap-2">

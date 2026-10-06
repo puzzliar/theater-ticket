@@ -75,7 +75,7 @@ export default async function AvailabilityMatrixPage({ params, searchParams }: {
       <div className="overflow-x-auto rounded-xl border border-line">
         <table className="w-full min-w-[900px] text-xs">
           <thead className="bg-surface text-left text-muted">
-            <tr><th className="p-2">参加者</th>{days.map((d) => <th key={d} className={`p-2 ${d === jstDateString() ? "text-accent" : ""}`}>{fmtDateLabel(d)}</th>)}</tr>
+            <tr><th className="p-2">参加者</th>{days.map((d) => <th key={d} className={`p-2 ${d === jstDateString() ? "text-accent-text" : ""}`}>{fmtDateLabel(d)}</th>)}</tr>
           </thead>
           <tbody>
             {list.map((p) => (
@@ -87,12 +87,12 @@ export default async function AvailabilityMatrixPage({ params, searchParams }: {
                     <td key={d} className="p-1">
                       <div className="space-y-0.5">
                         {a.map((x) => (
-                          <div key={x.id} className={`rounded px-1 py-0.5 ${x.status === "available" ? "bg-emerald-500/15 text-emerald-300" : "bg-red-500/15 text-red-300"}`}>{x.status === "available" ? "可" : "不可"} {fmtTime(x.starts_at)}-{fmtTime(x.ends_at)}</div>
+                          <div key={x.id} className={`rounded px-1 py-0.5 ${x.status === "available" ? "bg-emerald-500/15 text-emerald-700" : "bg-red-500/15 text-red-700"}`}>{x.status === "available" ? "可" : "不可"} {fmtTime(x.starts_at)}-{fmtTime(x.ends_at)}</div>
                         ))}
                         {b.map((x) =>
                           x.rh_sessions.org_id === org.id ? (
-                            <div key={x.rh_sessions.id} className={`rounded px-1 py-0.5 ${x.rh_sessions.kind === "performance" ? "bg-rose-500/15 text-rose-300" : "bg-sky-500/15 text-sky-300"}`}>
-                              {SESSION_KIND_LABEL[x.rh_sessions.kind]} {fmtTime(x.rh_sessions.starts_at)}-{fmtTime(x.rh_sessions.ends_at)} {x.rh_sessions.rh_productions?.name}{x.response === "pending" && <span className="text-yellow-400">?</span>}
+                            <div key={x.rh_sessions.id} className={`rounded px-1 py-0.5 ${x.rh_sessions.kind === "performance" ? "bg-rose-500/15 text-rose-700" : "bg-sky-500/15 text-sky-700"}`}>
+                              {SESSION_KIND_LABEL[x.rh_sessions.kind]} {fmtTime(x.rh_sessions.starts_at)}-{fmtTime(x.rh_sessions.ends_at)} {x.rh_sessions.rh_productions?.name}{x.response === "pending" && <span className="text-amber-600">?</span>}
                             </div>
                           ) : (
                             <div key={x.rh_sessions.id} className="rounded bg-surface-3/40 px-1 py-0.5 text-muted">他現場 {fmtTime(x.rh_sessions.starts_at)}-{fmtTime(x.rh_sessions.ends_at)}</div>

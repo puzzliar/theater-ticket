@@ -96,12 +96,12 @@ export default function CheckinList({ stageId, orders }: { stageId: string; orde
                 <button
                   onClick={() => startTransition(() => receiveCash(o.id, stageId))}
                   disabled={pending}
-                  className="rounded-lg bg-yellow-500 px-3 py-1.5 text-sm font-semibold text-accent-ink disabled:opacity-50"
+                  className="rounded-lg bg-accent px-3 py-1.5 text-sm font-semibold text-accent-ink disabled:opacity-50"
                 >
                   💴 未収 {yen(o.total)} を収受
                 </button>
               ) : (
-                <span className="text-xs text-emerald-400">支払済み</span>
+                <span className="text-xs text-emerald-600">支払済み</span>
               )}
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
@@ -114,7 +114,7 @@ export default function CheckinList({ stageId, orders }: { stageId: string; orde
                   disabled={pending}
                   className={`rounded-lg border px-3 py-1.5 text-sm disabled:opacity-50 ${
                     t.checkedIn
-                      ? "border-emerald-600 bg-emerald-900/40 text-emerald-300"
+                      ? "border-emerald-600 bg-emerald-50 text-emerald-700"
                       : "border-neutral-600 bg-surface-2 text-fg hover:border-accent"
                   }`}
                 >

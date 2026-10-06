@@ -33,7 +33,7 @@ export default function PayButton({ token }: { token: string }) {
       >
         {busy ? "処理中..." : "オンラインで支払う"}
       </button>
-      {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </div>
   );
 }

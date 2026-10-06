@@ -132,7 +132,7 @@ export default function GuestReservationForm({ stages, seatClasses }: Props) {
         {busy ? "処理中..." : "予約を確定する"}
       </button>
       {message && (
-        <p className={`mt-2 break-all text-sm ${message.type === "ok" ? "text-emerald-400" : "text-red-400"}`}>
+        <p className={`mt-2 break-all text-sm ${message.type === "ok" ? "text-emerald-600" : "text-red-600"}`}>
           {message.text}
         </p>
       )}

@@ -27,14 +27,14 @@ export default async function OrgHome({ params, searchParams }: { params: Promis
 
   return (
     <div className="space-y-10">
-      {sp.joined && <p className="rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-300">{org.name} に参加しました。召集されるとマイスケジュールに表示されます。</p>}
-      {sp.created && <p className="rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-300">団体を作成しました。「メンバー」から招待リンクを発行してキャストを招待してください。</p>}
-      {sp.denied && <p className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">その操作には管理者権限が必要です。</p>}
+      {sp.joined && <p className="rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-700">{org.name} に参加しました。召集されるとマイスケジュールに表示されます。</p>}
+      {sp.created && <p className="rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-700">団体を作成しました。「メンバー」から招待リンクを発行してキャストを招待してください。</p>}
+      {sp.denied && <p className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-700">その操作には管理者権限が必要です。</p>}
 
       {/* 仮メンバーの紐づけ(本人) */}
       {!mine && (
         <section className="rounded-2xl border border-accent/40 bg-accent/5 p-4 text-sm">
-          <p className="font-semibold text-accent">この団体での参加者登録</p>
+          <p className="font-semibold text-accent-text">この団体での参加者登録</p>
           {(unclaimed ?? []).length > 0 ? (
             <>
               <p className="mt-1 text-fg-2">主催者が先に登録した名前があります。あなたのものを選んでください。</p>
@@ -60,7 +60,7 @@ export default async function OrgHome({ params, searchParams }: { params: Promis
         {sessions.map((s) => (
           <div key={s.id} className="flex flex-wrap items-center justify-between gap-2 rounded border border-line px-3 py-2 text-sm">
             <span><span className="text-xs text-muted">{SESSION_KIND_LABEL[s.kind]}</span> {fmtRange(s.startsAt, s.endsAt)} {s.productionName} {s.title}</span>
-            <span className={`text-xs ${s.response === "yes" ? "text-emerald-400" : s.response === "no" ? "text-red-400" : "text-yellow-400"}`}>{RESPONSE_LABEL[s.response]}</span>
+            <span className={`text-xs ${s.response === "yes" ? "text-emerald-600" : s.response === "no" ? "text-red-600" : "text-amber-600"}`}>{RESPONSE_LABEL[s.response]}</span>
           </div>
         ))}
         <p className="text-xs text-dim">出欠の回答は <Link href="/me" className="underline">自分の予定</Link> から。</p>
@@ -73,7 +73,7 @@ export default async function OrgHome({ params, searchParams }: { params: Promis
         <div className="grid gap-3">
           {((productions ?? []) as (ProductionRow & { rh_production_members: { participant_id: string }[] })[]).map((p) => (
             <div key={p.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface p-4">
-              <Link href={`/o/${slug}/p/${p.id}`} className="hover:text-accent">
+              <Link href={`/o/${slug}/p/${p.id}`} className="hover:text-accent-text">
                 <span className="font-medium">{p.name}</span>
                 <span className="ml-2 text-xs text-dim">{p.rh_production_members.length}名{p.opens_on && ` ／ 初日 ${p.opens_on}`} ／ {PRODUCTION_STATUS_LABEL[p.status]}</span>
               </Link>
@@ -81,7 +81,7 @@ export default async function OrgHome({ params, searchParams }: { params: Promis
                 <div className="flex items-center gap-1 text-xs">
                   {(Object.keys(PRODUCTION_STATUS_LABEL) as ProductionRow["status"][]).map((s) => (
                     <form key={s} action={updateProductionStatus.bind(null, org.id, p.id, s)}>
-                      <button className={`rounded px-2 py-1 ${p.status === s ? "bg-accent text-black" : "bg-surface-2 text-muted hover:bg-surface-3"}`}>{PRODUCTION_STATUS_LABEL[s]}</button>
+                      <button className={`rounded px-2 py-1 ${p.status === s ? "bg-accent text-accent-ink" : "bg-surface-2 text-muted hover:bg-surface-3"}`}>{PRODUCTION_STATUS_LABEL[s]}</button>
                     </form>
                   ))}
                 </div>

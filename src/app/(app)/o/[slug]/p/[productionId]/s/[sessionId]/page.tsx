@@ -51,12 +51,12 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
       <div>
         <p className="text-sm text-dim"><Link href={`/o/${slug}/p/${productionId}`} className="hover:text-fg">← {session.rh_productions?.name}</Link></p>
         <h2 className="text-2xl font-bold">
-          <span className={`mr-2 rounded px-2 py-0.5 text-sm ${session.kind === "performance" ? "bg-rose-500/20 text-rose-300" : "bg-sky-500/20 text-sky-300"}`}>{SESSION_KIND_LABEL[session.kind]}</span>
-          {session.tentative && <span className="mr-2 rounded bg-orange-500/20 px-2 py-0.5 text-sm text-orange-300">仮押さえ</span>}
+          <span className={`mr-2 rounded px-2 py-0.5 text-sm ${session.kind === "performance" ? "bg-rose-500/20 text-rose-700" : "bg-sky-500/20 text-sky-700"}`}>{SESSION_KIND_LABEL[session.kind]}</span>
+          {session.tentative && <span className="mr-2 rounded bg-orange-500/20 px-2 py-0.5 text-sm text-orange-700">仮押さえ</span>}
           {fmtRange(session.starts_at, session.ends_at)} {session.title}
         </h2>
         <p className="text-sm text-muted">
-          状態: <span className={session.status === "done" ? "text-emerald-400" : session.status === "cancelled" ? "text-red-400" : "text-fg"}>{SESSION_STATUS_LABEL[session.status]}</span>
+          状態: <span className={session.status === "done" ? "text-emerald-600" : session.status === "cancelled" ? "text-red-600" : "text-fg"}>{SESSION_STATUS_LABEL[session.status]}</span>
           {session.location && ` ／ 📍${session.location}`}
           {session.tentative && session.respond_by && ` ／ 返答期限 ${fmtDateLabel(session.respond_by)}`}
         </p>
@@ -70,7 +70,7 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
             {sessionMembers.map((m) => (
               <div key={m.participant_id} className="flex justify-between rounded border border-line px-3 py-1.5">
                 <span>{m.rh_participants!.display_name}</span>
-                <span className={`text-xs ${m.response === "yes" ? "text-emerald-400" : m.response === "no" ? "text-red-400" : "text-yellow-400"}`}>{RESPONSE_LABEL[m.response]}</span>
+                <span className={`text-xs ${m.response === "yes" ? "text-emerald-600" : m.response === "no" ? "text-red-600" : "text-amber-600"}`}>{RESPONSE_LABEL[m.response]}</span>
               </div>
             ))}
           </div>
@@ -106,7 +106,7 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
               {session.status === "cancelled" ? (
                 <form action={reopenSession.bind(null, ...a)}><button className="text-muted hover:underline">中止を取り消す</button></form>
               ) : (
-                <form action={cancelSession.bind(null, ...a)}><button className="text-red-400 hover:underline">この予定を中止する(召集メンバーに通知)</button></form>
+                <form action={cancelSession.bind(null, ...a)}><button className="text-red-600 hover:underline">この予定を中止する(召集メンバーに通知)</button></form>
               )}
             </div>
           </section>
@@ -123,7 +123,7 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
                       <span><span className="font-mono">{s.rh_scenes?.code}</span> {s.rh_scenes?.name}</span>
                       <span className="flex items-center gap-2">
                         <select name={`scene_${s.scene_id}`} defaultValue={s.status} className={selectCls}><option value="planned">予定</option><option value="done">実施</option><option value="skipped">未実施</option></select>
-                        <button formAction={removeSessionScene.bind(null, ...a, s.scene_id)} className="text-xs text-dim/70 hover:text-red-400">外す</button>
+                        <button formAction={removeSessionScene.bind(null, ...a, s.scene_id)} className="text-xs text-dim/70 hover:text-red-600">外す</button>
                       </span>
                     </div>
                   ))}
@@ -141,11 +141,11 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
                           <tr key={m.participant_id} className="border-t border-line">
                             <td className="p-1">{m.rh_participants!.display_name}{!m.rh_participants!.profile_id && <span className="ml-1 text-xs text-dim">(未登録)</span>}</td>
                             <td className="p-1"><input type="checkbox" name={`req_${m.participant_id}`} defaultChecked={m.required} /></td>
-                            <td className={`p-1 text-xs ${m.response === "yes" ? "text-emerald-400" : m.response === "no" ? "text-red-400" : "text-yellow-400"}`}>{RESPONSE_LABEL[m.response]}</td>
-                            <td className={`p-1 text-xs ${v?.status === "conflict" ? "text-orange-400" : v?.status === "unavailable" ? "text-red-400" : "text-dim"}`}>{v?.status === "conflict" || v?.status === "unavailable" ? v.detail : ""}</td>
+                            <td className={`p-1 text-xs ${m.response === "yes" ? "text-emerald-600" : m.response === "no" ? "text-red-600" : "text-amber-600"}`}>{RESPONSE_LABEL[m.response]}</td>
+                            <td className={`p-1 text-xs ${v?.status === "conflict" ? "text-orange-600" : v?.status === "unavailable" ? "text-red-600" : "text-dim"}`}>{v?.status === "conflict" || v?.status === "unavailable" ? v.detail : ""}</td>
                             <td className="p-1"><select name={`att_${m.participant_id}`} defaultValue={m.attendance} className={selectCls}>{(Object.keys(ATTENDANCE_LABEL) as Attendance[]).map((x) => <option key={x} value={x}>{ATTENDANCE_LABEL[x]}</option>)}</select></td>
                             <td className="p-1 text-xs text-dim">{m.notified_at ? "送信済" : m.rh_participants!.profile_id ? "未送信" : "-"}</td>
-                            <td className="p-1"><button formAction={removeSessionMember.bind(null, ...a, m.participant_id)} className="text-xs text-dim/70 hover:text-red-400">外す</button></td>
+                            <td className="p-1"><button formAction={removeSessionMember.bind(null, ...a, m.participant_id)} className="text-xs text-dim/70 hover:text-red-600">外す</button></td>
                           </tr>
                         );
                       })}
@@ -155,8 +155,8 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <button className="rounded-lg bg-surface-3 px-4 py-2 text-sm hover:bg-line-strong">記録を保存</button>
-                {session.status === "scheduled" && <label className="flex items-center gap-1 text-xs text-accent"><input type="checkbox" name="finish" /> 保存と同時に「完了」にする(未記録の予定シーンは実施扱い)</label>}
-                {session.status === "done" && <span className="text-xs text-emerald-400">完了済み(記録の修正は可能)</span>}
+                {session.status === "scheduled" && <label className="flex items-center gap-1 text-xs text-accent-text"><input type="checkbox" name="finish" /> 保存と同時に「完了」にする(未記録の予定シーンは実施扱い)</label>}
+                {session.status === "done" && <span className="text-xs text-emerald-600">完了済み(記録の修正は可能)</span>}
               </div>
             </form>
             <div className="grid gap-2 sm:grid-cols-2">
@@ -170,7 +170,7 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
                 <button className="rounded-lg bg-surface-3 px-3 py-2 text-sm hover:bg-line-strong">追加</button>
               </form>
             </div>
-            <form action={sendInvites.bind(null, ...a)}><button className="text-xs text-accent hover:underline">未送信のメンバーに召集通知を送る</button></form>
+            <form action={sendInvites.bind(null, ...a)}><button className="text-xs text-accent-text hover:underline">未送信のメンバーに召集通知を送る</button></form>
           </section>
 
           <section className="space-y-3">
@@ -179,9 +179,9 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
             {subRequests.map((r) => (
               <div key={r.id} className="rounded-xl border border-line bg-surface p-3 text-sm">
                 <p>
-                  <span className={r.status === "open" ? "text-accent" : r.status === "filled" ? "text-emerald-400" : "text-dim"}>[{r.status === "open" ? "募集中" : r.status === "filled" ? "確定" : "取消"}]</span>{" "}
+                  <span className={r.status === "open" ? "text-accent-text" : r.status === "filled" ? "text-emerald-600" : "text-dim"}>[{r.status === "open" ? "募集中" : r.status === "filled" ? "確定" : "取消"}]</span>{" "}
                   {nameOf.get(r.absent_participant_id) ?? "?"} さんの代役 {r.reason && <span className="text-muted">({r.reason})</span>}
-                  {r.filled_by_participant_id && <span className="ml-2 text-emerald-400">→ {nameOf.get(r.filled_by_participant_id) ?? "?"} さん</span>}
+                  {r.filled_by_participant_id && <span className="ml-2 text-emerald-600">→ {nameOf.get(r.filled_by_participant_id) ?? "?"} さん</span>}
                 </p>
                 <p className="text-xs text-muted">候補 {r.rh_substitution_candidates.length}名: {r.rh_substitution_candidates.map((c) => `${c.rh_participants?.display_name ?? "?"}${c.applied_at ? "(応募)" : ""}`).join(", ") || "なし"}</p>
                 {r.status === "open" && (
@@ -190,7 +190,7 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
                       <select name="participant_id" className={selectCls}><option value="">手動で確定する参加者</option>{participants.filter((p) => p.participant_id !== r.absent_participant_id).map((p) => <option key={p.participant_id} value={p.participant_id}>{p.rh_participants!.display_name}</option>)}</select>
                       <button className="rounded bg-surface-3 px-2 py-1 text-xs hover:bg-line-strong">確定</button>
                     </form>
-                    <form action={cancelSubstitution.bind(null, ...a, r.id)}><button className="text-xs text-dim hover:text-red-400">募集を取り消す</button></form>
+                    <form action={cancelSubstitution.bind(null, ...a, r.id)}><button className="text-xs text-dim hover:text-red-600">募集を取り消す</button></form>
                   </div>
                 )}
               </div>

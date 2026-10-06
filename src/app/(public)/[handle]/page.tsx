@@ -52,7 +52,7 @@ export default async function PublicSitePage({ params }: { params: Promise<{ han
           {site.headline && <p className="text-fg-2">{site.headline}</p>}
           {links.length > 0 && (
             <p className="flex flex-wrap gap-3 text-sm">
-              {links.map((k) => <a key={k} href={site.links[k]} target="_blank" rel="noopener" className="text-accent hover:underline">{LINK_LABEL[k]}</a>)}
+              {links.map((k) => <a key={k} href={site.links[k]} target="_blank" rel="noopener" className="text-accent-text hover:underline">{LINK_LABEL[k]}</a>)}
             </p>
           )}
         </div>
@@ -62,7 +62,7 @@ export default async function PublicSitePage({ params }: { params: Promise<{ han
 
       {upcoming.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold text-accent">近日の出演</h2>
+          <h2 className="text-lg font-semibold text-accent-text">近日の出演</h2>
           <div className="space-y-2">
             {upcoming.map((u, i) => (
               <div key={i} className="rounded-xl border border-line bg-surface p-3 text-sm">
@@ -76,7 +76,7 @@ export default async function PublicSitePage({ params }: { params: Promise<{ han
 
       {credits.length > 0 && (
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold text-accent">出演履歴</h2>
+          <h2 className="text-lg font-semibold text-accent-text">出演履歴</h2>
           {years.map((y) => (
             <div key={y} className="space-y-2">
               <h3 className="text-sm font-semibold text-muted">{y}</h3>

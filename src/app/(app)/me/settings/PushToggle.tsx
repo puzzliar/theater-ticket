@@ -59,11 +59,11 @@ export default function PushToggle({ vapidPublicKey }: { vapidPublicKey: string 
   }
 
   if (state === "unsupported") return <p className="text-xs text-dim">この端末・ブラウザではプッシュ通知を利用できません(iPhone はホーム画面に追加してから開いてください)。</p>;
-  if (state === "denied") return <p className="text-xs text-yellow-500">通知がブロックされています。ブラウザの設定で許可してください。</p>;
+  if (state === "denied") return <p className="text-xs text-amber-600">通知がブロックされています。ブラウザの設定で許可してください。</p>;
   if (state === "checking") return <p className="text-xs text-dim">確認中...</p>;
   return (
     <div className="flex items-center gap-3 text-sm">
-      <span className={state === "on" ? "text-emerald-400" : "text-muted"}>{state === "on" ? "この端末で受信中" : "未設定"}</span>
+      <span className={state === "on" ? "text-emerald-600" : "text-muted"}>{state === "on" ? "この端末で受信中" : "未設定"}</span>
       {state === "on" ? (
         <button onClick={disable} disabled={busy} className="rounded bg-surface-3 px-3 py-1 text-xs hover:bg-line-strong disabled:opacity-50">この端末で受信をやめる</button>
       ) : (

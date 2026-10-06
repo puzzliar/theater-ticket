@@ -67,7 +67,7 @@ export default async function CastPage() {
               <h2 className="text-xl font-semibold">{event.name}</h2>
               <p className="mt-1 break-all text-xs text-dim">
                 あなたの案内用URL:{" "}
-                <span className="text-accent">{SITE_URL}/e/{event.id}?c={cast.slug}</span>
+                <span className="text-accent-text">{SITE_URL}/e/{event.id}?c={cast.slug}</span>
                 (このURL経由の購入は自動的にあなたの扱いになります)
               </p>
             </div>
@@ -76,7 +76,7 @@ export default async function CastPage() {
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-line bg-surface p-4">
                 <p className="text-sm text-muted">あなたの扱い売上(確定)</p>
-                <p className="text-2xl font-bold text-accent">{yen(sales)}</p>
+                <p className="text-2xl font-bold text-accent-text">{yen(sales)}</p>
                 <p className="text-sm text-muted">{soldCount}枚</p>
               </div>
               <div className="rounded-xl border border-line bg-surface p-4">
@@ -123,7 +123,7 @@ export default async function CastPage() {
                         </p>
                       </div>
                       <form action={castCancelReservation.bind(null, o.id)}>
-                        <button className="text-xs text-red-400 hover:underline">キャンセル</button>
+                        <button className="text-xs text-red-600 hover:underline">キャンセル</button>
                       </form>
                     </div>
                   ))}
@@ -137,13 +137,13 @@ export default async function CastPage() {
                 {active.slice(0, 30).map((o) => (
                   <p key={o.id} className="text-fg-2">
                     {fmtDateTime(o.created_at)} ／ {o.buyer_name} 様 ／ {yen(o.total)} ／{" "}
-                    <span className={o.payment_status === "paid" ? "text-emerald-400" : "text-yellow-400"}>
+                    <span className={o.payment_status === "paid" ? "text-emerald-600" : "text-amber-600"}>
                       {PAYMENT_STATUS_LABEL[o.payment_status]}
                     </span>
                   </p>
                 ))}
                 {pending.length > 0 && (
-                  <p className="mt-2 text-xs text-yellow-500">未決済 {pending.length}件(当日現金・支払い待ち含む)</p>
+                  <p className="mt-2 text-xs text-amber-600">未決済 {pending.length}件(当日現金・支払い待ち含む)</p>
                 )}
               </div>
             </div>

@@ -13,7 +13,7 @@ export default async function OrderCompletePage({
       <div className="text-5xl">🎉</div>
       <h1 className="text-2xl font-bold">ご購入ありがとうございます</h1>
       {mock && (
-        <p className="rounded-lg border border-yellow-700 bg-yellow-900/30 p-3 text-sm text-yellow-300">
+        <p className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
           テスト決済モードで確定しました(Stripe未設定のため実際の課金は発生していません)
         </p>
       )}
