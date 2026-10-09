@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/core/session";
+import { isMode } from "@/lib/core/mode";
 import { encryptToken, exchangeCode, googleConfigured, verifyState } from "@/lib/google-calendar";
 import { getSettings } from "@/lib/rehearsal/profile";
 import { importBusyAsUnavailable, syncProfileUpcoming } from "@/lib/rehearsal/google-sync";
@@ -8,7 +9,8 @@ import { SITE_URL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
-// Google OAuth コールバック。state の署名とログイン中プロフィールの一致を確認してからトークンを保存する
+// Google OAuth コールバック。state の署名とログイン中プロフィールの一致を確認してからトークンを保存する。
+// state は "<profileId>|<mode>"。モードごとに別の Google アカウントを保存できる
 export async function GET(req: NextRequest) {
   const back = `${SITE_URL}/me/settings`;
   if (!googleConfigured()) return NextResponse.redirect(`${back}?google=not_configured`);
@@ -16,7 +18,9 @@ export async function GET(req: NextRequest) {
   const state = req.nextUrl.searchParams.get("state") ?? "";
   if (req.nextUrl.searchParams.get("error") || !code) return NextResponse.redirect(`${back}?google=denied`);
 
-  const profileId = verifyState(state);
+  const payload = verifyState(state);
+  const [profileId, modeRaw] = (payload ?? "").split("|");
+  const mode = isMode(modeRaw) ? modeRaw : "cast";
   const me = await getSessionUser();
   if (!profileId || !me || me.id !== profileId) return NextResponse.redirect(`${back}?google=state_mismatch`);
 
@@ -26,15 +30,15 @@ export async function GET(req: NextRequest) {
     const { error } = await supabaseAdmin()
       .from("core_identities")
       .upsert(
-        { profile_id: me.id, provider: "google_calendar", provider_uid: email ?? me.id, email, secret_enc: encryptToken(refreshToken), connected_at: new Date().toISOString() },
-        { onConflict: "profile_id,provider" },
+        { profile_id: me.id, provider: "google_calendar", mode, provider_uid: email ?? me.id, email, secret_enc: encryptToken(refreshToken), connected_at: new Date().toISOString() },
+        { onConflict: "profile_id,provider,mode" },
       );
     if (error) throw new Error(error.message);
   } catch (e) {
     console.error("google connect failed", e);
     return NextResponse.redirect(`${back}?google=error`);
   }
-  await syncProfileUpcoming(me.id);
-  await importBusyAsUnavailable(me.id);
-  return NextResponse.redirect(`${back}?google=connected`);
+  await syncProfileUpcoming(me.id, mode);
+  if (mode === "cast") await importBusyAsUnavailable(me.id);
+  return NextResponse.redirect(`${back}?google=${mode === "organizer" ? "connected_organizer" : "connected"}`);
 }

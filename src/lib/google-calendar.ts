@@ -67,7 +67,7 @@ export function googleAuthUrl(memberId: string): string {
     response_type: "code",
     scope: SCOPES.join(" "),
     access_type: "offline",
-    prompt: "consent", // 毎回 refresh_token を返させる
+    prompt: "consent select_account", // 毎回 refresh_token を返させ、使う Google アカウントを選ばせる
     include_granted_scopes: "true",
     state: signState(memberId),
   });

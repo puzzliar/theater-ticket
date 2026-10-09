@@ -177,6 +177,14 @@ TTL: 自動 または 3600
 2. 一覧の **Google** をクリックして展開。**Enable Sign in with Google** が ON、**Client ID** と **Client Secret** が入っていることを確認
 3. 同じ画面に表示される **Callback URL (for OAuth)**（`https://wiqnmebudaadwqdaxwko.supabase.co/auth/v1/callback`）を控えておく。F-3 で Google 側のクライアントの「承認済みのリダイレクト URI」に含まれている必要がある
 
+### B-2b. Google アカウントの追加（Manual linking）を有効にする
+
+設定画面の「Google アカウントを追加」（1 つの ZAGUMIアカウントに複数の Google アカウントでログインできるようにする機能）に必要。
+
+1. https://supabase.com/dashboard/project/wiqnmebudaadwqdaxwko/auth/providers を開き、ページ上部の **Settings** タブ（Authentication → Settings）へ
+2. **Allow manual linking**（「Manual linking」）のトグルを **ON** にして **Save**
+3. 確認: ログイン後 `/me/settings` の「ログインに使うアカウント」で **Google アカウントを追加** を押し、別の Google アカウントを選ぶと一覧に 2 つ目が並ぶ。OFF のままだと「この環境ではアカウントの追加が有効になっていません」と表示される
+
 ### B-3. メール確認を ON にする
 
 1. 同じ **Providers** 画面で **Email** をクリックして展開
@@ -523,6 +531,9 @@ update core_profiles set is_platform_admin = true where email = '<メールア�
 | 8 | 予定詳細 → **本決まりにする** | 「仮」が消え、召集メンバーに予定変更の通知 |
 | 9 | `/me/site` → URL 名 `test-b`、肩書き、プロフィール文を入れて **ページを公開する** にチェック → **保存** → 写真をアップロード | `https://<ドメイン>/test-b` が開き、写真・プロフィール・出演履歴（テスト自主公演）が表示される |
 | 10 | 公演ページ → **主催者に引き渡す** → **引き渡しリンクを発行** → URL を A（座組の管理者）で開き **この座組で引き受ける** | A の座組に公演が移り、B が A の座組のメンバーに追加されている。B の `/me` では座組名が A のものに変わる |
+| 11 | A でヘッダーの **出演者** を押す | サイドバーがマイスケジュール等に変わり、座組ページの編集フォームが消える。**主催者** に戻すと `/manage`（主催ホーム）に座組と公演、直近の予定の出欠が並ぶ |
+| 12 | A の `/me/settings` → 「ログインに使うアカウント」→ **Google アカウントを追加** → 別の Google アカウントを選ぶ | 一覧に 2 つ目の Google が並ぶ（B-2b が必要）。ログアウト後、その Google アカウントでログインしても A のデータが見える |
+| 13 | A の `/me/settings` → Google カレンダー「主催者用」→ **主催者用のカレンダーを連携する** → 劇団用の Google アカウントを選ぶ | 「主催者用の Google カレンダーと連携しました」。その Google カレンダーに座組の予定が入る（出演者用とは別アカウントでよい） |
 
 ### H-4. β 参加劇団への案内文（例）
 
@@ -635,5 +646,6 @@ where channel = 'line' and sent_at >= date_trunc('month', now() at time zone 'As
 - [ ] H-1 Job の History が 200 ／ `?force=digest` で JSON が返る
 - [ ] H-2 運営ログイン、主催者コード発行
 - [ ] H-3 の 14 項目がすべて期待結果どおり
-- [ ] H-3b の 10 項目（セルフ公演・取り込み・空き状況・仮押さえ・公式サイト・引き渡し）が期待結果どおり
+- [ ] B-2b Manual linking ON
+- [ ] H-3b の 13 項目（セルフ公演・取り込み・空き状況・仮押さえ・公式サイト・引き渡し・モード切替・Google アカウント追加）が期待結果どおり
 - [ ] H-4 の案内文を β 参加劇団へ送付
