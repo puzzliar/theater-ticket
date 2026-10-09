@@ -2,6 +2,10 @@
 
 export type OrgRole = "owner" | "admin" | "member";
 export type Part = "cast" | "staff" | "director" | "organizer";
+// 利用モード: 出演者(キャスト・スタッフとして予定を受け取る) / 主催者(座組と公演を管理する)
+export type Mode = "cast" | "organizer";
+export const MODE_LABEL: Record<Mode, string> = { cast: "出演者", organizer: "主催者" };
+
 export type OrgKind = "troupe" | "producer" | "individual" | "other" | "personal";
 
 export interface ProfileRow {
@@ -10,6 +14,7 @@ export interface ProfileRow {
   email: string | null;
   default_part: Part;
   is_platform_admin: boolean;
+  active_mode: Mode;
   onboarded_at: string | null;
   deleted_at: string | null;
   created_at: string;
@@ -55,6 +60,7 @@ export interface InvitationRow {
 export interface IdentityRow {
   profile_id: string;
   provider: "line" | "google_calendar";
+  mode: Mode;
   provider_uid: string;
   email: string | null;
   display_name: string | null;

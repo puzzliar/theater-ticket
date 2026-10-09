@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { supabaseServer } from "@/lib/supabase/server";
+import LinkGoogleButton from "@/components/LinkGoogleButton";
 import { listMyOrgs, requireSessionUser } from "@/lib/core/session";
 import { PART_LABEL, ROLE_LABEL, type IdentityRow, type Part } from "@/lib/core/types";
 import { getSettings } from "@/lib/rehearsal/profile";
@@ -11,12 +13,13 @@ import { webpushConfigured } from "@/lib/webpush";
 import { nowMs } from "@/lib/rehearsal/time";
 import { SITE_URL } from "@/lib/constants";
 import PushToggle from "./PushToggle";
-import { updateProfile, updateNotifyPrefs, newLineCode, unlinkLine, importGoogleBusy, setFreebusyImport, disconnectGoogle, leaveOrg, deleteMyAccount, signOut } from "./actions";
+import { updateProfile, updateNotifyPrefs, newLineCode, unlinkLine, importGoogleBusy, setFreebusyImport, disconnectGoogle, unlinkGoogleLogin, leaveOrg, deleteMyAccount, signOut } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 const GOOGLE_MSG: Record<string, { cls: string; text: string }> = {
-  connected: { cls: "text-emerald-600", text: "Google カレンダーと連携しました。今後の召集を登録し、カレンダーの予定を「不可」として取り込みました。" },
+  connected: { cls: "text-emerald-600", text: "出演者用の Google カレンダーと連携しました。今後の召集を登録し、カレンダーの予定を「不可」として取り込みました。" },
+  connected_organizer: { cls: "text-emerald-600", text: "主催者用の Google カレンダーと連携しました。管理している座組の今後の予定を登録しました。" },
   denied: { cls: "text-amber-600", text: "Google の認可がキャンセルされました。" },
   error: { cls: "text-red-600", text: "Google 連携に失敗しました。時間をおいて再度お試しください。" },
   state_mismatch: { cls: "text-red-600", text: "連携の確認に失敗しました。もう一度やり直してください。" },
@@ -27,14 +30,19 @@ const LINE_MSG: Record<string, { cls: string; text: string }> = {
   taken: { cls: "text-red-600", text: "その LINE アカウントは別のユーザーに連携されています。" },
 };
 
-export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ google?: string; line?: string }> }) {
+export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ google?: string; line?: string; google_login?: string }> }) {
   const me = await requireSessionUser("/me/settings");
   const sp = await searchParams;
   const admin = supabaseAdmin();
-  const [settings, orgs, { data: identities }] = await Promise.all([getSettings(me.id), listMyOrgs(me.id), admin.from("core_identities").select("*").eq("profile_id", me.id)]);
+  const supa = await supabaseServer();
+  const [settings, orgs, { data: identities }, { data: authIdents }] = await Promise.all([getSettings(me.id), listMyOrgs(me.id), admin.from("core_identities").select("*").eq("profile_id", me.id), supa.auth.getUserIdentities()]);
   const idents = (identities ?? []) as IdentityRow[];
   const line = idents.find((i) => i.provider === "line");
-  const google = idents.find((i) => i.provider === "google_calendar");
+  const google = idents.find((i) => i.provider === "google_calendar" && i.mode === "cast");
+  const googleOrganizer = idents.find((i) => i.provider === "google_calendar" && i.mode === "organizer");
+  const loginIdents = authIdents?.identities ?? [];
+  const googleLogins = loginIdents.filter((i) => i.provider === "google");
+  const emailLogin = loginIdents.find((i) => i.provider === "email");
   const lineCodeValid = settings.line_link_code && settings.line_link_expires_at && new Date(settings.line_link_expires_at).getTime() > nowMs();
   const icalUrl = `${SITE_URL}/api/ical/${settings.ical_token}`;
   const googleMsg = sp.google ? GOOGLE_MSG[sp.google] : undefined;
@@ -64,6 +72,23 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           </select>
           <button className={`${btn} bg-surface-3 hover:bg-line-strong`}>保存</button>
         </form>
+      </section>
+
+      <section className="space-y-2 rounded-xl border border-line bg-surface p-4">
+        <h2 className="font-semibold">ログインに使うアカウント</h2>
+        <p className="text-xs text-muted">主催者用に別の Google アカウントを使っている場合も、ここに追加しておけばどちらの Google アカウントでもこの ZAGUMIアカウントにログインできます。ログアウトして入り直す必要はありません。</p>
+        {sp.google_login === "linked" && <p className="text-sm text-emerald-600">Google アカウントを追加しました。</p>}
+        <div className="space-y-1 text-sm">
+          {emailLogin && <div className="flex items-center justify-between rounded border border-line px-3 py-1.5"><span>メールアドレス <span className="text-xs text-dim">{me.email}</span></span></div>}
+          {googleLogins.map((i) => (
+            <div key={i.identity_id} className="flex items-center justify-between rounded border border-line px-3 py-1.5">
+              <span>Google <span className="text-xs text-dim">{(i.identity_data?.email as string | undefined) ?? i.id}</span></span>
+              {loginIdents.length > 1 && <form action={unlinkGoogleLogin.bind(null, i.identity_id)}><button className="text-xs text-dim hover:text-red-600">解除</button></form>}
+            </div>
+          ))}
+          {line && <div className="flex items-center justify-between rounded border border-line px-3 py-1.5"><span>LINE <span className="text-xs text-dim">{line.display_name ?? ""}</span></span></div>}
+        </div>
+        <LinkGoogleButton />
       </section>
 
       <section className="space-y-3 rounded-xl border border-line bg-surface p-4">
@@ -107,30 +132,44 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             </>
           )}
         </div>
-        <div className="space-y-2 rounded-xl border border-line bg-surface p-4">
+        <div className="space-y-3 rounded-xl border border-line bg-surface p-4">
           <h2 className="font-semibold">Google カレンダー</h2>
           {googleMsg && <p className={`text-sm ${googleMsg.cls}`}>{googleMsg.text}</p>}
           {googleConfigured() ? (
-            google ? (
-              <>
-                <p className="text-sm text-emerald-600">連携済み{google.email && `(${google.email})`}。召集予定は即時にカレンダーへ登録・更新・削除されます。</p>
-                <div className="flex items-center gap-2 text-sm text-fg-2">
-                  <form action={setFreebusyImport.bind(null, !settings.google_freebusy_import)}>
-                    <button className={`rounded px-2 py-0.5 text-xs ${settings.google_freebusy_import ? "bg-emerald-600 text-white" : "bg-surface-3"}`}>{settings.google_freebusy_import ? "ON" : "OFF"}</button>
-                  </form>
-                  <span>カレンダーの「予定あり」を空き時間の「不可」として毎朝取り込む(内容は取得しません)</span>
-                </div>
-                <div className="flex gap-3 text-xs">
-                  {settings.google_freebusy_import && <form action={importGoogleBusy}><button className="text-accent-text hover:underline">今すぐ取り込む</button></form>}
-                  <form action={disconnectGoogle}><button className="text-dim hover:text-red-600">連携を解除(登録した予定も削除)</button></form>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-sm text-fg-2">認可すると、所属するすべての劇団の召集が Google カレンダーに即時反映され、カレンダーの予定を空き時間として自動で取り込めます。</p>
-                <a href="/api/google/connect" className={`inline-block ${btn} bg-accent text-accent-ink hover:bg-accent-hover`}>Google カレンダーと連携する</a>
-              </>
-            )
+            <>
+              <div className="space-y-1 rounded-lg border border-line p-3">
+                <p className="text-sm font-medium">出演者用 <span className="text-xs font-normal text-dim">自分が召集された予定を登録</span></p>
+                {google ? (
+                  <>
+                    <p className="text-sm text-emerald-600">連携済み{google.email && `(${google.email})`}</p>
+                    <div className="flex items-center gap-2 text-xs text-fg-2">
+                      <form action={setFreebusyImport.bind(null, !settings.google_freebusy_import)}>
+                        <button className={`rounded px-2 py-0.5 text-xs ${settings.google_freebusy_import ? "bg-emerald-600 text-white" : "bg-surface-3"}`}>{settings.google_freebusy_import ? "ON" : "OFF"}</button>
+                      </form>
+                      <span>カレンダーの「予定あり」を空き時間の「不可」として毎朝取り込む(内容は取得しません)</span>
+                    </div>
+                    <div className="flex gap-3 text-xs">
+                      {settings.google_freebusy_import && <form action={importGoogleBusy}><button className="text-accent-text hover:underline">今すぐ取り込む</button></form>}
+                      <form action={disconnectGoogle.bind(null, "cast")}><button className="text-dim hover:text-red-600">連携を解除(登録した予定も削除)</button></form>
+                    </div>
+                  </>
+                ) : (
+                  <a href="/api/google/connect?mode=cast" className={`inline-block ${btn} bg-accent text-accent-ink hover:bg-accent-hover`}>Google カレンダーと連携する</a>
+                )}
+              </div>
+              <div className="space-y-1 rounded-lg border border-line p-3">
+                <p className="text-sm font-medium">主催者用 <span className="text-xs font-normal text-dim">管理している座組の全予定を登録。別の Google アカウントを選べます</span></p>
+                {googleOrganizer ? (
+                  <>
+                    <p className="text-sm text-emerald-600">連携済み{googleOrganizer.email && `(${googleOrganizer.email})`}</p>
+                    <form action={disconnectGoogle.bind(null, "organizer")}><button className="text-xs text-dim hover:text-red-600">連携を解除(登録した予定も削除)</button></form>
+                  </>
+                ) : (
+                  <a href="/api/google/connect?mode=organizer" className={`inline-block ${btn} border border-line-strong bg-white text-fg hover:bg-surface-2`}>主催者用のカレンダーを連携する</a>
+                )}
+              </div>
+              <p className="text-xs text-dim">連携のたびに Google のアカウント選択画面が出るので、用途ごとに別の Google アカウントを選べます。</p>
+            </>
           ) : (
             <p className="text-xs text-amber-600">(この環境では Google API 連携は未設定です。下の購読 URL をご利用ください)</p>
           )}

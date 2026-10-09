@@ -15,7 +15,7 @@ export async function completeOnboarding(next: string, formData: FormData) {
   if (formData.get("terms") !== "on" || formData.get("sharing") !== "on") throw new Error("利用規約・プライバシーポリシーと空き時間の共有への同意が必要です");
   const admin = supabaseAdmin();
   const now = new Date().toISOString();
-  await admin.from("core_profiles").update({ display_name: displayName, default_part: part, onboarded_at: me.profile.onboarded_at ?? now, updated_at: now }).eq("id", me.id);
+  await admin.from("core_profiles").update({ display_name: displayName, default_part: part, active_mode: part === "organizer" ? "organizer" : "cast", onboarded_at: me.profile.onboarded_at ?? now, updated_at: now }).eq("id", me.id);
   await admin.from("core_consents").insert([
     { profile_id: me.id, kind: "terms", version: TERMS_VERSION, granted: true },
     { profile_id: me.id, kind: "privacy", version: PRIVACY_VERSION, granted: true },

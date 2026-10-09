@@ -75,7 +75,7 @@ async function handle(ev: LineWebhookEvent, lineUserId: string): Promise<string 
     await admin.from("core_identities").delete().eq("provider", "line").eq("provider_uid", lineUserId);
     const { error } = await admin
       .from("core_identities")
-      .upsert({ profile_id: target.profile_id, provider: "line", provider_uid: lineUserId }, { onConflict: "profile_id,provider" });
+      .upsert({ profile_id: target.profile_id, provider: "line", provider_uid: lineUserId }, { onConflict: "profile_id,provider,mode" });
     if (error) return "連携に失敗しました。";
     await admin.from("rh_profile_settings").update({ line_link_code: null, line_link_expires_at: null }).eq("profile_id", target.profile_id);
     const tname = (target.core_profiles as unknown as { display_name: string } | null)?.display_name ?? "";

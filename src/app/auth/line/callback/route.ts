@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
     if (identity && identity.profile_id !== me.id) return NextResponse.redirect(`${SITE_URL}/me/settings?line=taken`);
     await admin
       .from("core_identities")
-      .upsert({ profile_id: me.id, provider: "line", provider_uid: line.sub, email: line.email, display_name: line.name, meta: { picture: line.picture } }, { onConflict: "profile_id,provider" });
+      .upsert({ profile_id: me.id, provider: "line", provider_uid: line.sub, email: line.email, display_name: line.name, meta: { picture: line.picture } }, { onConflict: "profile_id,provider,mode" });
     return NextResponse.redirect(`${SITE_URL}/me/settings?line=linked`);
   }
 

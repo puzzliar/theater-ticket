@@ -195,6 +195,12 @@ create policy rh_productions_admin_write on rh_productions
 
 - 各サービスの業務データ（稽古枠、注文、商品）は共有しない。相互参照が必要な場合は**契約ビュー**（`tk_ticket_sales_by_cast_v1` のような読み取り専用ビュー）で提供する既存方針を維持
 
+## 6.4b 出演者/主催者モードと複数の Google アカウント（2026-10-08 追加）
+
+- アカウントは 1 つのまま、**出演者モード / 主催者モード** を切り替えて使う（`core_profiles.active_mode` と Cookie）。モードは表示の切り替えで、権限は所属（`core_org_members.role`）が決める
+- 1 つのアカウントに複数のログイン手段（メール、複数の Google、LINE）を結びつけられる。Google の追加は Supabase Auth の identity linking（Manual linking を有効化）で行い、`auth.identities` に保持する。`core_identities` には入れない
+- 外部連携（`core_identities`）はモードごとに持てる（主キー `(profile_id, provider, mode)`）。Google カレンダーは出演者用と主催者用で別の Google アカウントを使える。LINE は 1 つ
+
 ## 6.5 配信形態（2026-10-04 追加）
 
 - **アカウントは共通、サービスは独立**。稽古管理とチケット販売は同じ Supabase プロジェクト（`auth.users`・`core_`）を使うが、別ドメイン・別 Vercel プロジェクトで配信し、それぞれ独自のトップページを持つ。画面上の相互リンクは置かない

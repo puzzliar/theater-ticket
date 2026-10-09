@@ -4,19 +4,24 @@ import { SITE_URL } from "@/lib/constants";
 import { accessTokenFrom, deleteEvent, freeBusy, googleConfigured, upsertEvent, GoogleApiError } from "@/lib/google-calendar";
 import { ts } from "./time";
 import { SESSION_KIND_LABEL, RESPONSE_LABEL, type SessionKind, type SessionStatus, type Response } from "./types";
+import type { Mode } from "@/lib/core/types";
 
 // 召集(rh_session_members)を本人の Google カレンダーへ同期する(要件 5.7 方式B)。
-// 連携情報は core_identities(provider=google_calendar)、カレンダー設定は rh_profile_settings。
+// 連携情報は core_identities(provider=google_calendar, mode)、カレンダー設定は rh_profile_settings。
+// 出演者モードの連携: 自分が召集された予定を同期(イベント ID は rh_session_members.google_event_id)。
+// 主催者モードの連携: 自分が管理者の座組の全予定を同期(イベント ID は rh_calendar_events)。別の Google アカウントを使える。
 // 失敗しても本体の処理は止めない(ログのみ)。iCal フィードが常にフォールバック。
 
 interface Cal {
   profileId: string;
+  mode: Mode;
   secretEnc: string;
   calendarId: string;
 }
 
 interface SessionForSync {
   id: string;
+  org_id: string;
   kind: SessionKind;
   title: string;
   starts_at: string;
@@ -28,47 +33,49 @@ interface SessionForSync {
   rh_session_scenes: { rh_scenes: { code: string; name: string } | null }[];
 }
 
-function eventInput(s: SessionForSync, response: Response) {
+function eventInput(s: SessionForSync, response: Response | null) {
   const scenes = s.rh_session_scenes.map((x) => x.rh_scenes).filter(Boolean) as { code: string; name: string }[];
   return {
     summary: `[${SESSION_KIND_LABEL[s.kind]}] ${s.rh_productions?.core_organizations?.name ?? ""} ${s.rh_productions?.name ?? ""}${s.title ? ` ${s.title}` : ""}`,
-    description: [scenes.length ? `シーン: ${scenes.map((x) => `${x.code} ${x.name}`).join(" / ")}` : "", `出欠: ${RESPONSE_LABEL[response]}`, s.note, `${SITE_URL}/me`].filter(Boolean).join("\n"),
+    description: [scenes.length ? `シーン: ${scenes.map((x) => `${x.code} ${x.name}`).join(" / ")}` : "", response ? `出欠: ${RESPONSE_LABEL[response]}` : "主催者用カレンダー(座組の予定)", s.note, response ? `${SITE_URL}/me` : `${SITE_URL}/manage`].filter(Boolean).join("\n"),
     location: s.location,
     start: s.starts_at,
     end: s.ends_at,
   };
 }
 
-async function calFor(profileId: string): Promise<Cal | null> {
+async function calFor(profileId: string, mode: Mode = "cast"): Promise<Cal | null> {
   const admin = supabaseAdmin();
   const [{ data: ident }, { data: settings }] = await Promise.all([
-    admin.from("core_identities").select("secret_enc").eq("profile_id", profileId).eq("provider", "google_calendar").maybeSingle(),
+    admin.from("core_identities").select("secret_enc").eq("profile_id", profileId).eq("provider", "google_calendar").eq("mode", mode).maybeSingle(),
     admin.from("rh_profile_settings").select("google_calendar_id").eq("profile_id", profileId).maybeSingle(),
   ]);
   if (!ident?.secret_enc) return null;
-  return { profileId, secretEnc: ident.secret_enc, calendarId: settings?.google_calendar_id ?? "primary" };
+  // カレンダー ID の設定は出演者用。主催者用は常に primary(連携した Google アカウントのメインカレンダー)
+  return { profileId, mode, secretEnc: ident.secret_enc, calendarId: mode === "cast" ? settings?.google_calendar_id ?? "primary" : "primary" };
 }
 
 async function tokenFor(cal: Cal, cache: Map<string, string | null>): Promise<string | null> {
-  if (cache.has(cal.profileId)) return cache.get(cal.profileId)!;
+  const key = `${cal.profileId}:${cal.mode}`;
+  if (cache.has(key)) return cache.get(key)!;
   let token: string | null = null;
   try {
     token = await accessTokenFrom(cal.secretEnc);
   } catch (e) {
-    console.error("google token refresh failed", cal.profileId, e);
+    console.error("google token refresh failed", cal.profileId, cal.mode, e);
     if (e instanceof GoogleApiError && e.status === 400) {
       // 認可取り消し(invalid_grant): 連携を解除して再連携を促す
-      await supabaseAdmin().from("core_identities").delete().eq("profile_id", cal.profileId).eq("provider", "google_calendar");
+      await supabaseAdmin().from("core_identities").delete().eq("profile_id", cal.profileId).eq("provider", "google_calendar").eq("mode", cal.mode);
     }
   }
-  cache.set(cal.profileId, token);
+  cache.set(key, token);
   return token;
 }
 
 async function loadSession(sessionId: string): Promise<SessionForSync | null> {
   const { data } = await supabaseAdmin()
     .from("rh_sessions")
-    .select("id, kind, title, starts_at, ends_at, location, note, status, rh_productions(name, core_organizations(name)), rh_session_scenes(rh_scenes(code, name))")
+    .select("id, org_id, kind, title, starts_at, ends_at, location, note, status, rh_productions(name, core_organizations(name)), rh_session_scenes(rh_scenes(code, name))")
     .eq("id", sessionId)
     .maybeSingle();
   return (data as unknown as SessionForSync | null) ?? null;
@@ -96,11 +103,46 @@ async function syncOne(session: SessionForSync, participantId: string, cal: Cal,
   }
 }
 
-// 予定の召集メンバー(連携済みの人)を同期
+// 主催者モードのカレンダー: 座組の管理者で主催者用の連携がある人に、座組の全予定を同期する
+async function organizerCalsFor(orgId: string): Promise<Cal[]> {
+  const admin = supabaseAdmin();
+  const { data: admins } = await admin.from("core_org_members").select("profile_id").eq("org_id", orgId).eq("status", "active").in("role", ["owner", "admin"]);
+  const cals: Cal[] = [];
+  for (const a of admins ?? []) {
+    const cal = await calFor(a.profile_id, "organizer");
+    if (cal) cals.push(cal);
+  }
+  return cals;
+}
+
+async function syncOrganizerOne(session: SessionForSync, cal: Cal, cache: Map<string, string | null>): Promise<void> {
+  const admin = supabaseAdmin();
+  const token = await tokenFor(cal, cache);
+  if (!token) return;
+  const { data: row } = await admin.from("rh_calendar_events").select("event_id").eq("session_id", session.id).eq("profile_id", cal.profileId).maybeSingle();
+  const eventId = row?.event_id ?? null;
+  try {
+    if (session.status === "cancelled") {
+      if (eventId) {
+        await deleteEvent(token, cal.calendarId, eventId);
+        await admin.from("rh_calendar_events").delete().eq("session_id", session.id).eq("profile_id", cal.profileId);
+      }
+      return;
+    }
+    const newId = await upsertEvent(token, cal.calendarId, eventId, eventInput(session, null));
+    if (newId !== eventId) await admin.from("rh_calendar_events").upsert({ session_id: session.id, profile_id: cal.profileId, event_id: newId }, { onConflict: "session_id,profile_id" });
+  } catch (e) {
+    console.error("google organizer sync failed", session.id, cal.profileId, e);
+  }
+}
+
+// 予定の召集メンバー(連携済みの人)と、座組の管理者(主催者用連携)を同期
 export async function syncSession(sessionId: string, onlyParticipantIds?: string[]): Promise<void> {
   if (!googleConfigured()) return;
   const session = await loadSession(sessionId);
   if (!session) return;
+  const orgCache = new Map<string, string | null>();
+  for (const cal of await organizerCalsFor(session.org_id)) await syncOrganizerOne(session, cal, orgCache);
   let q = supabaseAdmin()
     .from("rh_session_members")
     .select("participant_id, response, google_event_id, rh_participants!inner(profile_id)")
@@ -141,11 +183,27 @@ export async function removeEventForParticipant(sessionId: string, participantId
   }
 }
 
-// 連携直後: 今後の召集(全組織)をまとめて同期
-export async function syncProfileUpcoming(profileId: string): Promise<number> {
+// 連携直後: 今後の予定をまとめて同期(出演者: 召集された予定 / 主催者: 管理者である座組の全予定)
+export async function syncProfileUpcoming(profileId: string, mode: Mode = "cast"): Promise<number> {
   if (!googleConfigured()) return 0;
-  const cal = await calFor(profileId);
+  const cal = await calFor(profileId, mode);
   if (!cal) return 0;
+  if (mode === "organizer") {
+    const admin = supabaseAdmin();
+    const { data: orgs } = await admin.from("core_org_members").select("org_id").eq("profile_id", profileId).eq("status", "active").in("role", ["owner", "admin"]);
+    const orgIds = (orgs ?? []).map((o) => o.org_id);
+    if (orgIds.length === 0) return 0;
+    const { data: sessions } = await admin.from("rh_sessions").select("id").in("org_id", orgIds).neq("status", "cancelled").gte("starts_at", new Date().toISOString());
+    const cache = new Map<string, string | null>();
+    let n = 0;
+    for (const s of sessions ?? []) {
+      const session = await loadSession(s.id);
+      if (!session) continue;
+      await syncOrganizerOne(session, cal, cache);
+      n++;
+    }
+    return n;
+  }
   const { data: rows } = await supabaseAdmin()
     .from("rh_session_members")
     .select("session_id, participant_id, response, google_event_id, rh_participants!inner(profile_id), rh_sessions!inner(starts_at)")
@@ -163,12 +221,26 @@ export async function syncProfileUpcoming(profileId: string): Promise<number> {
 }
 
 // 連携解除前: 作成したイベントを本人のカレンダーから削除
-export async function deleteAllEventsForProfile(profileId: string): Promise<void> {
+export async function deleteAllEventsForProfile(profileId: string, mode: Mode = "cast"): Promise<void> {
   if (!googleConfigured()) return;
   const admin = supabaseAdmin();
-  const cal = await calFor(profileId);
+  const cal = await calFor(profileId, mode);
   if (!cal) return;
   const token = await tokenFor(cal, new Map());
+  if (mode === "organizer") {
+    const { data: rows } = await admin.from("rh_calendar_events").select("session_id, event_id").eq("profile_id", profileId);
+    for (const r of rows ?? []) {
+      if (token) {
+        try {
+          await deleteEvent(token, cal.calendarId, r.event_id);
+        } catch (e) {
+          console.error("google delete failed", r.session_id, e);
+        }
+      }
+    }
+    await admin.from("rh_calendar_events").delete().eq("profile_id", profileId);
+    return;
+  }
   const { data: rows } = await admin
     .from("rh_session_members")
     .select("session_id, participant_id, google_event_id, rh_participants!inner(profile_id)")

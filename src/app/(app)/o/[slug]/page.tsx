@@ -7,6 +7,7 @@ import { addDays, fmtRange, jstDateString, jstDayRange } from "@/lib/rehearsal/t
 import { PRODUCTION_STATUS_LABEL, SESSION_KIND_LABEL, RESPONSE_LABEL, type ParticipantRow, type ProductionRow } from "@/lib/rehearsal/types";
 import { PART_LABEL } from "@/lib/core/types";
 import { createProduction, updateProductionStatus, claimMe, ensureMyParticipant } from "./actions";
+import { switchMode } from "@/app/actions/mode";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,16 @@ export default async function OrgHome({ params, searchParams }: { params: Promis
     <div className="space-y-10">
       {sp.joined && <p className="rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-700">{org.name} に参加しました。召集されるとマイスケジュールに表示されます。</p>}
       {sp.created && <p className="rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-700">団体を作成しました。「メンバー」から招待リンクを発行してキャストを招待してください。</p>}
-      {sp.denied && <p className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-700">その操作には管理者権限が必要です。</p>}
+      {sp.denied === "mode" ? (
+        <form action={switchMode} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-accent/40 bg-accent/5 p-3 text-sm">
+          <span>その操作は主催者モードで行えます。</span>
+          <input type="hidden" name="mode" value="organizer" />
+          <input type="hidden" name="next" value={`/o/${slug}`} />
+          <button className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-ink hover:bg-accent-hover">主催者モードに切り替える</button>
+        </form>
+      ) : sp.denied ? (
+        <p className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-700">その操作には管理者権限が必要です。</p>
+      ) : null}
 
       {/* 仮メンバーの紐づけ(本人) */}
       {!mine && (

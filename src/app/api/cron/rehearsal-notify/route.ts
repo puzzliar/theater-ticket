@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
 
   // Google 連携者の FreeBusy 取り込み(1日1回)
   if (jobs.includes("digest")) {
-    const { data: idents } = await admin.from("core_identities").select("profile_id").eq("provider", "google_calendar");
+    const { data: idents } = await admin.from("core_identities").select("profile_id").eq("provider", "google_calendar").eq("mode", "cast");
     for (const i of idents ?? []) {
       const { error } = await admin.from("rh_notifications").insert({ profile_id: i.profile_id, channel: "none", dedupe_key: `freebusy:${today}:${i.profile_id}` });
       if (!error) counts.freebusy += await importBusyAsUnavailable(i.profile_id);

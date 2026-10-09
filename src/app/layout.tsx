@@ -3,6 +3,8 @@ import Link from "next/link";
 import "./globals.css";
 import { APP_DESCRIPTION, APP_NAME, IS_REHEARSAL } from "@/lib/app";
 import { getSessionUser } from "@/lib/core/session";
+import { getMode, modeHome } from "@/lib/core/mode";
+import ModeSwitch from "@/components/ModeSwitch";
 
 export const metadata: Metadata = {
   title: { default: APP_NAME, template: `%s | ${APP_NAME}` },
@@ -54,15 +56,17 @@ function TicketTopBar() {
 
 async function RehearsalTopBar() {
   const session = await getSessionUser();
+  const mode = await getMode(session);
   const initial = (session?.profile.display_name ?? "?").slice(0, 1);
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-        <Link href={session ? "/me" : "/"} aria-label="ZAGUMIスケジュール" className="flex items-center">
+        <Link href={session ? modeHome(mode) : "/"} aria-label="ZAGUMIスケジュール" className="flex items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/zagumi-schedule.svg" alt="ZAGUMIスケジュール" className="h-9 w-auto" />
         </Link>
         <nav className="flex items-center gap-2 text-sm">
+          {session && <ModeSwitch mode={mode} />}
           {session ? (
             <Link href="/me/settings" className="flex items-center gap-2 rounded-full border border-line py-1 pl-1 pr-3 text-fg-2 hover:bg-surface-2 hover:text-fg">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-ink">{initial}</span>

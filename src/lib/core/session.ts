@@ -2,7 +2,8 @@ import "server-only";
 import { notFound, redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { isAdminRole, type OrganizationRow, type OrgMemberRow, type OrgRole, type Part, type ProfileRow } from "./types";
+import { isAdminRole, type Mode, type OrganizationRow, type OrgMemberRow, type OrgRole, type Part, type ProfileRow } from "./types";
+import { getMode } from "./mode";
 
 // ログインセッションと共通プロフィール・組織コンテキストの解決。
 // プロフィールは service role で読む(RLS の自己参照ポリシーでも読めるが、未作成時の自動作成を兼ねる)。
@@ -64,7 +65,11 @@ export interface OrgContext {
   user: SessionUser;
   org: OrganizationRow;
   membership: OrgMemberRow;
+  // isAdmin: 今の画面で管理操作を見せるか(権限があり、かつ主催者モード。セルフ公演の個人座組はモードに関わらず可)
   isAdmin: boolean;
+  // canAdmin: 権限そのもの(モードに関わらず)
+  canAdmin: boolean;
+  mode: Mode;
 }
 
 // 組織スコープの画面・アクション用。level=admin は owner/admin のみ
@@ -81,9 +86,12 @@ export async function requireOrg(slug: string, level: "member" | "admin" = "memb
     .eq("status", "active")
     .maybeSingle();
   if (!membership) notFound();
-  const isAdmin = isAdminRole(membership.role);
-  if (level === "admin" && !isAdmin) redirect(`/o/${slug}?denied=1`);
-  return { user, org: org as OrganizationRow, membership: membership as OrgMemberRow, isAdmin };
+  const canAdmin = isAdminRole(membership.role);
+  const mode = await getMode(user);
+  const isAdmin = canAdmin && (org.kind === "personal" || mode === "organizer");
+  if (level === "admin" && !canAdmin) redirect(`/o/${slug}?denied=1`);
+  if (level === "admin" && !isAdmin) redirect(`/o/${slug}?denied=mode`);
+  return { user, org: org as OrganizationRow, membership: membership as OrgMemberRow, isAdmin, canAdmin, mode };
 }
 
 // Server Action 用(redirect ではなく例外)
@@ -96,9 +104,11 @@ export async function requireOrgById(orgId: string, level: "member" | "admin" = 
     admin.from("core_org_members").select("*").eq("org_id", orgId).eq("profile_id", user.id).eq("status", "active").maybeSingle(),
   ]);
   if (!org || !membership) throw new Error("この組織へのアクセス権がありません");
+  // Server Action は権限そのもので判定する(モードは表示の切り替えであって権限ではない)
   const isAdmin = isAdminRole(membership.role);
   if (level === "admin" && !isAdmin) throw new Error("管理者権限が必要です");
-  return { user, org: org as OrganizationRow, membership: membership as OrgMemberRow, isAdmin };
+  const mode = await getMode(user);
+  return { user, org: org as OrganizationRow, membership: membership as OrgMemberRow, isAdmin, canAdmin: isAdmin, mode };
 }
 
 export async function requirePlatformAdmin(): Promise<SessionUser> {

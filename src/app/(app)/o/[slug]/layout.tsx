@@ -1,13 +1,14 @@
 import { requireOrg } from "@/lib/core/session";
 import { ORG_KIND_LABEL } from "@/lib/core/types";
 import { SidebarNav, type NavItem } from "@/components/AppNav";
+import { switchMode } from "@/app/actions/mode";
 
 export const dynamic = "force-dynamic";
 
 // 座組スコープのレイアウト。メンバーシップが無ければ 404。ページ見出しとタブ
 export default async function OrgLayout({ children, params }: { children: React.ReactNode; params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const { org, isAdmin } = await requireOrg(slug);
+  const { org, isAdmin, canAdmin } = await requireOrg(slug);
   const tabs: NavItem[] = [
     { href: `/o/${slug}`, label: "公演", icon: "公" },
     { href: `/o/${slug}/members`, label: org.kind === "personal" ? "共演者・招待" : "メンバー", icon: "人", match: "prefix" },
@@ -24,6 +25,14 @@ export default async function OrgLayout({ children, params }: { children: React.
           <SidebarNav items={tabs} />
         </div>
       </div>
+      {canAdmin && !isAdmin && (
+        <form action={switchMode} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface p-3 text-sm text-muted">
+          <span>出演者モードで表示しています。公演や予定の編集は主催者モードで行えます。</span>
+          <input type="hidden" name="mode" value="organizer" />
+          <input type="hidden" name="next" value={`/o/${slug}`} />
+          <button className="rounded-lg border border-line-strong px-3 py-1.5 text-xs font-semibold text-fg hover:bg-surface-2">主催者モードに切り替える</button>
+        </form>
+      )}
       {children}
     </div>
   );
