@@ -20,14 +20,14 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
 
   const [{ data: sScenes }, { data: sMembers }, { data: scenes }, { data: pm }, { data: requests }] = await Promise.all([
     db.from("rh_session_scenes").select("scene_id, status, rh_scenes(code, name, sort_order)").eq("session_id", sessionId),
-    db.from("rh_session_members").select("participant_id, required, response, attendance, note, notified_at, rh_participants(id, display_name, profile_id)").eq("session_id", sessionId),
+    db.from("rh_session_members").select("participant_id, required, response, attendance, note, notified_at, assignment, rh_shift_roles(name), rh_participants(id, display_name, profile_id)").eq("session_id", sessionId),
     db.from("rh_scenes").select("*").eq("production_id", productionId).order("sort_order"),
     db.from("rh_production_members").select("participant_id, rh_participants(id, display_name, is_active)").eq("production_id", productionId),
     db.from("rh_substitution_requests").select("*, rh_substitution_candidates(participant_id, applied_at, rh_participants(display_name))").eq("session_id", sessionId).order("created_at", { ascending: false }),
   ]);
 
   type SS = { scene_id: string; status: SceneStatus; rh_scenes: { code: string; name: string; sort_order: number } | null };
-  type SM = { participant_id: string; required: boolean; response: Response; attendance: Attendance; note: string; notified_at: string | null; rh_participants: Pick<ParticipantRow, "id" | "display_name" | "profile_id"> | null };
+  type SM = { participant_id: string; required: boolean; response: Response; attendance: Attendance; note: string; notified_at: string | null; assignment: "candidate" | "assigned"; rh_shift_roles: { name: string } | null; rh_participants: Pick<ParticipantRow, "id" | "display_name" | "profile_id"> | null };
   const sessionScenes = ((sScenes ?? []) as unknown as SS[]).sort((a, b) => (a.rh_scenes?.sort_order ?? 0) - (b.rh_scenes?.sort_order ?? 0));
   const sessionMembers = ((sMembers ?? []) as unknown as SM[]).filter((m) => m.rh_participants).sort((a, b) => a.rh_participants!.display_name.localeCompare(b.rh_participants!.display_name, "ja"));
   const memberIds = new Set(sessionMembers.map((m) => m.participant_id));
@@ -69,8 +69,8 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
           <div className="grid gap-1 sm:grid-cols-2">
             {sessionMembers.map((m) => (
               <div key={m.participant_id} className="flex justify-between rounded border border-line px-3 py-1.5">
-                <span>{m.rh_participants!.display_name}</span>
-                <span className={`text-xs ${m.response === "yes" ? "text-emerald-600" : m.response === "no" ? "text-red-600" : "text-amber-600"}`}>{RESPONSE_LABEL[m.response]}</span>
+                <span>{m.rh_participants!.display_name}{m.rh_shift_roles && <span className="ml-1 rounded bg-sky-500/15 px-1.5 py-0.5 text-xs text-sky-700">{m.rh_shift_roles.name}</span>}</span>
+                <span className={`text-xs ${m.response === "yes" ? "text-emerald-600" : m.response === "no" ? "text-red-600" : "text-amber-600"}`}>{m.assignment === "candidate" ? "希望受付中" : RESPONSE_LABEL[m.response]}</span>
               </div>
             ))}
           </div>
@@ -139,7 +139,7 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
                         const v = verdicts.get(m.participant_id);
                         return (
                           <tr key={m.participant_id} className="border-t border-line">
-                            <td className="p-1">{m.rh_participants!.display_name}{!m.rh_participants!.profile_id && <span className="ml-1 text-xs text-dim">(未登録)</span>}</td>
+                            <td className="p-1">{m.rh_participants!.display_name}{m.rh_shift_roles && <span className="ml-1 rounded bg-sky-500/15 px-1.5 py-0.5 text-xs text-sky-700">{m.rh_shift_roles.name}</span>}{m.assignment === "candidate" && <span className="ml-1 text-xs text-dim">(希望受付中)</span>}{!m.rh_participants!.profile_id && <span className="ml-1 text-xs text-dim">(未登録)</span>}</td>
                             <td className="p-1"><input type="checkbox" name={`req_${m.participant_id}`} defaultChecked={m.required} /></td>
                             <td className={`p-1 text-xs ${m.response === "yes" ? "text-emerald-600" : m.response === "no" ? "text-red-600" : "text-amber-600"}`}>{RESPONSE_LABEL[m.response]}</td>
                             <td className={`p-1 text-xs ${v?.status === "conflict" ? "text-orange-600" : v?.status === "unavailable" ? "text-red-600" : "text-dim"}`}>{v?.status === "conflict" || v?.status === "unavailable" ? v.detail : ""}</td>

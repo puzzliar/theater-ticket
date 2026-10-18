@@ -4,7 +4,8 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { requireOrg } from "@/lib/core/session";
 import { checkAvailability, sceneProgress, type AvailabilityVerdict } from "@/lib/rehearsal/schedule";
 import { fmtDate, fmtRange, jstDateString, jstToIso, nowMs, ts } from "@/lib/rehearsal/time";
-import { SESSION_KIND_LABEL, SESSION_STATUS_LABEL, type ParticipantRow, type ProductionRow, type SceneRow, type SessionRow } from "@/lib/rehearsal/types";
+import { MANAGEMENT_MODE_LABEL, SESSION_KIND_LABEL, SESSION_STATUS_LABEL, type ManagementMode, type ParticipantRow, type ProductionRow, type SceneRow, type SessionRow } from "@/lib/rehearsal/types";
+import ShiftBoard from "./ShiftBoard";
 import { PART_LABEL } from "@/lib/core/types";
 import { openTransferFor } from "@/lib/rehearsal/transfer";
 import { SITE_URL } from "@/lib/constants";
@@ -27,6 +28,7 @@ export default async function ProductionPage({ params, searchParams }: { params:
   if (!production) notFound();
   const prod = production as ProductionRow;
   const isPersonal = org.kind === "personal";
+  const isShift = prod.management_mode === "shift";
   const transfer = isAdmin ? await openTransferFor(productionId) : null;
 
   const [{ data: pm }, { data: allParticipants }, { data: scenes }, { data: sceneMembers }, { data: sessions }, progress] = await Promise.all([
@@ -114,7 +116,7 @@ export default async function ProductionPage({ params, searchParams }: { params:
     <div className="space-y-10">
       <div>
         <p className="text-sm text-dim"><Link href={`/o/${slug}`} className="hover:text-fg">← プロダクション一覧</Link></p>
-        <h2 className="text-2xl font-bold">{prod.name}</h2>
+        <h2 className="text-2xl font-bold">{prod.name} {isShift && <span className="ml-1 rounded bg-sky-500/15 px-2 py-0.5 align-middle text-xs font-medium text-sky-700">シフト制</span>}</h2>
         <p className="text-sm text-muted">{prod.rehearsal_starts_on && `稽古開始 ${prod.rehearsal_starts_on} `}{prod.opens_on && `／ 初日 ${prod.opens_on} `}{prod.closes_on && `〜 ${prod.closes_on} `}{prod.default_location && `／ ${prod.default_location}`}{prod.block_from && prod.block_to && ` ／ 他現場を入れない期間 ${prod.block_from}〜${prod.block_to}`}</p>
         {one(sp.handover) && <p className="mt-2 rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-700">公演を引き受けました。参加していたキャストはこの座組のメンバーになっています。</p>}
         {one(sp.imported) && <p className="mt-2 rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-700">{one(sp.imported)} 件の予定を取り込みました。</p>}
@@ -130,6 +132,12 @@ export default async function ProductionPage({ params, searchParams }: { params:
               <label className="text-xs text-muted">終演日<input name="closes_on" type="date" defaultValue={prod.closes_on ?? ""} className={`${input} mt-1 w-full`} /></label>
               <label className="text-xs text-muted">他現場を入れない期間(開始。小屋入りなど)<input name="block_from" type="date" defaultValue={prod.block_from ?? ""} className={`${input} mt-1 w-full`} /></label>
               <label className="text-xs text-muted">同(終了)<input name="block_to" type="date" defaultValue={prod.block_to ?? ""} className={`${input} mt-1 w-full`} /></label>
+              <label className="text-xs text-muted sm:col-span-3">管理モード
+                <select name="management_mode" defaultValue={prod.management_mode} className={`${input} mt-1 w-full`}>
+                  {(Object.keys(MANAGEMENT_MODE_LABEL) as ManagementMode[]).map((m) => <option key={m} value={m}>{MANAGEMENT_MODE_LABEL[m]}</option>)}
+                </select>
+                <span className="mt-1 block text-dim">全員出演型は小劇場演劇など全員が同じ回に出る公演向け。シフト制はウォークスルー型や 1 人が 1 公演を誘導する形式向けで、回ごとに役割(案内人・受付など)を埋めます。</span>
+              </label>
               <input name="note" defaultValue={prod.note} placeholder="メモ" className={`${input} sm:col-span-3`} />
               <p className="text-xs text-dim sm:col-span-3">「他現場を入れない期間」を設定すると、この公演のメンバーは期間中、他の座組の参加可否確認で「他現場(本番期間)」と表示されます。</p>
               <div><button className="rounded-lg bg-surface-3 px-4 py-2 text-sm hover:bg-line-strong">保存</button></div>
@@ -138,6 +146,9 @@ export default async function ProductionPage({ params, searchParams }: { params:
         )}
       </div>
 
+      {isShift ? (
+        <ShiftBoard orgId={org.id} productionId={productionId} isAdmin={isAdmin} defaultLocation={prod.default_location} flash={{ slots: one(sp.slots), assigned: one(sp.assigned), notified: one(sp.notified) }} />
+      ) : (
       <section className="space-y-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="text-lg font-semibold">シーン進捗</h3>
@@ -201,10 +212,11 @@ export default async function ProductionPage({ params, searchParams }: { params:
           </form>
         )}
       </section>
+      )}
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h3 className="text-lg font-semibold">予定(稽古・本番)</h3>
+          <h3 className="text-lg font-semibold">{isShift ? "予定の一覧(稽古・その他も含む)" : "予定(稽古・本番)"}</h3>
           {isAdmin && <Link href={`/o/${slug}/p/${productionId}/import`} className="rounded-lg border border-accent/40 px-3 py-1 text-xs text-accent-text hover:bg-accent/10">日程を貼り付けて取り込む</Link>}
         </div>
         <div className="space-y-2">
@@ -227,9 +239,9 @@ export default async function ProductionPage({ params, searchParams }: { params:
               <label className="flex items-center gap-2 text-xs text-fg-2 sm:col-span-2"><input type="checkbox" name="tentative" /> 仮押さえ(本決まり前。参加者の予定に「仮」と表示)</label>
               <label className="text-xs text-muted sm:col-span-2">返答期限(仮押さえの場合)<input name="respond_by" type="date" className={`${input} mt-1 w-full`} /></label>
             </div>
-            <p className="mt-3 text-xs text-muted">対象シーン(必要メンバーが自動で召集されます)</p>
+            {!isShift && <p className="mt-3 text-xs text-muted">対象シーン(必要メンバーが自動で召集されます)</p>}
             <div className="mt-1 flex flex-wrap gap-3 text-xs">
-              {((scenes ?? []) as SceneRow[]).map((sc) => {
+              {!isShift && ((scenes ?? []) as SceneRow[]).map((sc) => {
                 const p = progress.find((x) => x.scene_id === sc.id);
                 const isRemaining = Number(p?.done_count ?? 0) < sc.target_count;
                 return <label key={sc.id} className={`flex items-center gap-1 ${isRemaining ? "text-accent-text" : "text-muted"}`}><input type="checkbox" name="scene_ids" value={sc.id} defaultChecked={draft.sceneIds.includes(sc.id)} />{sc.code} {sc.name}</label>;

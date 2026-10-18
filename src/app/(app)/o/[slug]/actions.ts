@@ -12,6 +12,7 @@ import { notifySessionMembers, openSubstitution, fillSubstitution } from "@/lib/
 import { syncSession, removeEventForParticipant } from "@/lib/rehearsal/google-sync";
 import { createTransfer, revokeTransfer, TransferError } from "@/lib/rehearsal/transfer";
 import type { ParsedKind } from "@/lib/rehearsal/parse-schedule";
+import { assignShift, autoAssign, generateShiftSlots, notifyAssigned, openShiftRequests, ShiftError, unassignShift } from "@/lib/rehearsal/shifts";
 import type { SessionKind } from "@/lib/rehearsal/types";
 
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
@@ -179,14 +180,127 @@ export async function updateProduction(orgId: string, productionId: string, form
   const blockTo = d("block_to");
   if ((blockFrom && !blockTo) || (!blockFrom && blockTo)) throw new Error("他現場を入れない期間は開始と終了の両方を入力してください");
   if (blockFrom && blockTo && blockTo < blockFrom) throw new Error("他現場を入れない期間の終了は開始以降にしてください");
+  const mode = str(formData, "management_mode");
   const { error } = await supabaseAdmin()
     .from("rh_productions")
-    .update({ name, default_location: str(formData, "default_location"), rehearsal_starts_on: d("rehearsal_starts_on"), opens_on: d("opens_on"), closes_on: d("closes_on"), block_from: blockFrom, block_to: blockTo, note: str(formData, "note") })
+    .update({
+      name,
+      default_location: str(formData, "default_location"),
+      rehearsal_starts_on: d("rehearsal_starts_on"),
+      opens_on: d("opens_on"),
+      closes_on: d("closes_on"),
+      block_from: blockFrom,
+      block_to: blockTo,
+      note: str(formData, "note"),
+      ...(mode === "ensemble" || mode === "shift" ? { management_mode: mode } : {}),
+    })
     .eq("id", productionId)
     .eq("org_id", orgId);
   if (error) throw new Error(error.message);
   revalidatePath(`/o/${org.slug}/p/${productionId}`);
   revalidatePath(`/o/${org.slug}`);
+}
+
+// ---------- シフト制(回ごとに役割を埋める) ----------
+function shiftErr(e: unknown): never {
+  if (e instanceof ShiftError) throw new Error(e.message);
+  throw e;
+}
+
+export async function addShiftRole(orgId: string, productionId: string, formData: FormData) {
+  const { org } = await requireOrgById(orgId, "admin");
+  const name = str(formData, "name");
+  if (!name) throw new Error("役割名を入力してください");
+  const admin = supabaseAdmin();
+  const { data: last } = await admin.from("rh_shift_roles").select("sort_order").eq("production_id", productionId).order("sort_order", { ascending: false }).limit(1).maybeSingle();
+  const { error } = await admin.from("rh_shift_roles").insert({ org_id: orgId, production_id: productionId, name, required_count: Math.max(0, Number(formData.get("required_count") ?? 1) || 0), sort_order: (last?.sort_order ?? 0) + 10, note: str(formData, "note") });
+  if (error) throw new Error(error.code === "23505" ? "同じ名前の役割が既にあります" : error.message);
+  revalidatePath(`/o/${org.slug}/p/${productionId}`);
+}
+
+export async function updateShiftRole(orgId: string, productionId: string, roleId: string, formData: FormData) {
+  const { org } = await requireOrgById(orgId, "admin");
+  await supabaseAdmin().from("rh_shift_roles").update({ required_count: Math.max(0, Number(formData.get("required_count") ?? 1) || 0) }).eq("id", roleId).eq("org_id", orgId);
+  revalidatePath(`/o/${org.slug}/p/${productionId}`);
+}
+
+export async function deleteShiftRole(orgId: string, productionId: string, roleId: string) {
+  const { org } = await requireOrgById(orgId, "admin");
+  await supabaseAdmin().from("rh_shift_roles").delete().eq("id", roleId).eq("org_id", orgId);
+  revalidatePath(`/o/${org.slug}/p/${productionId}`);
+}
+
+export async function generateSlots(orgId: string, productionId: string, formData: FormData) {
+  const { org } = await requireOrgById(orgId, "admin");
+  const times = str(formData, "times").split(/[,、\s]+/).map((t) => t.trim()).filter((t) => /^\d{1,2}:\d{2}$/.test(t)).map((t) => t.padStart(5, "0"));
+  try {
+    const ids = await generateShiftSlots(orgId, productionId, {
+      from: str(formData, "from"),
+      to: str(formData, "to"),
+      times,
+      durationMin: Number(formData.get("duration") ?? 60) || 60,
+      weekdays: list(formData, "weekdays").map(Number).filter((n) => n >= 0 && n <= 6),
+      titlePattern: str(formData, "title_pattern") || "{n}回目",
+      location: str(formData, "location"),
+      tentative: formData.get("tentative") === "on",
+    });
+    if (formData.get("open_requests") === "on" && ids.length) await openShiftRequests(orgId, productionId, { sessionIds: ids, notify: formData.get("notify") === "on" });
+    revalidatePath(`/o/${org.slug}/p/${productionId}`);
+    redirect(`/o/${org.slug}/p/${productionId}?slots=${ids.length}#shifts`);
+  } catch (e) {
+    if (e instanceof ShiftError) throw new Error(e.message);
+    throw e;
+  }
+}
+
+export async function openRequests(orgId: string, productionId: string, formData: FormData) {
+  const { org } = await requireOrgById(orgId, "admin");
+  try {
+    await openShiftRequests(orgId, productionId, { notify: formData.get("notify") === "on" });
+  } catch (e) {
+    shiftErr(e);
+  }
+  revalidatePath(`/o/${org.slug}/p/${productionId}`);
+}
+
+export async function assignShiftAction(orgId: string, productionId: string, sessionId: string, formData: FormData) {
+  const { org } = await requireOrgById(orgId, "admin");
+  const participantId = str(formData, "participant_id");
+  if (!participantId) throw new Error("メンバーを選択してください");
+  const roleId = str(formData, "role_id") || null;
+  try {
+    await assignShift(orgId, sessionId, participantId, roleId, formData.get("notify") !== "off");
+  } catch (e) {
+    shiftErr(e);
+  }
+  revalidatePath(`/o/${org.slug}/p/${productionId}`);
+}
+
+export async function unassignShiftAction(orgId: string, productionId: string, sessionId: string, participantId: string) {
+  const { org } = await requireOrgById(orgId, "admin");
+  try {
+    await unassignShift(sessionId, participantId);
+  } catch (e) {
+    shiftErr(e);
+  }
+  revalidatePath(`/o/${org.slug}/p/${productionId}`);
+}
+
+export async function autoAssignAction(orgId: string, productionId: string) {
+  const { org } = await requireOrgById(orgId, "admin");
+  let made = 0;
+  try {
+    made = await autoAssign(orgId, productionId);
+  } catch (e) {
+    shiftErr(e);
+  }
+  redirect(`/o/${org.slug}/p/${productionId}?assigned=${made}#shifts`);
+}
+
+export async function notifyAssignedAction(orgId: string, productionId: string) {
+  const { org } = await requireOrgById(orgId, "admin");
+  const sent = await notifyAssigned(productionId);
+  redirect(`/o/${org.slug}/p/${productionId}?notified=${sent}#shifts`);
 }
 
 // セルフ公演を主催者の座組へ引き渡すためのリンクを発行(/handover/[token])

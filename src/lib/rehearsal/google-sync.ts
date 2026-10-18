@@ -147,6 +147,7 @@ export async function syncSession(sessionId: string, onlyParticipantIds?: string
     .from("rh_session_members")
     .select("participant_id, response, google_event_id, rh_participants!inner(profile_id)")
     .eq("session_id", sessionId)
+    .eq("assignment", "assigned")
     .not("rh_participants.profile_id", "is", null);
   if (onlyParticipantIds?.length) q = q.in("participant_id", onlyParticipantIds);
   const { data } = await q;
@@ -208,6 +209,7 @@ export async function syncProfileUpcoming(profileId: string, mode: Mode = "cast"
     .from("rh_session_members")
     .select("session_id, participant_id, response, google_event_id, rh_participants!inner(profile_id), rh_sessions!inner(starts_at)")
     .eq("rh_participants.profile_id", profileId)
+    .eq("assignment", "assigned")
     .gte("rh_sessions.starts_at", new Date().toISOString());
   const cache = new Map<string, string | null>();
   let n = 0;

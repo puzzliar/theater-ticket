@@ -8,11 +8,17 @@ export type Attendance = "unknown" | "present" | "absent" | "late";
 export type NotifyChannel = "line" | "webpush" | "email" | "none";
 export type NotifyKind = "digest" | "reminder" | "invite" | "substitution";
 
+// 公演の管理モード: ensemble=全員出演型(シーンと稽古枠) / shift=シフト制(回ごとに役割を埋める。ウォークスルー型や 1 人 1 公演の誘導型)
+export type ManagementMode = "ensemble" | "shift";
+// 召集行の状態: assigned=召集・確定 / candidate=シフト希望の受付中
+export type Assignment = "candidate" | "assigned";
+
 export interface ProductionRow {
   id: string;
   org_id: string;
   tk_event_id: string | null;
   name: string;
+  management_mode: ManagementMode;
   status: "planning" | "rehearsing" | "running" | "closed";
   default_location: string;
   rehearsal_starts_on: string | null;
@@ -71,10 +77,23 @@ export interface SessionSceneRow {
   status: SceneStatus;
 }
 
+export interface ShiftRoleRow {
+  id: string;
+  org_id: string;
+  production_id: string;
+  name: string;
+  required_count: number;
+  sort_order: number;
+  note: string;
+  created_at: string;
+}
+
 export interface SessionMemberRow {
   session_id: string;
   participant_id: string;
   org_id: string;
+  assignment: Assignment;
+  shift_role_id: string | null;
   required: boolean;
   response: Response;
   attendance: Attendance;
@@ -194,6 +213,7 @@ export interface ProfileSettingsRow {
 }
 
 export const SESSION_KIND_LABEL: Record<SessionKind, string> = { rehearsal: "稽古", performance: "本番", other: "その他" };
+export const MANAGEMENT_MODE_LABEL: Record<ManagementMode, string> = { ensemble: "全員出演型(シーン・稽古枠)", shift: "シフト制(回ごとに役割を埋める)" };
 export const SESSION_STATUS_LABEL: Record<SessionStatus, string> = { scheduled: "予定", done: "完了", cancelled: "中止" };
 export const RESPONSE_LABEL: Record<Response, string> = { pending: "未回答", yes: "参加", no: "不参加", maybe: "未定" };
 export const ATTENDANCE_LABEL: Record<Attendance, string> = { unknown: "-", present: "出席", absent: "欠席", late: "遅刻" };

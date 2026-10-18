@@ -101,8 +101,8 @@ export async function acceptTransfer(token: string, toOrgId: string, actor: Sess
     admin.from("rh_production_members").select("participant_id, role_name").eq("production_id", pid),
     sceneIds.length ? admin.from("rh_scene_members").select("scene_id, participant_id").in("scene_id", sceneIds) : Promise.resolve({ data: [] as { scene_id: string; participant_id: string }[] }),
     sessionIds.length
-      ? admin.from("rh_session_members").select("session_id, participant_id, required, response, attendance, note, notified_at, google_event_id").in("session_id", sessionIds)
-      : Promise.resolve({ data: [] as { session_id: string; participant_id: string; required: boolean; response: string; attendance: string; note: string; notified_at: string | null; google_event_id: string | null }[] }),
+      ? admin.from("rh_session_members").select("session_id, participant_id, required, response, attendance, note, notified_at, google_event_id, assignment, shift_role_id").in("session_id", sessionIds)
+      : Promise.resolve({ data: [] as { session_id: string; participant_id: string; required: boolean; response: string; attendance: string; note: string; notified_at: string | null; google_event_id: string | null; assignment: string; shift_role_id: string | null }[] }),
     sessionIds.length ? admin.from("rh_substitution_requests").select("id, absent_participant_id, filled_by_participant_id").in("session_id", sessionIds) : Promise.resolve({ data: [] as { id: string; absent_participant_id: string; filled_by_participant_id: string | null }[] }),
   ]);
   const reqIds = (reqs ?? []).map((r) => r.id);
@@ -143,6 +143,7 @@ export async function acceptTransfer(token: string, toOrgId: string, actor: Sess
   // 本体と従属データの org_id を移す
   await admin.from("rh_productions").update({ org_id: toOrgId }).eq("id", pid);
   await admin.from("rh_scenes").update({ org_id: toOrgId }).eq("production_id", pid);
+  await admin.from("rh_shift_roles").update({ org_id: toOrgId }).eq("production_id", pid);
   await admin.from("rh_sessions").update({ org_id: toOrgId }).eq("production_id", pid);
   if (sessionIds.length) await admin.from("rh_session_scenes").update({ org_id: toOrgId }).in("session_id", sessionIds);
 

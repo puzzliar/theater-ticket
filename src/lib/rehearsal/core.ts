@@ -48,16 +48,21 @@ export async function respondToSession(profileId: string, sessionId: string, res
   await syncSession(sessionId, [row.participant_id]);
 }
 
-// 召集メンバーへ通知(新規召集・変更・中止)。仮メンバーには届かない
-export async function notifySessionMembers(sessionId: string, kind: "invite" | "update" | "cancel", onlyParticipantIds?: string[]): Promise<number> {
+// 召集メンバーへ通知(新規召集・変更・中止)。仮メンバーには届かない。
+// shift_request は、シフト制で「入れる回」を聞く段階の候補者(assignment=candidate)への通知
+export async function notifySessionMembers(sessionId: string, kind: "invite" | "update" | "cancel" | "shift_request", onlyParticipantIds?: string[]): Promise<number> {
   const admin = supabaseAdmin();
   const session = await loadSession(sessionId);
-  let q = admin.from("rh_session_members").select("participant_id, rh_participants!inner(id, profile_id)").eq("session_id", sessionId);
+  let q = admin
+    .from("rh_session_members")
+    .select("participant_id, rh_participants!inner(id, profile_id)")
+    .eq("session_id", sessionId)
+    .eq("assignment", kind === "shift_request" ? "candidate" : "assigned");
   if (onlyParticipantIds?.length) q = q.in("participant_id", onlyParticipantIds);
   const { data: rows } = await q;
 
-  const title = kind === "invite" ? "召集" : kind === "update" ? "予定変更" : "中止";
-  const tail = kind === "cancel" ? "この予定は中止になりました。" : "出欠の回答をお願いします。";
+  const title = kind === "invite" ? "召集" : kind === "update" ? "予定変更" : kind === "cancel" ? "中止" : "シフト希望の受付";
+  const tail = kind === "cancel" ? "この予定は中止になりました。" : kind === "shift_request" ? "この回に入れるかどうかを回答してください(入れる／入れない／未定)。" : "出欠の回答をお願いします。";
   const text = `${sessionSummary(session)}\n${session.note ? `${session.note}\n` : ""}${tail}`;
   const stamp = kind === "invite" ? "" : `:${session.updated_at}`;
 
@@ -65,9 +70,9 @@ export async function notifySessionMembers(sessionId: string, kind: "invite" | "
   for (const r of (rows ?? []) as unknown as { participant_id: string; rh_participants: { id: string; profile_id: string | null } }[]) {
     const pid = r.rh_participants.profile_id;
     if (!pid) continue;
-    const ch = await notifyProfile(pid, "invite", `session:${kind}:${sessionId}:${r.participant_id}${stamp}`, { title, text, url: `${SITE_URL}/me` });
+    const ch = await notifyProfile(pid, "invite", `session:${kind}:${sessionId}:${r.participant_id}${stamp}`, { title, text, url: kind === "shift_request" ? `${SITE_URL}/me#shifts` : `${SITE_URL}/me` });
     if (ch !== "duplicate" && ch !== "none") sent++;
-    if (kind === "invite") {
+    if (kind === "invite" || kind === "shift_request") {
       await admin.from("rh_session_members").update({ notified_at: new Date().toISOString() }).eq("session_id", sessionId).eq("participant_id", r.participant_id);
     }
   }
