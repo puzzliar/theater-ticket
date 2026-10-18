@@ -28,6 +28,11 @@ export default async function MePage() {
     listPersonalProductions(me.id),
     listProfileSessions(me.id, todayStart, farEnd),
   ]);
+  // シフト希望の受付中(シフト制の公演で「入れる回」を聞かれているもの)。公演ごとにまとめる
+  const candidates = (await listProfileSessions(me.id, todayStart, farEnd, false, true)).filter((s) => s.assignment === "candidate");
+  const candidateGroups = new Map<string, typeof candidates>();
+  for (const c of candidates) candidateGroups.set(c.productionId, [...(candidateGroups.get(c.productionId) ?? []), c]);
+  const unansweredShifts = candidates.filter((c) => c.response === "pending").length;
   // 仮押さえの重複: 90 日先までで、仮押さえを含む予定同士が時間帯で重なるもの
   const active = farSessions.filter((s) => s.response !== "no" && s.status === "scheduled");
   const tentatives = active.filter((s) => s.tentative);
@@ -102,6 +107,34 @@ export default async function MePage() {
         </section>
       )}
 
+      {candidates.length > 0 && (
+        <section id="shifts" className="space-y-3 rounded-2xl border border-sky-500/40 bg-sky-500/5 p-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="font-semibold text-sky-700">シフト希望の受付中</h2>
+            <span className="text-xs text-muted">未回答 {unansweredShifts} 回。入れる回に「入れる」と答えてください。主催者が確定すると予定に載ります</span>
+          </div>
+          {[...candidateGroups.entries()].map(([pid, list]) => (
+            <div key={pid} className="rounded-xl border border-line bg-surface p-3 text-sm">
+              <p className="mb-2 font-medium">{list[0].orgName}／{list[0].productionName}</p>
+              <div className="grid gap-1">
+                {list.map((s) => (
+                  <div key={s.id} className="flex flex-wrap items-center justify-between gap-2 rounded border border-line px-2 py-1.5">
+                    <span><span className="font-mono">{fmtRange(s.startsAt, s.endsAt)}</span>{s.title && <span className="text-muted"> {s.title}</span>}{s.respondBy && <span className="ml-2 text-xs text-muted">期限 {fmtDateLabel(s.respondBy)}</span>}</span>
+                    <span className="flex gap-1">
+                      {(["yes", "maybe", "no"] as const).map((r) => (
+                        <form key={r} action={respond.bind(null, s.id, r)}>
+                          <button className={`rounded px-2 py-0.5 text-xs ${s.response === r ? (r === "yes" ? "bg-emerald-600 text-white" : r === "no" ? "bg-red-600 text-white" : "bg-fg text-surface") : "bg-surface-3 hover:bg-line-strong"}`}>{r === "yes" ? "入れる" : r === "maybe" ? "未定" : "入れない"}</button>
+                        </form>
+                      ))}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+
       {(pending.length > 0 || openRequests.length > 0) && (
         <section className="space-y-3 rounded-2xl border border-accent/40 bg-accent/5 p-4">
           <h2 className="font-semibold text-accent-text">要対応</h2>
@@ -154,6 +187,7 @@ export default async function MePage() {
                         {s.tentative && <span className="mr-1 rounded bg-orange-500/20 px-1.5 py-0.5 text-xs text-orange-700">仮</span>}
                         <span className="text-muted">{s.orgName}／</span><span className="font-medium">{s.productionName}</span>
                         {s.title && <span className="text-fg-2"> {s.title}</span>}
+                        {s.shiftRole && <span className="ml-1 rounded bg-sky-500/15 px-1.5 py-0.5 text-xs text-sky-700">{s.shiftRole}</span>}
                       </p>
                       <p className="text-xs text-muted">{s.location ? `📍 ${s.location}` : "📍 場所未定"}{s.scenes.length > 0 && ` ／ シーン: ${s.scenes.map((x) => `${x.code} ${x.name}`).join(", ")}`}</p>
                       {s.note && <p className="text-xs text-dim">{s.note}</p>}
