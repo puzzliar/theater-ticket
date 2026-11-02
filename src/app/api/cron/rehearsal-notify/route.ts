@@ -6,6 +6,7 @@ import { listProfileSessions, sessionLine } from "@/lib/rehearsal/schedule";
 import { addDays, fmtDateLabel, jstDateString, jstDayRange, jstHour } from "@/lib/rehearsal/time";
 import { RESPONSE_LABEL } from "@/lib/rehearsal/types";
 import { SITE_URL } from "@/lib/constants";
+import { IS_SHIFT } from "@/lib/app";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export const dynamic = "force-dynamic";
 //  - REHEARSAL_DIGEST_HOUR(既定 8)時台: 今日の予定ダイジェスト(予定がある人のみ) + Google FreeBusy の取り込み
 //  - REHEARSAL_REMINDER_HOUR(既定 20)時台: 翌日の予定リマインド
 // チャネルは本人設定に従う(既定はメール)。dedupe_key で冪等。
+// スケジュールとシフトは別デプロイで別々に動き、それぞれ自サービスの公演だけを配信する(dedupe_key にサービスを含める)。
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   if (secret && req.headers.get("authorization") !== `Bearer ${secret}`) {
@@ -54,7 +56,7 @@ export async function GET(req: NextRequest) {
       const body = sessions.map((s) => `・${sessionLine(s, false)} [${RESPONSE_LABEL[s.response]}]`).join("\n");
       const pending = sessions.filter((s) => s.response === "pending").length;
       const foot = pending > 0 ? `\n未回答が${pending}件あります。` : "";
-      const ch = await notifyProfile(pid, job, `${job}:${date}:${pid}`, { title, text: `${body}${foot}`, url: `${SITE_URL}/me` });
+      const ch = await notifyProfile(pid, job, `${IS_SHIFT ? "shift:" : ""}${job}:${date}:${pid}`, { title, text: `${body}${foot}`, url: `${SITE_URL}/me` });
       if (ch !== "duplicate" && ch !== "none") counts[job]++;
     }
   }

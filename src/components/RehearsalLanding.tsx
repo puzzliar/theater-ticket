@@ -20,7 +20,7 @@ export default function RehearsalLanding({ me, deleted }: { me: SessionUser | nu
 
         <section className="mx-auto max-w-3xl space-y-6 text-center">
           <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs text-fg-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" />小劇場・イマーシブシアターのための予定表。基本機能は無料
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" />小劇場のための予定表。基本機能は無料
           </p>
           <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-5xl">今日、どこに行けばいいか。<br />誰がいつ来られるか。</h1>
           <p className="mx-auto max-w-2xl text-base text-muted sm:text-lg">稽古から本番までの予定を、主催者とキャストの両方が一つの場所で把握できるサービスです。複数の座組を掛け持ちするキャストも、1 つのアカウントで全部の予定が見えます。</p>
@@ -60,7 +60,7 @@ export default function RehearsalLanding({ me, deleted }: { me: SessionUser | nu
 
         <section className="space-y-2 text-center text-sm text-muted">
           <p>現在はクローズド β として招待制で運用しています。座組(団体)を作成するには運営が発行する主催者コードが必要です。キャストとして参加する場合は、主催者から受け取った招待リンクを開いてください。</p>
-          <p className="text-xs text-dim">アカウントは ZAGUMI の他のサービス(チケット・物販・精算)と共通です。</p>
+          <p className="text-xs text-dim">アカウントは ZAGUMI の他のサービス(シフト・チケット・物販・精算)と共通です。イマーシブ公演のシフト組みは ZAGUMIシフトをご利用ください。</p>
         </section>
       </div>
     </div>

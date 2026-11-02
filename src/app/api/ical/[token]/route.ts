@@ -1,3 +1,4 @@
+import { APP_NAME } from "@/lib/app";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { buildIcs, type IcsEvent } from "@/lib/ics";
@@ -31,7 +32,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
       status: s.status === "cancelled" ? "CANCELLED" : s.response === "yes" ? "CONFIRMED" : "TENTATIVE",
     }));
 
-  return new NextResponse(buildIcs(`ZAGUMIスケジュール (${prof.display_name})`, events), {
+  return new NextResponse(buildIcs(`${APP_NAME} (${prof.display_name})`, events), {
     headers: { "Content-Type": "text/calendar; charset=utf-8", "Content-Disposition": 'inline; filename="rehearsal.ics"', "Cache-Control": "private, max-age=300" },
   });
 }

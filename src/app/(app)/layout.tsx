@@ -3,6 +3,7 @@ import { getSessionUser, listMyOrgs } from "@/lib/core/session";
 import { getMode } from "@/lib/core/mode";
 import { isAdminRole } from "@/lib/core/types";
 import { MobileNav, SidebarNav, type NavItem } from "@/components/AppNav";
+import { HOME_LABEL, IS_SHIFT } from "@/lib/app";
 
 export const dynamic = "force-dynamic";
 
@@ -16,20 +17,26 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const troupes = orgs.filter((o) => o.org.kind !== "personal");
   const adminTroupes = troupes.filter((o) => isAdminRole(o.role));
 
-  const castItems: NavItem[] = [
-    { href: "/me", label: "マイスケジュール", icon: "予" },
-    { href: "/me/availability", label: "空き状況を伝える", icon: "○" },
-    { href: personal ? `/o/${personal.org.slug}` : "/me#self", label: "セルフ公演", icon: "自" },
-    { href: "/me/site", label: "公式サイト", icon: "頁" },
-    { href: "/me/settings", label: "設定", icon: "設" },
-  ];
+  // シフトでは個人向け機能(空き状況・セルフ公演・公式サイト)を提供しない(ZAGUMIスケジュール側の機能)
+  const castItems: NavItem[] = IS_SHIFT
+    ? [
+        { href: "/me", label: HOME_LABEL, icon: "シ" },
+        { href: "/me/settings", label: "設定", icon: "設" },
+      ]
+    : [
+        { href: "/me", label: HOME_LABEL, icon: "予" },
+        { href: "/me/availability", label: "空き状況を伝える", icon: "○" },
+        { href: personal ? `/o/${personal.org.slug}` : "/me#self", label: "セルフ公演", icon: "自" },
+        { href: "/me/site", label: "公式サイト", icon: "頁" },
+        { href: "/me/settings", label: "設定", icon: "設" },
+      ];
   const organizerItems: NavItem[] = [
     { href: "/manage", label: "主催ホーム", icon: "主" },
     ...adminTroupes.slice(0, 6).map((o) => ({ href: `/o/${o.org.slug}`, label: o.org.name, icon: "座", match: "prefix" as const })),
     { href: "/me/settings", label: "設定", icon: "設" },
   ];
   const items = mode === "organizer" ? organizerItems : castItems;
-  const mobile: NavItem[] = mode === "organizer" ? [organizerItems[0], ...adminTroupes.slice(0, 2).map((o) => ({ href: `/o/${o.org.slug}`, label: o.org.name.slice(0, 6), icon: "座", match: "prefix" as const })), { href: "/me/settings", label: "設定", icon: "設" }] : [castItems[0], castItems[1], castItems[3], castItems[4]];
+  const mobile: NavItem[] = mode === "organizer" ? [organizerItems[0], ...adminTroupes.slice(0, 2).map((o) => ({ href: `/o/${o.org.slug}`, label: o.org.name.slice(0, 6), icon: "座", match: "prefix" as const })), { href: "/me/settings", label: "設定", icon: "設" }] : IS_SHIFT ? castItems : [castItems[0], castItems[1], castItems[3], castItems[4]];
 
   return (
     <div className="mx-auto flex w-full max-w-7xl gap-8 px-4 pb-20 pt-6 md:pb-10">

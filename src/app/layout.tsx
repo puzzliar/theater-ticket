@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
-import { APP_DESCRIPTION, APP_NAME, IS_REHEARSAL } from "@/lib/app";
+import { APP_DESCRIPTION, APP_LOGO, APP_NAME, IS_REHEARSAL } from "@/lib/app";
 import { getSessionUser } from "@/lib/core/session";
 import { getMode, modeHome } from "@/lib/core/mode";
 import ModeSwitch from "@/components/ModeSwitch";
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description: APP_DESCRIPTION,
 };
 
-// サービスごとに独立したシェル。ZAGUMIスケジュールと ZAGUMIチケットは ZAGUMIアカウントを共有するが相互リンクは置かない
+// サービスごとに独立したシェル。ZAGUMIスケジュール・ZAGUMIシフト・ZAGUMIチケットは ZAGUMIアカウントを共有するが相互リンクは置かない
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja">
@@ -61,9 +61,9 @@ async function RehearsalTopBar() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-        <Link href={session ? modeHome(mode) : "/"} aria-label="ZAGUMIスケジュール" className="flex items-center">
+        <Link href={session ? modeHome(mode) : "/"} aria-label={APP_NAME} className="flex items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/zagumi-schedule.svg" alt="ZAGUMIスケジュール" className="h-9 w-auto" />
+          <img src={APP_LOGO} alt={APP_NAME} className="h-9 w-auto" />
         </Link>
         <nav className="flex items-center gap-2 text-sm">
           {session && <ModeSwitch mode={mode} />}

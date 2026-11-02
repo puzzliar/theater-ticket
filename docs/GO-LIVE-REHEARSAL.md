@@ -14,6 +14,7 @@
 |---|---|---|---|
 | 1 | ZAGUMIスケジュールの公開ドメイン | `schedule.zagumi.jp`（`zagumi.jp` を取得しない場合は `zagumi-schedule.puzzliar.jp`） | A-2、A-3、A-5、B-1、F-3、G-1 のリダイレクト URL、`NEXT_PUBLIC_SITE_URL` |
 | 1b | ZAGUMIチケットの公開ドメイン | `ticket.zagumi.jp`（現状の予定は `ticket.puzzliar.jp`） | B-1。本書では `<チケットのドメイン>` と書く |
+| 1c | ZAGUMIシフトの公開ドメイン | `shift.zagumi.jp`（`zagumi.jp` を取得しない場合は `zagumi-shift.puzzliar.jp`） | A-2b。本書では `<シフトのドメイン>` と書く。スケジュールと同じ手順で 3 つ目の Vercel プロジェクト `zagumi-shift` を作る |
 | 2 | 送信元メールアドレスと表示名 | `ZAGUMI <noreply@puzzliar.jp>` | C、B-4、`EMAIL_FROM` |
 | 3 | 問い合わせ先 | `support@puzzliar.jp` | D、F-2、`VAPID_SUBJECT` |
 
@@ -69,6 +70,16 @@ ZAGUMIスケジュールとチケット販売は**共通アカウント（同じ
 7. 以降の A-3〜A-6 はこの `zagumi-schedule` プロジェクトに対して行う。https://vercel.com/dashboard のプロジェクト一覧から `zagumi-schedule` をクリックして開く
 
 > `theater-ticket` 側には `NEXT_PUBLIC_APP` を**設定しない**（未設定＝チケット販売として動く）。設定すると `ticket.puzzliar.jp` がZAGUMIスケジュールに変わってしまう。
+
+### A-2b. ZAGUMIシフト用の Vercel プロジェクトを作る
+
+イマーシブ公演のシフト組みは **ZAGUMIシフト** として別サービスで配信する。A-2 と同じ手順で **3 つ目のプロジェクト** を作る。
+
+1. https://vercel.com/new → `puzzliar/theater-ticket` を **Import** → Project Name `zagumi-shift`
+2. Environment Variables に Key `NEXT_PUBLIC_APP`、Value **`shift`** を入れて **Add**。続けて A-3 の「必須」の変数を同じ値で入れる。ただし `NEXT_PUBLIC_SITE_URL` は `https://<シフトのドメイン>`、`EMAIL_FROM` は `ZAGUMIシフト <noreply@puzzliar.jp>`
+3. **Deploy** → A-5 の手順で `<シフトのドメイン>` を接続（CNAME のホスト名は `shift`）→ A-6 で `https://<シフトのドメイン>/` が「この回、誰が入れるか。」のトップページになることを確認
+4. 任意: 相互転送用に `zagumi-schedule` へ `NEXT_PUBLIC_SHIFT_SITE_URL`、`zagumi-shift` へ `NEXT_PUBLIC_SCHEDULE_SITE_URL` と `NEXT_PUBLIC_TICKET_SITE_URL` を登録する（相手サービスのパスを開いたときに相手のドメインへ転送する。画面上のリンクは出ない）
+5. 以降、B-1 の Redirect URLs、F-3 のリダイレクト URI、G-2 の Webhook、H-1 のスケジューラは **スケジュールとシフトの両ドメイン分**を登録する（付録 2）。LINE の Messaging API チャネルはサービスごとに作るが、**同じプロバイダー `PUZZLIAR` の下**に作ること（同じプロバイダー内なら LINE のユーザー ID が共通になり、一度の連携で両サービスから通知できる）
 
 ### A-3. 環境変数を登録する
 
@@ -533,7 +544,7 @@ update core_profiles set is_platform_admin = true where email = '<メールア�
 | 10 | 公演ページ → **主催者に引き渡す** → **引き渡しリンクを発行** → URL を A（座組の管理者）で開き **この座組で引き受ける** | A の座組に公演が移り、B が A の座組のメンバーに追加されている。B の `/me` では座組名が A のものに変わる |
 | 11 | A でヘッダーの **出演者** を押す | サイドバーがマイスケジュール等に変わり、座組ページの編集フォームが消える。**主催者** に戻すと `/manage`（主催ホーム）に座組と公演、直近の予定の出欠が並ぶ |
 | 12 | A の `/me/settings` → 「ログインに使うアカウント」→ **Google アカウントを追加** → 別の Google アカウントを選ぶ | 一覧に 2 つ目の Google が並ぶ（B-2b が必要）。ログアウト後、その Google アカウントでログインしても A のデータが見える |
-| 14 | A（主催者モード）で公演の「公演の情報を編集」→ 管理モードを **シフト制** に → 保存 → 「シフト表」で役割 `案内人` 2 名を追加 → 回を一括で作る（明日〜明後日、`11:00, 14:00`、90 分、全員に聞く ON） | 4 回が作られ、B に「シフト希望の受付」の通知。B の `/me` に「シフト希望の受付中」が出て、回ごとに 入れる／未定／入れない を押せる |
+| 14 | **ZAGUMIシフト**（`https://<シフトのドメイン>`）に A でログイン → 主催者モードで `/o/test-troupe` → 「新しい公演」で `体験展` を作成 → 「シフト表」で役割 `案内人` 2 名を追加 → 回を一括で作る（明日〜明後日、`11:00, 14:00`、90 分、全員に聞く ON） | 4 回が作られ、B に「シフト希望の受付」の通知。B がシフトのドメインで `/me` を開くと「シフト希望の受付中」が出て、回ごとに 入れる／未定／入れない を押せる。スケジュールのドメインの `/me` にはこの公演が**出ない** |
 | 15 | B が 2 回に「入れる」→ A が **希望から自動で埋める** → **確定を一斉通知** | A の表で B が案内人の枠に入り、B に召集通知。B の 2 週間の予定に「案内人」バッジつきで表示され、確定していない回は表示されない |
 | 13 | A の `/me/settings` → Google カレンダー「主催者用」→ **主催者用のカレンダーを連携する** → 劇団用の Google アカウントを選ぶ | 「主催者用の Google カレンダーと連携しました」。その Google カレンダーに座組の予定が入る（出演者用とは別アカウントでよい） |
 
@@ -610,7 +621,8 @@ where channel = 'line' and sent_at >= date_trunc('month', now() at time zone 'As
 
 | Key | 必須 | 用途 | 取得箇所 |
 |---|---|---|---|
-| `NEXT_PUBLIC_APP` | 必須 | `rehearsal`＝ZAGUMIスケジュールとして配信（未設定＝チケット販売） | A-2 |
+| `NEXT_PUBLIC_APP` | 必須 | `rehearsal`＝ZAGUMIスケジュール、`shift`＝ZAGUMIシフトとして配信（未設定＝チケット販売） | A-2、A-2b |
+| `NEXT_PUBLIC_TICKET_SITE_URL` `NEXT_PUBLIC_SCHEDULE_SITE_URL` `NEXT_PUBLIC_SHIFT_SITE_URL` | 任意 | 他サービスのパスを開いたときの転送先 | A-2b |
 | `NEXT_PUBLIC_SUPABASE_URL` `NEXT_PUBLIC_SUPABASE_ANON_KEY` `SUPABASE_SERVICE_ROLE_KEY` | 必須 | DB・認証（チケットと共通） | B-0 |
 | `NEXT_PUBLIC_SITE_URL` | 必須 | 公開 URL | 0-1 |
 | `RESEND_API_KEY` `EMAIL_FROM` | 必須 | メール通知 | C-3 |
@@ -628,18 +640,18 @@ where channel = 'line' and sent_at >= date_trunc('month', now() at time zone 'As
 | 登録先 | 画面 | 値 |
 |---|---|---|
 | Supabase | Authentication → URL Configuration → Site URL | `https://<ドメイン>` |
-| Supabase | 同 → Redirect URLs | `https://<ドメイン>/auth/callback`、`https://<ドメイン>/**`、`https://<チケットのドメイン>/auth/callback`、`https://<チケットのドメイン>/**` |
-| Google Cloud | クライアント → 承認済みのリダイレクト URI | `https://<ドメイン>/api/google/callback`、`https://wiqnmebudaadwqdaxwko.supabase.co/auth/v1/callback` |
+| Supabase | 同 → Redirect URLs | `https://<ドメイン>/auth/callback`、`https://<ドメイン>/**`、`https://<シフトのドメイン>/auth/callback`、`https://<シフトのドメイン>/**`、`https://<チケットのドメイン>/auth/callback`、`https://<チケットのドメイン>/**` |
+| Google Cloud | クライアント → 承認済みのリダイレクト URI | `https://<ドメイン>/api/google/callback`、`https://<シフトのドメイン>/api/google/callback`、`https://wiqnmebudaadwqdaxwko.supabase.co/auth/v1/callback` |
 | Google Cloud | ブランディング → ホームページ／プライバシー／規約 | `https://<ドメイン>/`、`/privacy`、`/terms` |
-| LINE Developers | Messaging API 設定 → Webhook URL | `https://<ドメイン>/api/line/webhook` |
+| LINE Developers | Messaging API 設定 → Webhook URL | `https://<ドメイン>/api/line/webhook`（シフト用チャネルは `https://<シフトのドメイン>/api/line/webhook`） |
 | LINE Developers | LINE ログイン設定 → コールバック URL | `https://<ドメイン>/auth/line/callback` |
-| cron-job.org | Job URL | `https://<ドメイン>/api/cron/rehearsal-notify`（Header `Authorization: Bearer <CRON_SECRET>`） |
+| cron-job.org | Job URL | `https://<ドメイン>/api/cron/rehearsal-notify` と `https://<シフトのドメイン>/api/cron/rehearsal-notify`（それぞれ Header `Authorization: Bearer <CRON_SECRET>`） |
 
 ## 付録 3. 公開前チェックリスト
 
 > 順序と所要時間つきの残タスク一覧は `docs/LAUNCH-TASKS.md` を参照。
 
-- [ ] A-1 `main` にマージ済み ／ A-2 `zagumi-schedule` プロジェクト作成（`NEXT_PUBLIC_APP=rehearsal`） ／ A-5 ドメインが Valid Configuration ／ A-6 トップページが開き、`ticket.puzzliar.jp` は従来どおり
+- [ ] A-1 `main` にマージ済み ／ A-2 `zagumi-schedule` プロジェクト作成（`NEXT_PUBLIC_APP=rehearsal`） ／ A-2b `zagumi-shift` プロジェクト作成（`NEXT_PUBLIC_APP=shift`） ／ A-5 両ドメインが Valid Configuration ／ A-6 両トップページが開き、`ticket.puzzliar.jp` は従来どおり
 - [ ] A-3 必須 12 変数をZAGUMIスケジュールプロジェクトに登録
 - [ ] B-1 Site URL と Redirect URLs ／ B-3 Confirm email ON ／ B-5 Custom SMTP ON
 - [ ] C-2 Resend Domain が Verified ／ C-4 Click Tracking Disabled
@@ -651,5 +663,5 @@ where channel = 'line' and sent_at >= date_trunc('month', now() at time zone 'As
 - [ ] H-2 運営ログイン、主催者コード発行
 - [ ] H-3 の 14 項目がすべて期待結果どおり
 - [ ] B-2b Manual linking ON ／ Authentication → Settings → Password の Leaked password protection ON
-- [ ] H-3b の 15 項目（セルフ公演・取り込み・空き状況・仮押さえ・公式サイト・引き渡し・モード切替・Google アカウント追加・シフト制）が期待結果どおり
+- [ ] H-3b の 15 項目（セルフ公演・取り込み・空き状況・仮押さえ・公式サイト・引き渡し・モード切替・Google アカウント追加・ZAGUMIシフトでのシフト組み）が期待結果どおり
 - [ ] H-4 の案内文を β 参加劇団へ送付

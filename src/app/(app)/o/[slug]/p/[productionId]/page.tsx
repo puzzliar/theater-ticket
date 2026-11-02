@@ -4,7 +4,8 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { requireOrg } from "@/lib/core/session";
 import { checkAvailability, sceneProgress, type AvailabilityVerdict } from "@/lib/rehearsal/schedule";
 import { fmtDate, fmtRange, jstDateString, jstToIso, nowMs, ts } from "@/lib/rehearsal/time";
-import { MANAGEMENT_MODE_LABEL, SESSION_KIND_LABEL, SESSION_STATUS_LABEL, type ManagementMode, type ParticipantRow, type ProductionRow, type SceneRow, type SessionRow } from "@/lib/rehearsal/types";
+import { SESSION_KIND_LABEL, SESSION_STATUS_LABEL, type ParticipantRow, type ProductionRow, type SceneRow, type SessionRow } from "@/lib/rehearsal/types";
+import { IS_SHIFT, PRODUCTION_MODE } from "@/lib/app";
 import ShiftBoard from "./ShiftBoard";
 import { PART_LABEL } from "@/lib/core/types";
 import { openTransferFor } from "@/lib/rehearsal/transfer";
@@ -27,8 +28,10 @@ export default async function ProductionPage({ params, searchParams }: { params:
   const { data: production } = await db.from("rh_productions").select("*").eq("id", productionId).eq("org_id", org.id).maybeSingle();
   if (!production) notFound();
   const prod = production as ProductionRow;
+  // 他サービス(スケジュール⇔シフト)の公演はこのデプロイでは扱わない
+  if (prod.management_mode !== PRODUCTION_MODE) notFound();
   const isPersonal = org.kind === "personal";
-  const isShift = prod.management_mode === "shift";
+  const isShift = IS_SHIFT;
   const transfer = isAdmin ? await openTransferFor(productionId) : null;
 
   const [{ data: pm }, { data: allParticipants }, { data: scenes }, { data: sceneMembers }, { data: sessions }, progress] = await Promise.all([
@@ -115,8 +118,8 @@ export default async function ProductionPage({ params, searchParams }: { params:
   return (
     <div className="space-y-10">
       <div>
-        <p className="text-sm text-dim"><Link href={`/o/${slug}`} className="hover:text-fg">← プロダクション一覧</Link></p>
-        <h2 className="text-2xl font-bold">{prod.name} {isShift && <span className="ml-1 rounded bg-sky-500/15 px-2 py-0.5 align-middle text-xs font-medium text-sky-700">シフト制</span>}</h2>
+        <p className="text-sm text-dim"><Link href={`/o/${slug}`} className="hover:text-fg">{isShift ? "← 公演一覧" : "← プロダクション一覧"}</Link></p>
+        <h2 className="text-2xl font-bold">{prod.name}</h2>
         <p className="text-sm text-muted">{prod.rehearsal_starts_on && `稽古開始 ${prod.rehearsal_starts_on} `}{prod.opens_on && `／ 初日 ${prod.opens_on} `}{prod.closes_on && `〜 ${prod.closes_on} `}{prod.default_location && `／ ${prod.default_location}`}{prod.block_from && prod.block_to && ` ／ 他現場を入れない期間 ${prod.block_from}〜${prod.block_to}`}</p>
         {one(sp.handover) && <p className="mt-2 rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-700">公演を引き受けました。参加していたキャストはこの座組のメンバーになっています。</p>}
         {one(sp.imported) && <p className="mt-2 rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-700">{one(sp.imported)} 件の予定を取り込みました。</p>}
@@ -126,18 +129,12 @@ export default async function ProductionPage({ params, searchParams }: { params:
             <summary className="cursor-pointer text-fg-2">公演の情報を編集</summary>
             <form action={updateProduction.bind(null, org.id, productionId)} className="mt-3 grid gap-2 sm:grid-cols-3">
               <input name="name" required defaultValue={prod.name} placeholder="公演名" className={`${input} sm:col-span-2`} />
-              <input name="default_location" defaultValue={prod.default_location} placeholder="既定の稽古場所" className={input} />
-              <label className="text-xs text-muted">稽古開始日<input name="rehearsal_starts_on" type="date" defaultValue={prod.rehearsal_starts_on ?? ""} className={`${input} mt-1 w-full`} /></label>
+              <input name="default_location" defaultValue={prod.default_location} placeholder={isShift ? "会場" : "既定の稽古場所"} className={input} />
+              <label className="text-xs text-muted">{isShift ? "稽古開始日(任意)" : "稽古開始日"}<input name="rehearsal_starts_on" type="date" defaultValue={prod.rehearsal_starts_on ?? ""} className={`${input} mt-1 w-full`} /></label>
               <label className="text-xs text-muted">初日<input name="opens_on" type="date" defaultValue={prod.opens_on ?? ""} className={`${input} mt-1 w-full`} /></label>
               <label className="text-xs text-muted">終演日<input name="closes_on" type="date" defaultValue={prod.closes_on ?? ""} className={`${input} mt-1 w-full`} /></label>
               <label className="text-xs text-muted">他現場を入れない期間(開始。小屋入りなど)<input name="block_from" type="date" defaultValue={prod.block_from ?? ""} className={`${input} mt-1 w-full`} /></label>
               <label className="text-xs text-muted">同(終了)<input name="block_to" type="date" defaultValue={prod.block_to ?? ""} className={`${input} mt-1 w-full`} /></label>
-              <label className="text-xs text-muted sm:col-span-3">管理モード
-                <select name="management_mode" defaultValue={prod.management_mode} className={`${input} mt-1 w-full`}>
-                  {(Object.keys(MANAGEMENT_MODE_LABEL) as ManagementMode[]).map((m) => <option key={m} value={m}>{MANAGEMENT_MODE_LABEL[m]}</option>)}
-                </select>
-                <span className="mt-1 block text-dim">全員出演型は小劇場演劇など全員が同じ回に出る公演向け。シフト制はウォークスルー型や 1 人が 1 公演を誘導する形式向けで、回ごとに役割(案内人・受付など)を埋めます。</span>
-              </label>
               <input name="note" defaultValue={prod.note} placeholder="メモ" className={`${input} sm:col-span-3`} />
               <p className="text-xs text-dim sm:col-span-3">「他現場を入れない期間」を設定すると、この公演のメンバーは期間中、他の座組の参加可否確認で「他現場(本番期間)」と表示されます。</p>
               <div><button className="rounded-lg bg-surface-3 px-4 py-2 text-sm hover:bg-line-strong">保存</button></div>
@@ -217,7 +214,7 @@ export default async function ProductionPage({ params, searchParams }: { params:
       <section className="space-y-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="text-lg font-semibold">{isShift ? "予定の一覧(稽古・その他も含む)" : "予定(稽古・本番)"}</h3>
-          {isAdmin && <Link href={`/o/${slug}/p/${productionId}/import`} className="rounded-lg border border-accent/40 px-3 py-1 text-xs text-accent-text hover:bg-accent/10">日程を貼り付けて取り込む</Link>}
+          {isAdmin && !isShift && <Link href={`/o/${slug}/p/${productionId}/import`} className="rounded-lg border border-accent/40 px-3 py-1 text-xs text-accent-text hover:bg-accent/10">日程を貼り付けて取り込む</Link>}
         </div>
         <div className="space-y-2">
           {upcoming.length === 0 && <p className="text-sm text-muted">今後の予定はありません。</p>}
@@ -295,7 +292,7 @@ export default async function ProductionPage({ params, searchParams }: { params:
             <button className="rounded-lg bg-surface-3 px-3 py-2 text-sm hover:bg-line-strong">チェックした参加者を追加</button>
           </form>
         )}
-        {isAdmin && isPersonal && (
+        {isAdmin && isPersonal && !isShift && (
           <div className="space-y-2 rounded-xl border border-accent/30 bg-accent/5 p-4 text-sm">
             <p className="font-semibold text-accent-text">主催者に引き渡す</p>
             <p className="text-fg-2">主催者が ZAGUMI に座組を登録したら、この公演を予定・シーン・出欠記録ごと主催者の座組へ移せます。共演者も一緒に移動し、以降は主催者が管理します。下のリンクを主催者に送ってください。</p>

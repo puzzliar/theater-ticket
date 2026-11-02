@@ -1,7 +1,8 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { fmtDate, fmtTime, jstDateString, overlaps, ts } from "./time";
-import { SESSION_KIND_LABEL, type Assignment, type SessionKind, type SessionStatus, type Response, type SceneProgressRow } from "./types";
+import { SESSION_KIND_LABEL, type Assignment, type ManagementMode, type SessionKind, type SessionStatus, type Response, type SceneProgressRow } from "./types";
+import { PRODUCTION_MODE } from "@/lib/app";
 
 // 個人の予定(全組織横断)と、予定(稽古・本番)に対する参加可否判定。
 // ここは service role で動く。他組織の予定は「他現場」という判定結果にだけ変換して返し、内容は返さない。
@@ -50,13 +51,13 @@ type Row = {
     status: SessionStatus;
     tentative: boolean;
     respond_by: string | null;
-    rh_productions: { name: string; core_organizations: { slug: string; name: string } | null } | null;
+    rh_productions: { name: string; management_mode: ManagementMode; core_organizations: { slug: string; name: string } | null } | null;
     rh_session_scenes: { rh_scenes: { code: string; name: string; sort_order: number } | null }[];
   };
 };
 
 const SELECT =
-  "participant_id, required, response, assignment, rh_shift_roles(name), rh_participants!inner(profile_id), rh_sessions!inner(id, org_id, production_id, kind, title, starts_at, ends_at, location, note, status, tentative, respond_by, rh_productions(name, core_organizations(slug, name)), rh_session_scenes(rh_scenes(code, name, sort_order)))";
+  "participant_id, required, response, assignment, rh_shift_roles(name), rh_participants!inner(profile_id), rh_sessions!inner(id, org_id, production_id, kind, title, starts_at, ends_at, location, note, status, tentative, respond_by, rh_productions(name, management_mode, core_organizations(slug, name)), rh_session_scenes(rh_scenes(code, name, sort_order)))";
 
 function toMemberSession(r: Row): MemberSession {
   return {
@@ -88,8 +89,9 @@ function toMemberSession(r: Row): MemberSession {
   };
 }
 
-// 本人の召集予定(全組織)。既定ではシフト希望の受付中(candidate)は含めない
-export async function listProfileSessions(profileId: string, fromIso: string, toIso: string, includeCancelled = false, includeCandidates = false): Promise<MemberSession[]> {
+// 本人の召集予定(全組織)。既定ではシフト希望の受付中(candidate)は含めない。
+// mode: このサービスが扱う公演だけに絞る(スケジュール=ensemble、シフト=shift)。"all" で両サービス横断
+export async function listProfileSessions(profileId: string, fromIso: string, toIso: string, includeCancelled = false, includeCandidates = false, mode: ManagementMode | "all" = PRODUCTION_MODE): Promise<MemberSession[]> {
   const { data } = await supabaseAdmin()
     .from("rh_session_members")
     .select(SELECT)
@@ -99,6 +101,7 @@ export async function listProfileSessions(profileId: string, fromIso: string, to
   return ((data ?? []) as unknown as Row[])
     .filter((r) => includeCancelled || r.rh_sessions.status !== "cancelled")
     .filter((r) => includeCandidates || r.assignment === "assigned")
+    .filter((r) => mode === "all" || (r.rh_sessions.rh_productions?.management_mode ?? "ensemble") === mode)
     .map(toMemberSession)
     .sort((a, b) => ts(a.startsAt) - ts(b.startsAt));
 }

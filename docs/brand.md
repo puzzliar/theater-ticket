@@ -19,7 +19,8 @@
 | 2(右) | ZAGUMIチケット | `zagumi-ticket*.svg` |
 | 3(右下) | ZAGUMI物販 | `zagumi-goods*.svg` |
 | 4(真下) | ZAGUMI精算 | `zagumi-pay*.svg` |
-| 5〜7 | 予備 | |
+| 5(左下) | ZAGUMIシフト | `zagumi-shift*.svg` |
+| 6〜7 | 予備 | |
 
 割り当ては `docs/brand-gen.mjs` の `SERVICE_DOT` が正。
 
@@ -31,7 +32,7 @@
 | `zagumi-mark.svg` / `-white` / `-mono` | シンボル単体。SNS アイコン、小さい表示、単色印刷 |
 | `zagumi-wordmark.svg` | 文字のみ |
 | `zagumi-icon.svg` | アプリアイコン(琥珀の角丸に墨のマーク)。`src/app/icon.svg` と同じ |
-| `zagumi-schedule.svg` 等 | サービス名つき(スケジュール・チケット・物販・精算)。`-white` は暗い背景用、`-mark` はそのサービスの点位置のシンボル単体 |
+| `zagumi-schedule.svg` 等 | サービス名つき(スケジュール・チケット・物販・精算・シフト)。`-white` は暗い背景用、`-mark` はそのサービスの点位置のシンボル単体 |
 | `preview.png` | 一覧プレビュー |
 
 ## 使い方の決まり

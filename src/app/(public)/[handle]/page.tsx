@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { IS_REHEARSAL } from "@/lib/app";
+import { IS_SCHEDULE } from "@/lib/app";
 import { SITE_URL } from "@/lib/constants";
 import { getPublicSite, handleProblem, LINK_KEYS, LINK_LABEL, normalizeHandle } from "@/lib/rehearsal/site";
 import { fmtDateLabel, fmtTime } from "@/lib/rehearsal/time";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 // キャスト公式サイト(公開)。/[handle]
 async function load(handleRaw: string) {
-  if (!IS_REHEARSAL) return null;
+  if (!IS_SCHEDULE) return null;
   const handle = normalizeHandle(handleRaw);
   if (handleProblem(handle)) return null;
   return getPublicSite(handle);

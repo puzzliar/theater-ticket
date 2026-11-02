@@ -58,7 +58,7 @@ export async function createSelfProduction(formData: FormData) {
   const org = await ensurePersonalOrg(me);
   const { data, error } = await supabaseAdmin()
     .from("rh_productions")
-    .insert({ org_id: org.id, name, default_location: String(formData.get("default_location") ?? "").trim(), opens_on: String(formData.get("opens_on") ?? "").trim() || null })
+    .insert({ org_id: org.id, name, management_mode: "ensemble", default_location: String(formData.get("default_location") ?? "").trim(), opens_on: String(formData.get("opens_on") ?? "").trim() || null })
     .select("id")
     .single();
   if (error) throw new Error(error.message);

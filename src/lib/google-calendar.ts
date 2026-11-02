@@ -1,3 +1,4 @@
+import { APP_NAME } from "@/lib/app";
 import "server-only";
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { SITE_URL } from "@/lib/constants";
@@ -145,7 +146,7 @@ function eventBody(ev: GcalEventInput) {
     // 本システムの予定を FreeBusy 取り込みで「不可」扱いしないよう、空き時間には影響させない
     transparency: "transparent",
     reminders: { useDefault: false, overrides: [{ method: "popup", minutes: 120 }] },
-    source: { title: "ZAGUMIスケジュール", url: `${SITE_URL}/me` },
+    source: { title: APP_NAME, url: `${SITE_URL}/me` },
   };
 }
 
