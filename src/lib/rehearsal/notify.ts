@@ -4,6 +4,7 @@ import { linePush, lineConfigured } from "@/lib/line";
 import { sendEmail } from "@/lib/email";
 import { sendWebPush, webpushConfigured } from "@/lib/webpush";
 import { jstDateString } from "./time";
+import { APP_NAME } from "@/lib/app";
 import type { NotifyChannel, NotifyKind, ProfileSettingsRow } from "./types";
 
 // 通知の配送(要件 5.8 / 5.9 v0.2)。
@@ -66,7 +67,7 @@ export async function notifyProfile(profileId: string, kind: NotifyKind, dedupeK
       if (ok) return finalize(dedupeKey, "webpush");
     } else if (ch === "email") {
       if (!profile.email || profile.email.endsWith("@line.puzzliar.jp")) continue;
-      if (await sendEmail(profile.email, `【ZAGUMIスケジュール】${msg.title}`, `<pre style="font-family:inherit;white-space:pre-wrap">${escapeHtml(fullText)}</pre>`)) return finalize(dedupeKey, "email");
+      if (await sendEmail(profile.email, `【${APP_NAME}】${msg.title}`, `<pre style="font-family:inherit;white-space:pre-wrap">${escapeHtml(fullText)}</pre>`)) return finalize(dedupeKey, "email");
     }
   }
   // どのチャネルでも送れなかった: 記録は残す(画面上の「要対応」で拾える)

@@ -1,3 +1,4 @@
+import { IS_SHIFT } from "@/lib/app";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -16,6 +17,7 @@ const SAMPLE = `10/12(日) 13:00-17:00 稽古 @区民センター
 
 // 日程テキストの取り込み。GET で貼り付け → 同じページでプレビュー → 確認して一括登録
 export default async function ImportPage({ params, searchParams }: { params: Promise<{ slug: string; productionId: string }>; searchParams: Promise<{ text?: string }> }) {
+  if (IS_SHIFT) notFound();
   const { slug, productionId } = await params;
   const sp = await searchParams;
   const { org } = await requireOrg(slug, "admin");

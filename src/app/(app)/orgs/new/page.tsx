@@ -1,3 +1,4 @@
+import { HOME_LABEL } from "@/lib/app";
 import Link from "next/link";
 import { requireSessionUser } from "@/lib/core/session";
 import { organizerCodeRequired } from "@/lib/core/orgs";
@@ -15,7 +16,7 @@ export default async function NewOrgPage({ searchParams }: { searchParams: Promi
   return (
     <div className="mx-auto max-w-md space-y-6">
       <div>
-        <p className="text-sm text-dim"><Link href="/me" className="hover:text-fg">← マイスケジュール</Link></p>
+        <p className="text-sm text-dim"><Link href="/me" className="hover:text-fg">← {HOME_LABEL}</Link></p>
         <h1 className="text-xl font-bold">劇団・団体を作成</h1>
         <p className="mt-1 text-sm text-muted">作成した人がオーナーになります。メンバーは招待リンクで参加します。</p>
       </div>

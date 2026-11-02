@@ -4,6 +4,7 @@ import { listMyOrgs, requireSessionUser } from "@/lib/core/session";
 import { isAdminRole } from "@/lib/core/types";
 import { addDays, fmtDateLabel, fmtRange, jstDateString, jstDayRange } from "@/lib/rehearsal/time";
 import { PRODUCTION_STATUS_LABEL, SESSION_KIND_LABEL, type ProductionRow, type SessionKind } from "@/lib/rehearsal/types";
+import { IS_SHIFT, PRODUCTION_MODE } from "@/lib/app";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +19,9 @@ export default async function ManagePage() {
   const admin = supabaseAdmin();
   const [{ data: productions }, { data: sessions }, { data: subs }] = orgIds.length
     ? await Promise.all([
-        admin.from("rh_productions").select("*, rh_production_members(participant_id)").in("org_id", orgIds).neq("status", "closed").order("created_at", { ascending: false }),
-        admin.from("rh_sessions").select("id, org_id, production_id, kind, title, starts_at, ends_at, location, tentative, respond_by, rh_productions(name), rh_session_members(response)").in("org_id", orgIds).eq("status", "scheduled").gte("starts_at", start).lt("starts_at", end).order("starts_at"),
-        admin.from("rh_substitution_requests").select("id, org_id, session_id, rh_sessions(starts_at, ends_at, rh_productions(name))").in("org_id", orgIds).eq("status", "open"),
+        admin.from("rh_productions").select("*, rh_production_members(participant_id)").in("org_id", orgIds).eq("management_mode", PRODUCTION_MODE).neq("status", "closed").order("created_at", { ascending: false }),
+        admin.from("rh_sessions").select("id, org_id, production_id, kind, title, starts_at, ends_at, location, tentative, respond_by, rh_productions!inner(name, management_mode), rh_session_members(response)").in("org_id", orgIds).eq("rh_productions.management_mode", PRODUCTION_MODE).eq("status", "scheduled").gte("starts_at", start).lt("starts_at", end).order("starts_at"),
+        admin.from("rh_substitution_requests").select("id, org_id, session_id, rh_sessions!inner(starts_at, ends_at, rh_productions!inner(name, management_mode))").in("org_id", orgIds).eq("rh_sessions.rh_productions.management_mode", PRODUCTION_MODE).eq("status", "open"),
       ])
     : [{ data: [] }, { data: [] }, { data: [] }];
   type P = ProductionRow & { rh_production_members: { participant_id: string }[] };
@@ -43,12 +44,12 @@ export default async function ManagePage() {
         </div>
         <div className="space-y-3 rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-card)]">
           <p className="font-semibold">まだ管理している座組がありません</p>
-          <p className="text-sm text-muted">座組(劇団・団体)を作ると、公演・シーン・予定を登録してキャストを召集できます。現在はクローズド β のため、作成には運営が発行する主催者コードが必要です。</p>
+          <p className="text-sm text-muted">{IS_SHIFT ? "座組(団体)を作ると、公演と回ごとの役割を登録してキャストのシフトを組めます。" : "座組(劇団・団体)を作ると、公演・シーン・予定を登録してキャストを召集できます。"}現在はクローズド β のため、作成には運営が発行する主催者コードが必要です。</p>
           <div className="flex flex-wrap gap-2">
             <Link href="/orgs/new" className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-ink hover:bg-accent-hover">座組を作る</Link>
             <Link href="/me" className="rounded-lg border border-line-strong px-4 py-2 text-sm hover:bg-surface-2">出演者として使う</Link>
           </div>
-          <p className="text-xs text-dim">自分の公演を自分で管理するだけなら、出演者モードの「セルフ公演」で主催者コードなしに始められます。</p>
+          {!IS_SHIFT && <p className="text-xs text-dim">自分の公演を自分で管理するだけなら、出演者モードの「セルフ公演」で主催者コードなしに始められます。</p>}
         </div>
       </div>
     );
@@ -67,7 +68,7 @@ export default async function ManagePage() {
       <section className="grid gap-3 sm:grid-cols-4">
         <div className={tile}><p className="text-xs text-dim">管理している座組</p><p className="mt-1 text-2xl font-semibold tabular-nums">{orgs.length}</p></div>
         <div className={tile}><p className="text-xs text-dim">2 週間の予定</p><p className="mt-1 text-2xl font-semibold tabular-nums">{upcoming.length}<span className="ml-1 text-sm font-normal text-muted">件</span></p></div>
-        <div className={tile}><p className="text-xs text-dim">未回答の召集</p><p className={`mt-1 text-2xl font-semibold tabular-nums ${pendingTotal ? "text-accent-text" : ""}`}>{pendingTotal}<span className="ml-1 text-sm font-normal text-muted">名分</span></p></div>
+        <div className={tile}><p className="text-xs text-dim">{IS_SHIFT ? "未回答(確定済みの回)" : "未回答の召集"}</p><p className={`mt-1 text-2xl font-semibold tabular-nums ${pendingTotal ? "text-accent-text" : ""}`}>{pendingTotal}<span className="ml-1 text-sm font-normal text-muted">名分</span></p></div>
         <div className={tile}><p className="text-xs text-dim">代役募集中 ／ 仮押さえ</p><p className="mt-1 text-2xl font-semibold tabular-nums">{openSubs.length}<span className="mx-1 text-sm font-normal text-muted">／</span>{tentativeCount}</p></div>
       </section>
 

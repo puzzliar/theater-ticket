@@ -10,10 +10,11 @@ import { listPersonalProductions } from "@/lib/rehearsal/personal";
 import { PRODUCTION_STATUS_LABEL } from "@/lib/rehearsal/types";
 import { overlaps } from "@/lib/rehearsal/time";
 import { respond, apply, addAvailability, deleteAvailability, createSelfProduction } from "./actions";
+import { IS_SHIFT } from "@/lib/app";
 
 export const dynamic = "force-dynamic";
 
-// 個人ビュー(要件 5.6): 全組織横断の「今日どこへ行くか」
+// 個人ビュー(要件 5.6): 全組織横断の「今日どこへ行くか」。シフト(ZAGUMIシフト)では確定した回とシフト希望の受付だけを扱う
 export default async function MePage() {
   const me = await requireSessionUser("/me");
   const today = jstDateString();
@@ -62,7 +63,7 @@ export default async function MePage() {
           <p className="text-xs text-dim">{fmtDateLabel(today)}</p>
           <h1 className="text-2xl font-bold tracking-tight">こんにちは、{me.profile.display_name} さん</h1>
         </div>
-        <Link href="/me/availability" className="rounded-lg bg-accent px-3.5 py-2 text-sm font-semibold text-accent-ink hover:bg-accent-hover">空き状況を伝える</Link>
+        {!IS_SHIFT && <Link href="/me/availability" className="rounded-lg bg-accent px-3.5 py-2 text-sm font-semibold text-accent-ink hover:bg-accent-hover">空き状況を伝える</Link>}
       </div>
 
       {/* 今日と数字 */}
@@ -79,13 +80,13 @@ export default async function MePage() {
             </div>
           )}
         </div>
-        <div className={tile}><p className="text-xs text-dim">今週の予定</p><p className="mt-1 text-2xl font-semibold tabular-nums">{weekCount}<span className="ml-1 text-sm font-normal text-muted">件</span></p></div>
-        <div className={tile}><p className="text-xs text-dim">未回答の召集</p><p className={`mt-1 text-2xl font-semibold tabular-nums ${pending.length ? "text-accent-text" : ""}`}>{pending.length}<span className="ml-1 text-sm font-normal text-muted">件</span></p></div>
+        <div className={tile}><p className="text-xs text-dim">{IS_SHIFT ? "今週のシフト" : "今週の予定"}</p><p className="mt-1 text-2xl font-semibold tabular-nums">{weekCount}<span className="ml-1 text-sm font-normal text-muted">件</span></p></div>
+        <div className={tile}><p className="text-xs text-dim">{IS_SHIFT ? "未回答のシフト希望" : "未回答の召集"}</p><p className={`mt-1 text-2xl font-semibold tabular-nums ${(IS_SHIFT ? unansweredShifts : pending.length) ? "text-accent-text" : ""}`}>{IS_SHIFT ? unansweredShifts : pending.length}<span className="ml-1 text-sm font-normal text-muted">件</span></p></div>
       </section>
 
       {/* 所属 */}
       <section className="flex flex-wrap items-center gap-2 text-sm">
-        {realOrgs.length === 0 && <span className="text-muted">まだどの座組にも参加していません。主催者から招待リンクを受け取るか、下の「セルフ公演」で自分の予定を管理できます。</span>}
+        {realOrgs.length === 0 && <span className="text-muted">{IS_SHIFT ? "まだどの座組にも参加していません。主催者から招待リンクを受け取ってください。" : "まだどの座組にも参加していません。主催者から招待リンクを受け取るか、下の「セルフ公演」で自分の予定を管理できます。"}</span>}
         {realOrgs.map((o) => (
           <Link key={o.org.id} href={`/o/${o.org.slug}`} className="rounded-full border border-line bg-surface px-3 py-1 hover:border-accent/50">
             {o.org.name} {isAdminRole(o.role) && <span className="text-xs text-accent-text">管理</span>}
@@ -94,7 +95,7 @@ export default async function MePage() {
         <Link href="/orgs/new" className="rounded-full border border-dashed border-line-strong px-3 py-1 text-muted hover:text-fg">＋ 座組を作る</Link>
       </section>
 
-      {holdConflicts.length > 0 && (
+      {!IS_SHIFT && holdConflicts.length > 0 && (
         <section className="space-y-2 rounded-2xl border border-orange-500/40 bg-orange-500/5 p-4 text-sm">
           <h2 className="font-semibold text-orange-700">仮押さえが重なっています</h2>
           {holdConflicts.map(({ t, others }) => (
@@ -169,8 +170,8 @@ export default async function MePage() {
       )}
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">今日からの予定(2週間)</h2>
-        {sessions.length === 0 && <p className="text-muted">予定はありません。</p>}
+        <h2 className="text-lg font-semibold">{IS_SHIFT ? "今日からのシフト(2週間・確定分)" : "今日からの予定(2週間)"}</h2>
+        {sessions.length === 0 && <p className="text-muted">{IS_SHIFT ? "確定したシフトはありません。" : "予定はありません。"}</p>}
         {days.map((d) => {
           const list = byDay.get(d);
           if (!list) return null;
@@ -208,6 +209,7 @@ export default async function MePage() {
         })}
       </section>
 
+      {!IS_SHIFT && (
       <section id="self" className="space-y-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-lg font-semibold">セルフ公演</h2>
@@ -231,7 +233,9 @@ export default async function MePage() {
           <button className="rounded-lg bg-surface-3 px-4 py-2 text-sm hover:bg-line-strong">セルフ公演を作る</button>
         </form>
       </section>
+      )}
 
+      {!IS_SHIFT && (
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">空き時間の登録</h2>
         <p className="text-sm text-muted">所属するすべての劇団の日程調整に使われます(主催者には「来られる／来られない」の判定だけが見えます)。Google カレンダーを連携すると「予定あり」が自動で不可になります。</p>
@@ -260,6 +264,7 @@ export default async function MePage() {
           ))}
         </div>
       </section>
+      )}
     </div>
   );
 }

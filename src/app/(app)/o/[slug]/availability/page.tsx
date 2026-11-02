@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PRODUCTION_MODE } from "@/lib/app";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { supabaseServer } from "@/lib/supabase/server";
 import { requireOrg } from "@/lib/core/session";
@@ -21,7 +22,7 @@ export default async function AvailabilityMatrixPage({ params, searchParams }: {
 
   const [{ data: participants }, { data: productions }] = await Promise.all([
     db.from("rh_participants").select("*").eq("org_id", org.id).eq("is_active", true).order("display_name"),
-    db.from("rh_productions").select("id, name").eq("org_id", org.id).neq("status", "closed").order("created_at", { ascending: false }),
+    db.from("rh_productions").select("id, name").eq("org_id", org.id).eq("management_mode", PRODUCTION_MODE).neq("status", "closed").order("created_at", { ascending: false }),
   ]);
   let list = (participants ?? []) as ParticipantRow[];
   if (sp.production) {

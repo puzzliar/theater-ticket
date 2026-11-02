@@ -1,3 +1,4 @@
+import { HOME_LABEL } from "@/lib/app";
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -56,7 +57,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
     <div className="space-y-10">
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-sm text-dim"><Link href="/me" className="hover:text-fg">← マイスケジュール</Link></p>
+          <p className="text-sm text-dim"><Link href="/me" className="hover:text-fg">← {HOME_LABEL}</Link></p>
           <h1 className="text-2xl font-bold">アカウント設定</h1>
         </div>
         <form action={signOut}><button className="text-sm text-muted hover:underline">ログアウト</button></form>

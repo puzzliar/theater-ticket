@@ -8,7 +8,7 @@ const PAPER = "#FFFFFF";
 // ---- シンボル: 円状に座る 8 人(座組)と、それを結ぶ Z(ZAGUMI = つながり) ----
 // 100x100 の座標系。中心(50,50)、半径 36 の円周上に 8 つの点。
 // サービスごとに琥珀の点の位置を変える(真上=ブランド、以降は時計回り)。8 サービスを超えたらロゴを見直す
-export const SERVICE_DOT = { brand: 0, schedule: 1, ticket: 2, goods: 3, pay: 4 };
+export const SERVICE_DOT = { brand: 0, schedule: 1, ticket: 2, goods: 3, pay: 4, shift: 5 };
 
 function mark({ ink, accent, size = 100, accentIndex = 0 }) {
   const cx = 50, cy = 50, r = 37, dot = 6;
@@ -77,7 +77,7 @@ fs.writeFileSync(`${out}/zagumi-mark-white.svg`, mark({ ink: PAPER, accent: AMBE
 fs.writeFileSync(`${out}/zagumi-mark-mono.svg`, mark({ ink: INK, accent: INK }));
 fs.writeFileSync(`${out}/zagumi-logo.svg`, lockup({ ink: INK, accent: AMBER }));
 fs.writeFileSync(`${out}/zagumi-logo-white.svg`, lockup({ ink: PAPER, accent: AMBER }));
-for (const [file, sub] of [["schedule", "スケジュール"], ["ticket", "チケット"], ["goods", "物販"], ["pay", "精算"]]) {
+for (const [file, sub] of [["schedule", "スケジュール"], ["ticket", "チケット"], ["goods", "物販"], ["pay", "精算"], ["shift", "シフト"]]) {
   const accentIndex = SERVICE_DOT[file];
   fs.writeFileSync(`${out}/zagumi-${file}.svg`, lockup({ ink: INK, accent: AMBER, sub, accentIndex }));
   fs.writeFileSync(`${out}/zagumi-${file}-white.svg`, lockup({ ink: PAPER, accent: AMBER, sub, accentIndex }));
@@ -108,8 +108,8 @@ body{margin:0;font-family:'Noto Sans JP','Hiragino Sans',sans-serif;background:#
 <div class="label">2. シンボル(座組マーク)とアプリアイコン</div>
 <div class="card light"><div class="row">${mark({ ink: INK, accent: AMBER, size: 140 })}${mark({ ink: INK, accent: INK, size: 140 })}<img src="data:image/svg+xml;base64,${Buffer.from(icon).toString("base64")}" width="140" height="140"><img src="data:image/svg+xml;base64,${Buffer.from(icon).toString("base64")}" width="32" height="32"></div></div>
 <div class="card dark"><div class="row">${mark({ ink: PAPER, accent: AMBER, size: 140 })}${mark({ ink: AMBER, accent: PAPER, size: 140 })}</div></div>
-<div class="label">3. サービスごとのロゴ(琥珀の点の位置がサービスを示す。真上=ブランド、以降は時計回りにスケジュール・チケット・物販・精算)</div>
-<div class="card light" style="grid-column:1/-1"><div class="row">${["brand","schedule","ticket","goods","pay"].map((k) => `<div style="text-align:center;font-size:12px;color:#666">${mark({ ink: INK, accent: AMBER, size: 110, accentIndex: SERVICE_DOT[k] })}<div>${k === "brand" ? "ZAGUMI" : { schedule: "スケジュール", ticket: "チケット", goods: "物販", pay: "精算" }[k]}</div></div>`).join("")}</div></div>
+<div class="label">3. サービスごとのロゴ(琥珀の点の位置がサービスを示す。真上=ブランド、以降は時計回りにスケジュール・チケット・物販・精算・シフト)</div>
+<div class="card light" style="grid-column:1/-1"><div class="row">${["brand","schedule","ticket","goods","pay","shift"].map((k) => `<div style="text-align:center;font-size:12px;color:#666">${mark({ ink: INK, accent: AMBER, size: 110, accentIndex: SERVICE_DOT[k] })}<div>${k === "brand" ? "ZAGUMI" : { schedule: "スケジュール", ticket: "チケット", goods: "物販", pay: "精算", shift: "シフト" }[k]}</div></div>`).join("")}</div></div>
 <div class="card light">${fs.readFileSync(`${out}/zagumi-schedule.svg`, "utf8").replace(/width="\d+" height="\d+"/, 'width="520"')}</div>
 <div class="card dark">${fs.readFileSync(`${out}/zagumi-ticket-white.svg`, "utf8").replace(/width="\d+" height="\d+"/, 'width="520"')}</div>
 <div class="card light">${fs.readFileSync(`${out}/zagumi-goods.svg`, "utf8").replace(/width="\d+" height="\d+"/, 'width="520"')}</div>

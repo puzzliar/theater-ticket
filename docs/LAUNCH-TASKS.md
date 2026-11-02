@@ -9,7 +9,7 @@
 | 順 | ステップ | 所要 | 待ち時間 | 前提 |
 |---|---|---|---|---|
 | 1 | 決める（ドメイン・メール・β範囲） | 30 分 | 商標調査・ドメイン取得 | なし |
-| 2 | Vercel に `zagumi-schedule` を作る | 30 分 | DNS 反映 数分〜数時間 | 1 |
+| 2 | Vercel に `zagumi-schedule` と `zagumi-shift` を作る | 45 分 | DNS 反映 数分〜数時間 | 1 |
 | 3 | Supabase Auth を設定する | 20 分 | なし | 1 |
 | 4 | Resend を設定する | 30 分 | DNS 反映 | 1 |
 | 5 | Google Cloud（カレンダー連携） | 40 分 | **審査 1〜6 週間** | 1、3 |
@@ -25,26 +25,30 @@
 
 ## ステップ 1. 決める
 
-- [ ] **1-1 ドメイン**。`zagumi.jp` を取得するなら ZAGUMIスケジュール＝`schedule.zagumi.jp`、チケット＝`ticket.zagumi.jp`。取得しないなら `zagumi-schedule.puzzliar.jp`（チケットは `ticket.puzzliar.jp` のまま）。
+- [ ] **1-1 ドメイン**。`zagumi.jp` を取得するなら ZAGUMIスケジュール＝`schedule.zagumi.jp`、ZAGUMIシフト＝`shift.zagumi.jp`、チケット＝`ticket.zagumi.jp`。取得しないなら `zagumi-schedule.puzzliar.jp` と `zagumi-shift.puzzliar.jp`（チケットは `ticket.puzzliar.jp` のまま）。
   1. https://www.onamae.com/ または https://jprs.jp/ で `zagumi.jp` の空きを確認し、取得するなら申し込む（反映まで数時間〜1 日）
   2. J-PlatPat（https://www.j-platpat.inpit.go.jp/）で「ZAGUMI」「座組」を商標検索し、第 42 類（ソフトウェア提供）に同一・類似がないか確認。あれば名称を再検討
   3. 決めたドメインを以降 `<ドメイン>` として使う
 - [ ] **1-2 送信元メールと問い合わせ先**。例: `ZAGUMIスケジュール <noreply@puzzliar.jp>`、`support@puzzliar.jp`。`support@` の受信箱を用意する（Google Workspace のエイリアスでよい）
 - [ ] **1-3 β の範囲**。招待制で始める（`ORG_CREATION_OPEN=false`、推奨）か、最初から公開か。招待制なら参加劇団を 1〜3 団体決めておく
 
-## ステップ 2. Vercel（手順書 A）
+## ステップ 2. Vercel（手順書 A・A-2b）
+
+ZAGUMIスケジュール（稽古〜本番の日程調整）と ZAGUMIシフト（イマーシブ公演のシフト組み）は別サービスとして配信するため、Vercel プロジェクトを 2 つ作る。どちらも同じリポジトリ・同じ環境変数で、`NEXT_PUBLIC_APP` と `NEXT_PUBLIC_SITE_URL`、`EMAIL_FROM` だけが異なる。
 
 - [ ] **2-1** https://vercel.com/new → `puzzliar/theater-ticket` を **Import** → Project Name `zagumi-schedule` → **Deploy**（A-2）
 - [ ] **2-2** Settings → Environment Variables に必須 12 変数を登録（A-3 の表）。`NEXT_PUBLIC_APP=rehearsal` を忘れない。**既存の `theater-ticket` プロジェクトには `NEXT_PUBLIC_APP` を絶対に入れない**
 - [ ] **2-3** `CRON_SECRET` と `GOOGLE_TOKEN_KEY` をランダム生成して登録（A-4）
 - [ ] **2-4** Settings → Domains に `<ドメイン>` を追加し、DNS に CNAME `cname.vercel-dns.com` を登録（A-5）。Valid Configuration になるまで待つ
 - [ ] **2-5** Deployments → 最新 → **Redeploy**。`https://<ドメイン>/` がZAGUMIスケジュールのトップになり、`<チケットのドメイン>/` は従来どおりであることを確認（A-6）
+- [ ] **2-6** 同じ手順で `zagumi-shift` プロジェクトを作る。`NEXT_PUBLIC_APP=shift`、`NEXT_PUBLIC_SITE_URL=https://<シフトのドメイン>`、`EMAIL_FROM` は `ZAGUMIシフト <noreply@puzzliar.jp>`。ドメイン接続後、トップが「この回、誰が入れるか。」になることを確認（A-2b）
+- [ ] **2-7** 任意: 相互転送用に `NEXT_PUBLIC_SCHEDULE_SITE_URL` / `NEXT_PUBLIC_SHIFT_SITE_URL` / `NEXT_PUBLIC_TICKET_SITE_URL` を各プロジェクトに登録（A-2b-4）
 
 ## ステップ 3. Supabase Auth（手順書 B）
 
 ダッシュボード: https://supabase.com/dashboard/project/wiqnmebudaadwqdaxwko
 
-- [ ] **3-1** Authentication → URL Configuration: Site URL `https://<ドメイン>`、Redirect URLs に `https://<ドメイン>/auth/callback`、`https://<ドメイン>/**`、`https://<チケットのドメイン>/**` を追加（B-1）
+- [ ] **3-1** Authentication → URL Configuration: Site URL `https://<ドメイン>`、Redirect URLs に `https://<ドメイン>/auth/callback`、`https://<ドメイン>/**`、`https://<シフトのドメイン>/auth/callback`、`https://<シフトのドメイン>/**`、`https://<チケットのドメイン>/**` を追加（B-1）
 - [ ] **3-2** Authentication → Providers → Google が ON であることを確認（B-2）
 - [ ] **3-3** Authentication → Settings（旧 Auth → Configuration）→ **Allow manual linking** を **ON**（B-2b）。これが OFF だと「Google アカウントを追加」が失敗する
 - [ ] **3-4** Confirm email を **ON**（B-3）
@@ -63,7 +67,7 @@
 
 - [ ] **5-1** Google Cloud Console で Calendar API を有効化（F-1）
 - [ ] **5-2** OAuth 同意画面: アプリ名 `ZAGUMIスケジュール`、サポートメール、承認済みドメイン `puzzliar.jp`（zagumi.jp を使うなら両方）、プライバシーポリシー `https://<ドメイン>/privacy`、スコープ `calendar.events`、テストユーザーにあなたと β 参加者のメールを追加（F-2）
-- [ ] **5-3** OAuth クライアント（ウェブ）作成: リダイレクト URI `https://<ドメイン>/api/google/callback`。Client ID / Secret を Vercel の `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` に登録（F-3）
+- [ ] **5-3** OAuth クライアント（ウェブ）作成: リダイレクト URI `https://<ドメイン>/api/google/callback` と `https://<シフトのドメイン>/api/google/callback`。Client ID / Secret を Vercel の `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` に登録（F-3）
 - [ ] **5-4** 再デプロイ後、`/me/settings` で出演者用・主催者用それぞれ「Google カレンダーと連携」が成功することを確認（F-4）
 - [ ] **5-5** 一般公開前に審査を申請（F-5）。Search Console でドメイン所有権確認 → 同意画面の「アプリを公開」→ 審査。承認まで 1〜6 週間。テストユーザー 100 人までは審査前でも使える
 
@@ -71,6 +75,7 @@
 
 - [ ] **6-1** プロバイダー `PUZZLIAR` を作成（G-1）
 - [ ] **6-2** Messaging API チャネル作成。Webhook URL `https://<ドメイン>/api/line/webhook`、Webhook を ON、**応答メッセージを OFF**、あいさつメッセージ OFF（G-2）。Channel secret / アクセストークンを Vercel の `LINE_CHANNEL_SECRET` / `LINE_CHANNEL_ACCESS_TOKEN`、友だち追加 URL を `LINE_ADD_FRIEND_URL` に登録
+- [ ] **6-2b** ZAGUMIシフト用にもう 1 つ Messaging API チャネルを**同じプロバイダーの下**に作り（Webhook `https://<シフトのドメイン>/api/line/webhook`）、`zagumi-shift` プロジェクトに同様に登録。同じプロバイダーなら LINE 連携は一度で両サービスに効く
 - [ ] **6-3** （任意）LINE ログインチャネルを作り `LINE_LOGIN_CHANNEL_ID` / `LINE_LOGIN_CHANNEL_SECRET` / `NEXT_PUBLIC_LINE_LOGIN_ENABLED=true` を登録。コールバック `https://<ドメイン>/auth/line/callback`（G-3）
 - [ ] **6-4** 料金プラン（コミュニケーションプラン 200 通/月）を確認し `LINE_PUSH_MONTHLY_LIMIT` を合わせる（G-4）
 - [ ] **6-5** 公式アカウントを友だち追加 → `/me/settings` で連携 → LINE で「今日」と送り返事が来ることを確認（G-5）
@@ -78,7 +83,7 @@
 ## ステップ 7. プッシュ鍵・スケジューラ・運営アカウント（手順書 E・H-1・H-2）
 
 - [ ] **7-1** ターミナルで `npx web-push generate-vapid-keys` → `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT=mailto:support@puzzliar.jp` を Vercel に登録（E）
-- [ ] **7-2** cron-job.org で `https://<ドメイン>/api/cron/rehearsal-notify` を **15 分おき**、ヘッダー `Authorization: Bearer <CRON_SECRET>` で作成し、Execute now で 200 を確認（H-1）
+- [ ] **7-2** cron-job.org で `https://<ドメイン>/api/cron/rehearsal-notify` と `https://<シフトのドメイン>/api/cron/rehearsal-notify` をそれぞれ **15 分おき**、ヘッダー `Authorization: Bearer <CRON_SECRET>` で作成し、Execute now で 200 を確認（H-1）
 - [ ] **7-3** チケット側のリマインド `https://<チケットのドメイン>/api/cron/send-reminders`（10 分おき）が未登録なら同様に作る
 - [ ] **7-4** 運営アカウントでログインし `/platform` から主催者コードを発行（H-2）。既存コード `PZ-30AFB903` は 2026-12-21 まで有効
 - [ ] **7-5** 環境変数をすべて入れ終えたら Vercel で最後に **Redeploy**
@@ -95,8 +100,8 @@
 ログイン後の画面は開発環境で一度も目視できていない（サンドボックスに Supabase キーがないため）。本番相当の環境で、運営アカウント A と β 参加者役 B（別ブラウザ）で以下を実施する。
 
 - [ ] **9-1** H-3 の 14 項目（座組作成、招待、参加、日程登録、回答、代役募集、通知、カレンダー同期、退会など）
-- [ ] **9-2** H-3b の 15 項目（セルフ公演、日程テキスト取り込み、空き状況テキスト＋LINE 共有、仮押さえと重複警告、公式サイト `/<ハンドル>`、公演の引き渡し、主催者/出演者モード切替、Google アカウント追加、シフト制）
-- [ ] **9-3** 画面の目視: `/me`、`/manage`、サイドバー、シフト表、`/me/settings` を PC とスマホ幅で確認し、文字の読みにくさ・崩れがあれば Claude にスクリーンショットを渡す
+- [ ] **9-2** H-3b の 15 項目（セルフ公演、日程テキスト取り込み、空き状況テキスト＋LINE 共有、仮押さえと重複警告、公式サイト `/<ハンドル>`、公演の引き渡し、主催者/出演者モード切替、Google アカウント追加、ZAGUMIシフトのドメインでのシフト組み）
+- [ ] **9-3** 画面の目視: 両サービスの `/me`、`/manage`、サイドバー、シフト表（シフト側）、`/me/settings` を PC とスマホ幅で確認し、文字の読みにくさ・崩れがあれば Claude にスクリーンショットを渡す
 - [ ] **9-4** 問題があれば Claude に報告 → 修正 → 再確認
 
 ## ステップ 10. β 開始と一般公開（手順書 H-4・I）

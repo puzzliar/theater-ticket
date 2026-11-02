@@ -9,7 +9,7 @@ export default function PrivacyPage() {
       <h2 className="text-lg font-semibold">1. 取得する情報</h2>
       <ul className="list-disc space-y-1 pl-5">
         <li>アカウント情報: メールアドレス、表示名、ログインに使用した外部サービス（Google、LINE）の識別子</li>
-        <li>ZAGUMIスケジュールの利用情報: 所属する団体、召集への出欠、出席記録、登録した空き時間</li>
+        <li>ZAGUMIスケジュール・ZAGUMIシフトの利用情報: 所属する団体、召集・シフト希望への回答、出席記録、登録した空き時間</li>
         <li>LINE 連携時: LINE のユーザー ID（通知の送信と、LINE からの問い合わせへの応答に使用）</li>
         <li>Google カレンダー連携時: Google アカウントのメールアドレス、カレンダーへのアクセストークン（暗号化して保存）、および「予定あり」の時間帯（予定の内容は取得しません）</li>
         <li>プッシュ通知の購読情報、アクセスログ</li>

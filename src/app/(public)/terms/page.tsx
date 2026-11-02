@@ -6,7 +6,7 @@ export default function TermsPage() {
     <article className="prose prose-invert max-w-none space-y-4 text-sm leading-relaxed text-fg">
       <h1 className="text-2xl font-bold">利用規約</h1>
       <p className="text-xs text-dim">版: {TERMS_VERSION}（ドラフト）</p>
-      <p>本規約は、PUZZLIAR（以下「当社」）が提供するスケジュール管理サービス「ZAGUMIスケジュール」および共通アカウント「ZAGUMIアカウント」（以下「本サービス」）の利用条件を定めるものです。</p>
+      <p>本規約は、PUZZLIAR（以下「当社」）が提供するスケジュール管理サービス「ZAGUMIスケジュール」、シフト管理サービス「ZAGUMIシフト」および共通アカウント「ZAGUMIアカウント」（以下「本サービス」）の利用条件を定めるものです。</p>
       <h2 className="text-lg font-semibold">1. アカウント</h2>
       <p>利用者は正確な情報でアカウントを登録し、認証情報を自己の責任で管理します。1 人につき 1 アカウントとし、複数の団体に所属できます。</p>
       <h2 className="text-lg font-semibold">2. 団体（組織）と権限</h2>

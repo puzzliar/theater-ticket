@@ -1,5 +1,7 @@
 "use server";
 
+import { PRODUCTION_MODE } from "@/lib/app";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -160,6 +162,7 @@ export async function createProduction(orgId: string, formData: FormData) {
     .insert({
       org_id: orgId,
       name: str(formData, "name"),
+      management_mode: PRODUCTION_MODE,
       default_location: str(formData, "default_location"),
       rehearsal_starts_on: str(formData, "rehearsal_starts_on") || null,
       opens_on: str(formData, "opens_on") || null,
@@ -180,7 +183,6 @@ export async function updateProduction(orgId: string, productionId: string, form
   const blockTo = d("block_to");
   if ((blockFrom && !blockTo) || (!blockFrom && blockTo)) throw new Error("他現場を入れない期間は開始と終了の両方を入力してください");
   if (blockFrom && blockTo && blockTo < blockFrom) throw new Error("他現場を入れない期間の終了は開始以降にしてください");
-  const mode = str(formData, "management_mode");
   const { error } = await supabaseAdmin()
     .from("rh_productions")
     .update({
@@ -192,7 +194,6 @@ export async function updateProduction(orgId: string, productionId: string, form
       block_from: blockFrom,
       block_to: blockTo,
       note: str(formData, "note"),
-      ...(mode === "ensemble" || mode === "shift" ? { management_mode: mode } : {}),
     })
     .eq("id", productionId)
     .eq("org_id", orgId);

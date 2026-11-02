@@ -59,7 +59,7 @@ export async function ensurePersonalOrg(user: SessionUser): Promise<Organization
 export async function listPersonalProductions(profileId: string): Promise<{ org: OrganizationRow; productions: (ProductionRow & { member_count: number })[] } | null> {
   const org = await findPersonalOrg(profileId);
   if (!org) return null;
-  const { data } = await supabaseAdmin().from("rh_productions").select("*, rh_production_members(participant_id)").eq("org_id", org.id).order("created_at", { ascending: false });
+  const { data } = await supabaseAdmin().from("rh_productions").select("*, rh_production_members(participant_id)").eq("org_id", org.id).eq("management_mode", "ensemble").order("created_at", { ascending: false });
   const productions = ((data ?? []) as (ProductionRow & { rh_production_members: { participant_id: string }[] })[]).map(({ rh_production_members, ...p }) => ({ ...p, member_count: rh_production_members.length }));
   return { org, productions };
 }

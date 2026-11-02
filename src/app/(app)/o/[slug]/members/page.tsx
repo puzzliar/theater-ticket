@@ -1,4 +1,5 @@
 import QRCode from "qrcode";
+import { PRODUCTION_MODE } from "@/lib/app";
 import { supabaseServer } from "@/lib/supabase/server";
 import { requireOrg } from "@/lib/core/session";
 import { invitationUsable } from "@/lib/core/orgs";
@@ -21,7 +22,7 @@ export default async function MembersPage({ params }: { params: Promise<{ slug: 
       ? db.from("core_invitations").select("*, rh_invitation_productions(rh_productions(id, name))").eq("org_id", org.id).is("revoked_at", null).order("created_at", { ascending: false })
       : Promise.resolve({ data: [] }),
     db.from("rh_participants").select("*").eq("org_id", org.id).order("display_name"),
-    db.from("rh_productions").select("id, name, status").eq("org_id", org.id).neq("status", "closed").order("created_at", { ascending: false }),
+    db.from("rh_productions").select("id, name, status").eq("org_id", org.id).eq("management_mode", PRODUCTION_MODE).neq("status", "closed").order("created_at", { ascending: false }),
     db.from("rh_production_members").select("production_id, participant_id").eq("org_id", org.id),
   ]);
   const prods = (productions ?? []) as { id: string; name: string; status: string }[];

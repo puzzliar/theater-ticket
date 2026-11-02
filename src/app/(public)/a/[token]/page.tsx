@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { IS_REHEARSAL } from "@/lib/app";
+import { IS_SCHEDULE } from "@/lib/app";
 import { computeDayStatuses, formatAvailabilityText, getShare, shareOptions, shareUsable } from "@/lib/rehearsal/availability-text";
 import { fmtDateLabel, jstDateString } from "@/lib/rehearsal/time";
 import CopyButton from "@/components/CopyButton";
@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "空き状況 | ZAGUMIスケジュー
 // 空き状況の公開ページ(リンクを知っている人だけ)。見せるのは ○×△ と可能な時間帯のみ
 export default async function SharePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const share = IS_REHEARSAL ? await getShare(token) : null;
+  const share = IS_SCHEDULE ? await getShare(token) : null;
   if (!share) return <Empty text="このリンクは存在しないか、無効化されています。" />;
   const usable = shareUsable(share);
   if (!usable.ok) return <Empty text={usable.reason!} />;
