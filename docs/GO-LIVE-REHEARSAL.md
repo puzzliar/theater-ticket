@@ -637,6 +637,8 @@ where channel = 'line' and sent_at >= date_trunc('month', now() at time zone 'As
 
 ## 付録 3. 公開前チェックリスト
 
+> 順序と所要時間つきの残タスク一覧は `docs/LAUNCH-TASKS.md` を参照。
+
 - [ ] A-1 `main` にマージ済み ／ A-2 `zagumi-schedule` プロジェクト作成（`NEXT_PUBLIC_APP=rehearsal`） ／ A-5 ドメインが Valid Configuration ／ A-6 トップページが開き、`ticket.puzzliar.jp` は従来どおり
 - [ ] A-3 必須 12 変数をZAGUMIスケジュールプロジェクトに登録
 - [ ] B-1 Site URL と Redirect URLs ／ B-3 Confirm email ON ／ B-5 Custom SMTP ON
@@ -648,6 +650,6 @@ where channel = 'line' and sent_at >= date_trunc('month', now() at time zone 'As
 - [ ] H-1 Job の History が 200 ／ `?force=digest` で JSON が返る
 - [ ] H-2 運営ログイン、主催者コード発行
 - [ ] H-3 の 14 項目がすべて期待結果どおり
-- [ ] B-2b Manual linking ON
+- [ ] B-2b Manual linking ON ／ Authentication → Settings → Password の Leaked password protection ON
 - [ ] H-3b の 15 項目（セルフ公演・取り込み・空き状況・仮押さえ・公式サイト・引き渡し・モード切替・Google アカウント追加・シフト制）が期待結果どおり
 - [ ] H-4 の案内文を β 参加劇団へ送付
