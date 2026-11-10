@@ -90,7 +90,14 @@ const icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" widt
   <g transform="translate(10 10) scale(0.8)">${mark({ ink: INK, accent: INK }).replace(/<svg[^>]*>|<\/svg>/g, "")}</g>
 </svg>`;
 fs.writeFileSync(`${out}/zagumi-icon.svg`, icon);
-fs.writeFileSync(`src/app/icon.svg`, icon);
+// サービスごとのアプリアイコン(ブラウザタブ用): 琥珀地に墨のマーク、そのサービスの点だけ白
+for (const [file] of [["schedule"], ["ticket"], ["goods"], ["pay"], ["shift"]]) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512">
+  <rect width="100" height="100" rx="22" fill="${AMBER}"/>
+  <g transform="translate(10 10) scale(0.8)">${mark({ ink: INK, accent: PAPER, accentIndex: SERVICE_DOT[file] }).replace(/<svg[^>]*>|<\/svg>/g, "")}</g>
+</svg>`;
+  fs.writeFileSync(`${out}/zagumi-${file}-icon.svg`, svg);
+}
 // プレビュー
 const wmOnly = (() => { const w = wordmark({ ink: INK, accent: AMBER }); return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w.width} ${w.height}" width="${w.width}" height="${w.height}">${w.svg}</svg>`; })();
 fs.writeFileSync(`${out}/zagumi-wordmark.svg`, wmOnly);

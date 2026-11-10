@@ -5,6 +5,7 @@ import { requireOrg } from "@/lib/core/session";
 import { checkAvailability } from "@/lib/rehearsal/schedule";
 import { fmtDateLabel, fmtRange, isoToJstLocal } from "@/lib/rehearsal/time";
 import { ATTENDANCE_LABEL, RESPONSE_LABEL, SESSION_KIND_LABEL, SESSION_STATUS_LABEL, type Attendance, type ParticipantRow, type Response, type SceneRow, type SceneStatus, type SessionRow, type SubstitutionRequestRow } from "@/lib/rehearsal/types";
+import { PRODUCTION_MODE } from "@/lib/app";
 import { updateSession, cancelSession, reopenSession, confirmSession, saveSessionRecord, addSessionScene, removeSessionScene, addSessionMember, removeSessionMember, sendInvites, requestSubstitution, fillSubstitutionManually, cancelSubstitution } from "../../../../actions";
 
 export const dynamic = "force-dynamic";
@@ -14,9 +15,11 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
   const { org, isAdmin } = await requireOrg(slug);
   const db = await supabaseServer();
 
-  const { data: sessionRow } = await db.from("rh_sessions").select("*, rh_productions(name)").eq("id", sessionId).eq("production_id", productionId).eq("org_id", org.id).maybeSingle();
+  const { data: sessionRow } = await db.from("rh_sessions").select("*, rh_productions(name, management_mode)").eq("id", sessionId).eq("production_id", productionId).eq("org_id", org.id).maybeSingle();
   if (!sessionRow) notFound();
-  const session = sessionRow as SessionRow & { rh_productions: { name: string } | null };
+  const session = sessionRow as SessionRow & { rh_productions: { name: string; management_mode: string } | null };
+  // 他サービス(スケジュール⇔シフト)の公演の予定はこのデプロイでは扱わない
+  if ((session.rh_productions?.management_mode ?? "ensemble") !== PRODUCTION_MODE) notFound();
 
   const [{ data: sScenes }, { data: sMembers }, { data: scenes }, { data: pm }, { data: requests }] = await Promise.all([
     db.from("rh_session_scenes").select("scene_id, status, rh_scenes(code, name, sort_order)").eq("session_id", sessionId),

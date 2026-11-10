@@ -362,7 +362,7 @@ export async function setParticipantProductions(orgId: string, participantId: st
   const { org } = await requireOrgById(orgId, "admin");
   const admin = supabaseAdmin();
   const wanted = new Set(list(formData, "production_ids"));
-  const { data: prods } = await admin.from("rh_productions").select("id").eq("org_id", orgId).neq("status", "closed");
+  const { data: prods } = await admin.from("rh_productions").select("id").eq("org_id", orgId).eq("management_mode", PRODUCTION_MODE).neq("status", "closed");
   const { data: current } = await admin.from("rh_production_members").select("production_id").eq("participant_id", participantId).eq("org_id", orgId);
   const currentSet = new Set((current ?? []).map((c) => c.production_id));
   const toAdd = (prods ?? []).map((p) => p.id).filter((id) => wanted.has(id) && !currentSet.has(id));

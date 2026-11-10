@@ -22,6 +22,8 @@ export const BRAND = "ZAGUMI";
 export const ACCOUNT_NAME = "ZAGUMIアカウント";
 export const APP_NAME = IS_SHIFT ? "ZAGUMIシフト" : IS_SCHEDULE ? "ZAGUMIスケジュール" : "ZAGUMIチケット";
 export const APP_LOGO = IS_SHIFT ? "/brand/zagumi-shift.svg" : IS_SCHEDULE ? "/brand/zagumi-schedule.svg" : "/brand/zagumi-ticket.svg";
+// ブラウザタブ用のアイコン(サービスの点だけ白)
+export const APP_ICON = IS_SHIFT ? "/brand/zagumi-shift-icon.svg" : IS_SCHEDULE ? "/brand/zagumi-schedule-icon.svg" : "/brand/zagumi-ticket-icon.svg";
 export const APP_DESCRIPTION = IS_SHIFT
   ? "イマーシブ公演の回ごとのシフトを、主催者とキャストで組む"
   : IS_SCHEDULE

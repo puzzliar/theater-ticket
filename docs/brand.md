@@ -1,6 +1,6 @@
 # ZAGUMI ブランド(ロゴ)
 
-生成元: ロゴは `public/brand/` に SVG で置く。手で描いたものではなく、座標から生成しているので、太さや配色を変えるときは生成スクリプトの数値を変えて作り直す(`docs/brand-gen.mjs`。リポジトリ直下で `node docs/brand-gen.mjs` を実行すると `public/brand/` と `src/app/icon.svg` を書き換える)。
+生成元: ロゴは `public/brand/` に SVG で置く。手で描いたものではなく、座標から生成しているので、太さや配色を変えるときは生成スクリプトの数値を変えて作り直す(`docs/brand-gen.mjs`。リポジトリ直下で `node docs/brand-gen.mjs` を実行すると `public/brand/` を書き換える)。
 
 ## コンセプト
 
@@ -31,7 +31,8 @@
 | `zagumi-logo.svg` / `zagumi-logo-white.svg` | 基本ロゴ(横組み)。明るい背景用 / 暗い背景用 |
 | `zagumi-mark.svg` / `-white` / `-mono` | シンボル単体。SNS アイコン、小さい表示、単色印刷 |
 | `zagumi-wordmark.svg` | 文字のみ |
-| `zagumi-icon.svg` | アプリアイコン(琥珀の角丸に墨のマーク)。`src/app/icon.svg` と同じ |
+| `zagumi-icon.svg` | ブランドのアプリアイコン(琥珀の角丸に墨のマーク)。`public/favicon.ico` の元 |
+| `zagumi-schedule-icon.svg` 等 | サービスごとのブラウザタブ用アイコン。琥珀地に墨のマークで、そのサービスの点だけ白。`src/app/layout.tsx` の `metadata.icons` が `NEXT_PUBLIC_APP` に応じて選ぶ |
 | `zagumi-schedule.svg` 等 | サービス名つき(スケジュール・チケット・物販・精算・シフト)。`-white` は暗い背景用、`-mark` はそのサービスの点位置のシンボル単体 |
 | `preview.png` | 一覧プレビュー |
 

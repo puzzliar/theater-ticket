@@ -1,6 +1,8 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { SITE_URL } from "@/lib/constants";
+import { PRODUCTION_MODE } from "@/lib/app";
+import type { ManagementMode } from "./types";
 import { notifyProfile } from "./notify";
 import { checkAvailability } from "./schedule";
 import { syncSession } from "./google-sync";
@@ -194,7 +196,7 @@ export async function openSubstitutionsFor(profileId: string) {
   const { data } = await supabaseAdmin()
     .from("rh_substitution_candidates")
     .select(
-      "request_id, applied_at, rh_participants!inner(profile_id), rh_substitution_requests!inner(id, status, reason, session_id, rh_sessions(kind, title, starts_at, ends_at, location, rh_productions(name, core_organizations(name))), absent:rh_participants!rh_substitution_requests_absent_participant_id_fkey(display_name))",
+      "request_id, applied_at, rh_participants!inner(profile_id), rh_substitution_requests!inner(id, status, reason, session_id, rh_sessions(kind, title, starts_at, ends_at, location, rh_productions(name, management_mode, core_organizations(name))), absent:rh_participants!rh_substitution_requests_absent_participant_id_fkey(display_name))",
     )
     .eq("rh_participants.profile_id", profileId)
     .eq("rh_substitution_requests.status", "open");
@@ -203,11 +205,14 @@ export async function openSubstitutionsFor(profileId: string) {
     rh_substitution_requests: {
       reason: string;
       session_id: string;
-      rh_sessions: { kind: SessionRow["kind"]; title: string; starts_at: string; ends_at: string; location: string; rh_productions: { name: string; core_organizations: { name: string } | null } | null } | null;
+      rh_sessions: { kind: SessionRow["kind"]; title: string; starts_at: string; ends_at: string; location: string; rh_productions: { name: string; management_mode: ManagementMode; core_organizations: { name: string } | null } | null } | null;
       absent: { display_name: string } | null;
     };
   };
-  return ((data ?? []) as unknown as Row[]).map((r) => ({
+  // このサービスの公演の募集だけ(スケジュール⇔シフトは別サービス)
+  return ((data ?? []) as unknown as Row[])
+    .filter((r) => (r.rh_substitution_requests.rh_sessions?.rh_productions?.management_mode ?? "ensemble") === PRODUCTION_MODE)
+    .map((r) => ({
     requestId: r.request_id,
     reason: r.rh_substitution_requests.reason,
     absentName: r.rh_substitution_requests.absent?.display_name ?? "",

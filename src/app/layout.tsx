@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
-import { APP_DESCRIPTION, APP_LOGO, APP_NAME, IS_REHEARSAL } from "@/lib/app";
+import { APP_DESCRIPTION, APP_ICON, APP_LOGO, APP_NAME, IS_REHEARSAL } from "@/lib/app";
 import { getSessionUser } from "@/lib/core/session";
 import { getMode, modeHome } from "@/lib/core/mode";
 import ModeSwitch from "@/components/ModeSwitch";
@@ -9,6 +9,8 @@ import ModeSwitch from "@/components/ModeSwitch";
 export const metadata: Metadata = {
   title: { default: APP_NAME, template: `%s | ${APP_NAME}` },
   description: APP_DESCRIPTION,
+  // サービスごとのタブアイコン(public/favicon.ico はブランド共通のフォールバック)
+  icons: { icon: [{ url: APP_ICON, type: "image/svg+xml" }] },
 };
 
 // サービスごとに独立したシェル。ZAGUMIスケジュール・ZAGUMIシフト・ZAGUMIチケットは ZAGUMIアカウントを共有するが相互リンクは置かない
