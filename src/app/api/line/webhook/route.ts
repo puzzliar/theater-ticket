@@ -6,20 +6,40 @@ import { applySubstitution, openSubstitutionsFor, respondToSession, RehearsalErr
 import { addDays, fmtDateLabel, jstDateString, jstDayRange, fmtRange } from "@/lib/rehearsal/time";
 import { SITE_URL } from "@/lib/constants";
 import { computeDayStatuses, formatAvailabilityText, normalizeOptions } from "@/lib/rehearsal/availability-text";
+import { IS_SHIFT } from "@/lib/app";
 
 // LINE Messaging API Webhook(要件 5.8)。返信(reply)は無料なので問い合わせ型の機能はすべてここで提供する。
 // 本人特定は core_identities(provider=line)。LINE ログインで登録した人は自動で紐づき、
 // メール/Google で登録した人は「連携 123456」で紐づける。
 
-const HELP = [
-  "使えるメッセージ:",
-  "「今日」「明日」「今週」…予定を表示",
-  "「空き」…2 週間の空き状況を ○×△ で返す(主催者への返事に貼れます)。「空き 30」で日数指定",
-  "「参加」「不参加」…直近の未回答の召集に回答(複数ある場合は「参加 2」のように番号指定)",
-  "「入れます」…募集中の代役に応募(複数ある場合は「入れます 2」)",
-  "「連携 123456」…アカウント連携(コードは Web の設定画面で発行)",
-  `詳細: ${SITE_URL}/me`,
-].join("\n");
+// サービスごとに案内を変える(スケジュール: 召集・空き状況・代役。シフト: シフト希望)
+const HELP = (IS_SHIFT
+  ? [
+      "使えるメッセージ:",
+      "「今日」「明日」「今週」…確定したシフトを表示",
+      "「希望」…受付中のシフト希望を番号つきで表示",
+      "「入れる 2」「入れない 2」…番号の回に希望を回答(「入れる 1,3,5」のように複数可)",
+      "「参加」「不参加」…確定済みの回で未回答のものに回答",
+      "「連携 123456」…アカウント連携(コードは Web の設定画面で発行)",
+      `詳細: ${SITE_URL}/me`,
+    ]
+  : [
+      "使えるメッセージ:",
+      "「今日」「明日」「今週」…予定を表示",
+      "「空き」…2 週間の空き状況を ○×△ で返す(主催者への返事に貼れます)。「空き 30」で日数指定",
+      "「参加」「不参加」…直近の未回答の召集に回答(複数ある場合は「参加 2」のように番号指定)",
+      "「入れます」…募集中の代役に応募(複数ある場合は「入れます 2」)",
+      "「連携 123456」…アカウント連携(コードは Web の設定画面で発行)",
+      `詳細: ${SITE_URL}/me`,
+    ]
+).join("\n");
+
+// シフト希望の受付中(候補)の回。90 日先まで
+async function shiftCandidates(profileId: string) {
+  const list = await listProfileSessions(profileId, new Date().toISOString(), new Date(Date.now() + 90 * 24 * 3600 * 1000).toISOString(), false, true);
+  return list.filter((s) => s.assignment === "candidate");
+}
+const RESP_JA: Record<"pending" | "yes" | "maybe" | "no", string> = { pending: "未回答", yes: "入れる", maybe: "未定", no: "入れない" };
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -98,6 +118,29 @@ async function handle(ev: LineWebhookEvent, lineUserId: string): Promise<string 
     const { data: prof } = await admin.from("core_profiles").select("display_name").eq("id", profileId).maybeSingle();
     const statuses = await computeDayStatuses(profileId, opts);
     return formatAvailabilityText(prof?.display_name ?? "", statuses, opts) + `\n期間や時間帯を変える: ${SITE_URL}/me/availability`;
+  }
+
+  // シフト希望(ZAGUMIシフト)。候補の回は listProfileSessions の既定では除外されるので専用コマンドで扱う
+  if (/^(希望|シフト希望|シフト|shift)$/i.test(text)) {
+    const cands = await shiftCandidates(profileId);
+    if (cands.length === 0) return "受付中のシフト希望はありません。";
+    const unanswered = cands.filter((s) => s.response === "pending").length;
+    return `受付中のシフト希望 ${cands.length} 回(未回答 ${unanswered})。「入れる 1,3」「入れない 2」のように番号で回答できます。\n` + cands.map((s, i) => `${i + 1}. ${sessionLine(s)} [${RESP_JA[s.response]}]`).join("\n");
+  }
+  const shiftResp = text.match(/^(入れる|はいれる|入れない|はいれない|入れません|はいれません)\s*([\d,、\s]+)?$/);
+  if (shiftResp) {
+    const response: "yes" | "no" = /ない|ません/.test(shiftResp[1]) ? "no" : "yes";
+    const cands = await shiftCandidates(profileId);
+    if (cands.length === 0) return "受付中のシフト希望はありません。";
+    const nums = (shiftResp[2] ?? "").split(/[,、\s]+/).filter(Boolean).map(Number);
+    if (nums.length === 0) {
+      if (cands.length > 1) return `受付中のシフト希望が ${cands.length} 回あります。「希望」で一覧を見て、「${shiftResp[1]} 2」のように番号を付けて返信してください。`;
+      nums.push(1);
+    }
+    const targets = nums.map((n) => cands[n - 1]).filter(Boolean);
+    if (targets.length === 0) return "その番号の回はありません。「希望」で一覧を確認してください。";
+    for (const t of targets) await respondToSession(profileId, t.id, response);
+    return `${targets.length} 回に「${RESP_JA[response]}」で回答しました。\n` + targets.map((t) => `・${sessionLine(t)}`).join("\n");
   }
 
   const resp = text.match(/^(参加|不参加|未定|yes|no|maybe)\s*(\d+)?$/i);
