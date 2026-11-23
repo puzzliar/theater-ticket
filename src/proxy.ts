@@ -1,18 +1,21 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-// サービス分離: 1 つのリポジトリを NEXT_PUBLIC_APP=(未設定: チケット)|rehearsal(スケジュール)|shift(シフト) の 3 つのデプロイで配信する。
+// サービス分離: 1 つのリポジトリを NEXT_PUBLIC_APP=(未設定: チケット)|rehearsal(スケジュール)|shift(シフト)|brand(ブランドのトップ) のデプロイで配信する。
 // それぞれのデプロイでは他サービスのパスを提供しない(API は 404、画面は相手サービスまたはトップへ転送)。
 // 共通: / (トップはサービスごとに異なる) /login /auth/callback /terms /privacy
 
-const APP = process.env.NEXT_PUBLIC_APP === "rehearsal" || process.env.NEXT_PUBLIC_APP === "schedule" ? "rehearsal" : process.env.NEXT_PUBLIC_APP === "shift" ? "shift" : "ticket";
-const TICKET_URL = process.env.NEXT_PUBLIC_TICKET_SITE_URL || null;
-const SCHEDULE_URL = process.env.NEXT_PUBLIC_SCHEDULE_SITE_URL || process.env.NEXT_PUBLIC_REHEARSAL_SITE_URL || null;
+const APP = process.env.NEXT_PUBLIC_APP === "rehearsal" || process.env.NEXT_PUBLIC_APP === "schedule" ? "rehearsal" : process.env.NEXT_PUBLIC_APP === "shift" ? "shift" : process.env.NEXT_PUBLIC_APP === "brand" ? "brand" : "ticket";
+const BRAND_DOMAIN = process.env.NEXT_PUBLIC_BRAND_DOMAIN || null;
+const TICKET_URL = process.env.NEXT_PUBLIC_TICKET_SITE_URL || (BRAND_DOMAIN ? `https://ticket.${BRAND_DOMAIN}` : null);
+const SCHEDULE_URL = process.env.NEXT_PUBLIC_SCHEDULE_SITE_URL || process.env.NEXT_PUBLIC_REHEARSAL_SITE_URL || (BRAND_DOMAIN ? `https://schedule.${BRAND_DOMAIN}` : null);
 
 const TICKET_ONLY = ["/admin", "/cast", "/reception", "/e", "/my", "/order", "/portal", "/api/checkout", "/api/guest-reservation", "/api/pay", "/api/stripe", "/api/cron/send-reminders"];
 // スケジュールとシフトで共通の rh_ 基盤のパス
 const RH_COMMON = ["/rehearsal", "/me", "/o", "/orgs", "/join", "/onboarding", "/platform", "/signup", "/auth/line", "/api/google", "/api/ical", "/api/line", "/api/push", "/api/me", "/api/cron/rehearsal-notify"];
 // スケジュールだけの機能(空き状況の共有、公式サイト、セルフ公演の引き渡し)
 const SCHEDULE_ONLY = ["/me/availability", "/me/site", "/a", "/handover"];
+// ブランドのトップページでは提供しないログイン系(各サービス側でログインする)
+const BRAND_FOREIGN = ["/login", "/auth"];
 
 function hasPrefix(pathname: string, prefixes: string[]) {
   return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -22,7 +25,16 @@ export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
   let target: string | null = null;
   let foreign = false;
-  if (APP === "ticket") {
+  if (APP === "brand") {
+    // トップ・規約・プライバシー以外は提供しない。スケジュールへ送る(チケットのパスはチケットへ)
+    if (hasPrefix(pathname, TICKET_ONLY)) {
+      foreign = true;
+      target = TICKET_URL;
+    } else if (hasPrefix(pathname, RH_COMMON) || hasPrefix(pathname, SCHEDULE_ONLY) || hasPrefix(pathname, BRAND_FOREIGN)) {
+      foreign = true;
+      target = SCHEDULE_URL;
+    }
+  } else if (APP === "ticket") {
     foreign = hasPrefix(pathname, RH_COMMON) || hasPrefix(pathname, SCHEDULE_ONLY);
     target = SCHEDULE_URL;
   } else if (APP === "rehearsal") {
@@ -50,7 +62,7 @@ export const config = {
   matcher: [
     "/admin/:path*", "/cast/:path*", "/reception/:path*", "/e/:path*", "/my/:path*", "/order/:path*", "/portal/:path*",
     "/api/checkout/:path*", "/api/guest-reservation/:path*", "/api/pay/:path*", "/api/stripe/:path*", "/api/cron/send-reminders/:path*",
-    "/rehearsal/:path*", "/me/:path*", "/o/:path*", "/orgs/:path*", "/join/:path*", "/onboarding/:path*", "/platform/:path*", "/signup/:path*", "/auth/line/:path*", "/a/:path*", "/handover/:path*",
+    "/rehearsal/:path*", "/me/:path*", "/o/:path*", "/orgs/:path*", "/join/:path*", "/onboarding/:path*", "/platform/:path*", "/signup/:path*", "/auth/:path*", "/login", "/a/:path*", "/handover/:path*",
     "/api/google/:path*", "/api/ical/:path*", "/api/line/:path*", "/api/push/:path*", "/api/me/:path*", "/api/cron/rehearsal-notify/:path*",
   ],
 };
