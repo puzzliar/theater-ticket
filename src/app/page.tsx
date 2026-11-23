@@ -1,15 +1,17 @@
 import Link from "next/link";
-import { IS_REHEARSAL, IS_SHIFT } from "@/lib/app";
+import { IS_BRAND, IS_REHEARSAL, IS_SHIFT } from "@/lib/app";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { fmtDateTime } from "@/lib/format";
 import { getSessionUser } from "@/lib/core/session";
 import RehearsalLanding from "@/components/RehearsalLanding";
 import ShiftLanding from "@/components/ShiftLanding";
+import BrandLanding from "@/components/BrandLanding";
 
 export const dynamic = "force-dynamic";
 
 // トップページはサービスごとに異なる。スケジュール／シフトのデプロイでは独立したサービス紹介、チケットデプロイでは公演一覧
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ deleted?: string }> }) {
+  if (IS_BRAND) return <BrandLanding />;
   if (IS_REHEARSAL) {
     const sp = await searchParams;
     const me = await getSessionUser();

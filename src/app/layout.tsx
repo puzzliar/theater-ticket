@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
-import { APP_DESCRIPTION, APP_ICON, APP_LOGO, APP_NAME, IS_REHEARSAL } from "@/lib/app";
+import { APP_DESCRIPTION, APP_ICON, APP_LOGO, APP_NAME, IS_BRAND, IS_REHEARSAL } from "@/lib/app";
 import { getSessionUser } from "@/lib/core/session";
 import { getMode, modeHome } from "@/lib/core/mode";
 import ModeSwitch from "@/components/ModeSwitch";
@@ -24,11 +24,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-screen bg-bg text-fg antialiased">
-        {IS_REHEARSAL ? <RehearsalTopBar /> : <TicketTopBar />}
-        <main className={IS_REHEARSAL ? "" : "mx-auto max-w-4xl px-4 py-8"}>{children}</main>
+        {IS_BRAND ? <BrandTopBar /> : IS_REHEARSAL ? <RehearsalTopBar /> : <TicketTopBar />}
+        <main className={IS_REHEARSAL || IS_BRAND ? "" : "mx-auto max-w-4xl px-4 py-8"}>{children}</main>
         <footer className="mx-auto max-w-7xl space-x-4 px-4 py-10 text-center text-xs text-dim">
           <span>© PUZZLIAR</span>
-          {IS_REHEARSAL && (
+          {(IS_REHEARSAL || IS_BRAND) && (
             <>
               <Link href="/terms" className="hover:text-fg">利用規約</Link>
               <Link href="/privacy" className="hover:text-fg">プライバシーポリシー</Link>
@@ -37,6 +37,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </footer>
       </body>
     </html>
+  );
+}
+
+function BrandTopBar() {
+  return (
+    <header className="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+        <Link href="/" aria-label="ZAGUMI" className="flex items-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/zagumi-logo.svg" alt="ZAGUMI" className="h-9 w-auto" />
+        </Link>
+        <nav className="text-sm text-muted"><a href="#services" className="hover:text-fg">サービス</a></nav>
+      </div>
+    </header>
   );
 }
 
