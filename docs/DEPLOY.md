@@ -1,8 +1,8 @@
-# 🚀 デプロイ手順(Vercel + ticket.puzzliar.jp)
+# 🚀 デプロイ手順(Vercel + ticket.zagumi.app)
 
-本アプリを `puzzliar.jp` 配下(推奨: `ticket.puzzliar.jp`)で公開するための手順。
+本アプリ(ZAGUMIチケット)を `ticket.zagumi.app` で公開するための手順。ブランドのルートドメイン `zagumi.app` は Vercel で購入・DNS 管理(2026-11-23 決定)。
 
-> **2026-10-04 追記**: 本書は**ZAGUMIチケット**(ブランド ZAGUMI のチケット販売サービス。Vercel プロジェクト `theater-ticket`)の手順。ドメインは ZAGUMI ブランドに合わせて `ticket.zagumi.jp` にする案がある(未取得なら本書どおり `ticket.puzzliar.jp`)。同じリポジトリから稽古管理を別サービスとして配信する手順は [GO-LIVE-REHEARSAL.md](GO-LIVE-REHEARSAL.md) を参照。`theater-ticket` プロジェクトには環境変数 `NEXT_PUBLIC_APP` を**設定しない**(未設定＝チケット販売として動く)。
+> **2026-10-04 追記**: 本書は**ZAGUMIチケット**(ブランド ZAGUMI のチケット販売サービス。Vercel プロジェクト `theater-ticket`)の手順。ドメインは `ticket.zagumi.app`(`NEXT_PUBLIC_BRAND_DOMAIN=zagumi.app` も設定する)。同じリポジトリから稽古管理を別サービスとして配信する手順は [GO-LIVE-REHEARSAL.md](GO-LIVE-REHEARSAL.md) を参照。`theater-ticket` プロジェクトには環境変数 `NEXT_PUBLIC_APP` を**設定しない**(未設定＝チケット販売として動く)。
 コード側の準備(ビルド確認・Cron設定・環境変数テンプレート)は完了済み。以下の3ステップで公開できます。
 
 ## Step 1. Vercel プロジェクト作成(約3分)
@@ -17,19 +17,20 @@
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://wiqnmebudaadwqdaxwko.supabase.co` | 共有Supabase(puzzliar's Project) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API Keys → `anon` `public` | 公開可のキー |
 | `SUPABASE_SERVICE_ROLE_KEY` | 同画面の `service_role` | **秘匿**。サーバー専用 |
-| `NEXT_PUBLIC_SITE_URL` | `https://ticket.puzzliar.jp` | |
+| `NEXT_PUBLIC_SITE_URL` | `https://ticket.zagumi.app` | |
+| `NEXT_PUBLIC_BRAND_DOMAIN` | `zagumi.app` | 他サービスのパスを開いたときの転送先の元 |
 | `STRIPE_SECRET_KEY` | (任意)Stripeの `sk_live_...` または `sk_test_...` | **未設定の間はモック決済モード**(実課金なしで即確定。動作確認向け) |
 | `STRIPE_WEBHOOK_SECRET` | (任意)Step 3参照 | |
 | `RESEND_API_KEY` | (任意)Resendキー | 未設定の間はメール送信スキップ |
-| `EMAIL_FROM` | `ZAGUMIチケット <tickets@puzzliar.jp>` | Resend側でドメイン認証が必要 |
+| `EMAIL_FROM` | `ZAGUMIチケット <tickets@zagumi.app>` | Resend側で `zagumi.app` のドメイン認証が必要 |
 | `CRON_SECRET` | 任意のランダム文字列 | Cron保護(Vercelが自動でヘッダ付与) |
 
 4. Deploy を実行
 
 ## Step 2. ドメイン設定(約2分 + DNS反映待ち)
 
-1. Vercel プロジェクト → Settings → Domains → `ticket.puzzliar.jp` を追加
-2. puzzliar.jp のDNS管理画面(お名前.com / Cloudflare等)で以下を追加:
+1. Vercel プロジェクト → Settings → Domains → `ticket.zagumi.app` を追加
+2. `zagumi.app` は Vercel 管理なので DNS は自動。他レジストラの場合だけ以下を追加:
 
 ```
 種別: CNAME
@@ -37,15 +38,15 @@
 値: cname.vercel-dns.com
 ```
 
-3. Vercel側の検証が通れば `https://ticket.puzzliar.jp` で公開(SSL自動)
+3. Vercel側の検証が通れば `https://ticket.zagumi.app` で公開(SSL自動)
 
-※ apexの `puzzliar.jp` 本体は既存サイトのまま。チケットはサブドメイン運用が安全です。
+※ apex の `zagumi.app` はブランドのトップページ(`zagumi-brand` プロジェクト)。
 
 ## Step 3. Stripe 本番決済の有効化(実売開始時)
 
 1. Stripe ダッシュボード → Developers → API keys から `sk_...` を取得し、Vercelの `STRIPE_SECRET_KEY` に設定
 2. Developers → Webhooks → Add endpoint:
-   - URL: `https://ticket.puzzliar.jp/api/stripe/webhook`
+   - URL: `https://ticket.zagumi.app/api/stripe/webhook`
    - イベント: `checkout.session.completed`
 3. 表示される Signing secret (`whsec_...`) を `STRIPE_WEBHOOK_SECRET` に設定して再デプロイ
 
@@ -53,7 +54,7 @@
 
 ## 初期アカウント・デモデータ(設定済み)
 
-- **管理者ログイン**: `https://ticket.puzzliar.jp/login`
+- **管理者ログイン**: `https://ticket.zagumi.app/login`
   - メール: `harbingerstar@gmail.com` ／ 初期パスワード: 別途共有(チャット参照)。ログイン後の変更を推奨
   - ログインできない場合: Supabase Dashboard → Authentication → Users → 該当ユーザー → Reset password
 - **デモ公演『星の航路』**が公開状態で入っています(指定席16席 + 自由席40枚、キャスト2名・扱いルール設定済み)。動作確認後、管理画面から非公開にしてください
