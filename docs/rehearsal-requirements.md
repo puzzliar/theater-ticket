@@ -416,7 +416,7 @@ LINE 側は審査不要。LINE Developers でプロバイダーを 1 つ作り�
 | `/terms` `/privacy` | 公開 | 規約・プライバシーポリシー（ドラフト。法務レビュー前） |
 | `/api/ical/[token]` `/api/google/*` `/api/line/webhook` `/api/push/subscribe` `/api/me/export` `/api/cron/rehearsal-notify` | 連携 | v0.1 と同様（個人単位に変更） |
 
-配信形態（Q29）: ZAGUMIスケジュールは `NEXT_PUBLIC_APP=rehearsal` でビルドした独立したデプロイ（Vercel プロジェクト `zagumi-schedule`、ドメイン例 `schedule.zagumi.jp`）。ZAGUMIチケットのデプロイ（`theater-ticket`、ドメイン例 `ticket.zagumi.jp`）では上記の稽古管理パスは提供されず、逆も同様。共通なのはアカウント（Supabase Auth・`core_` テーブル）と `/login` `/auth/callback` `/terms` `/privacy` の実装のみ。
+配信形態（Q29）: ZAGUMIスケジュールは `NEXT_PUBLIC_APP=rehearsal` でビルドした独立したデプロイ（Vercel プロジェクト `zagumi-schedule`、ドメイン `schedule.zagumi.app`）。ZAGUMIシフトは `NEXT_PUBLIC_APP=shift`（`zagumi-shift`、`shift.zagumi.app`）、ブランドのトップは `NEXT_PUBLIC_APP=brand`（`zagumi-brand`、`zagumi.app`）。ZAGUMIチケットのデプロイ（`theater-ticket`、`ticket.zagumi.app`）では上記の稽古管理パスは提供されず、逆も同様。共通なのはアカウント（Supabase Auth・`core_` テーブル）と `/login` `/auth/callback` `/terms` `/privacy` の実装のみ。
 
 環境変数（`.env.example`）: 既存に加え `NEXT_PUBLIC_APP`、`ORG_CREATION_OPEN`、`LINE_LOGIN_CHANNEL_ID/SECRET`、`NEXT_PUBLIC_LINE_LOGIN_ENABLED`、`LINE_PUSH_MONTHLY_LIMIT`、`NEXT_PUBLIC_VAPID_PUBLIC_KEY`、`VAPID_PRIVATE_KEY`、`VAPID_SUBJECT`。
 
